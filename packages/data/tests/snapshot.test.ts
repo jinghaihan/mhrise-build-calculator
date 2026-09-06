@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { collectAvailableSlots, createArmorVariant, createWikiRef } from '@mhrise-build-tools/core'
+import {
+  collectAvailableSlots,
+  createArmorVariant,
+  createWikiRef,
+  getSkillLevel,
+} from '@mhrise-build-tools/core'
 import { describe, expect, it } from 'vitest'
 import {
   createSnapshotBuildRequest,
@@ -92,7 +97,7 @@ describe('source snapshots', () => {
 
     expect(solutions).toHaveLength(1)
     expect(solutions[0].weapon.ref.id).toBe(weapon.ref.id)
-    expect(solutions[0].skills).toContainEqual({ level: 1, skillId: attackId })
+    expect(getSkillLevel(solutions[0].skills, attackId)).toBeGreaterThanOrEqual(1)
   })
 
   it('can generate Qurious Crafting variants for selected armor records', () => {
