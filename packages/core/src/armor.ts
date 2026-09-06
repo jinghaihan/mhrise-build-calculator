@@ -7,7 +7,7 @@ import type {
   ArmorVariant,
   SkillValue,
 } from './model'
-import { applySkillChanges, countActiveSkills, getSkillLevel } from './skills'
+import { applySkillChanges, countActiveSkills } from './skills'
 import { applySlotUpgrades } from './slots'
 
 export const MAX_ARMOR_SKILLS = 5
@@ -199,49 +199,6 @@ export function generateArmorVariants(
 
   search(0, 0, 0, ZERO_ARMOR_RESISTANCES, [], 0, [])
   return [...variants.values()]
-}
-
-export function pruneDominatedArmorVariants(
-  variants: readonly ArmorVariant[],
-  requirements: readonly SkillValue[],
-): ArmorVariant[] {
-  return variants.filter((candidate, candidateIndex) => !variants.some((other, otherIndex) => {
-    if (candidateIndex === otherIndex || !armorVariantCovers(other, candidate, requirements)) {
-      return false
-    }
-
-    return isStrictlyBetterArmorVariant(other, candidate, requirements)
-  }))
-}
-
-function armorVariantCovers(
-  left: ArmorVariant,
-  right: ArmorVariant,
-  requirements: readonly SkillValue[],
-): boolean {
-  const leftSlots = [...left.slots].sort((a, b) => b - a)
-  const rightSlots = [...right.slots].sort((a, b) => b - a)
-
-  return left.defense >= right.defense
-    && leftSlots.every((level, index) => level >= (rightSlots[index] ?? 0))
-    && getArmorResistancePenalty(left.resistances) <= getArmorResistancePenalty(right.resistances)
-    && requirements.every(requirement => getSkillLevel(left.skills, requirement.skillId)
-      >= getSkillLevel(right.skills, requirement.skillId))
-}
-
-function isStrictlyBetterArmorVariant(
-  left: ArmorVariant,
-  right: ArmorVariant,
-  requirements: readonly SkillValue[],
-): boolean {
-  const leftSlots = [...left.slots].sort((a, b) => b - a)
-  const rightSlots = [...right.slots].sort((a, b) => b - a)
-
-  return left.defense > right.defense
-    || leftSlots.some((level, index) => level > (rightSlots[index] ?? 0))
-    || getArmorResistancePenalty(left.resistances) < getArmorResistancePenalty(right.resistances)
-    || requirements.some(requirement => getSkillLevel(left.skills, requirement.skillId)
-      > getSkillLevel(right.skills, requirement.skillId))
 }
 
 function compareResistancePriority(

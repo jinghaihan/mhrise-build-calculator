@@ -26,6 +26,6 @@ Use `parseSourceSnapshot` to load the JSON and `searchSnapshotBuild` to search f
 
 Pass `generateArmorVariants: true` to a snapshot search to derive Qurious Crafting variants automatically for the requested armor records. Use `armorVariantOptions` to cap the generated depth or count while exploring a search space.
 
-Snapshot searches prune variants that are strictly worse in defense, slots, requested skills, and resistance balance. Set `pruneDominatedArmor: false` in the planner options to inspect the unpruned candidate set.
+Snapshot searches retain armor variant identities. The solver may merge equivalent partial search states only when the selected equipment identity is not needed by the caller; reuse planning keeps identities so a locally weaker-looking piece can still be shared by multiple builds.
 
 Armor, weapon, and decoration records retain Kiranico numeric IDs. Local talisman candidates use `local:` IDs because talismans are generated states rather than Kiranico equipment records.

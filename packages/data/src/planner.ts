@@ -10,7 +10,6 @@ import type { SourceSnapshot } from './snapshot'
 import {
   ARMOR_SLOTS,
   optimizeEquipmentReuse,
-  pruneDominatedArmorVariants,
   solveBuild,
 } from '@mhrise-build-tools/core'
 import { createBuildRequest } from './catalog'
@@ -21,7 +20,6 @@ export interface SnapshotPlanOptions {
   readonly generateArmorVariants?: boolean
   readonly maxSolutions?: number
   readonly maxTalismanCandidates?: number
-  readonly pruneDominatedArmor?: boolean
   readonly talismanSkillIds?: readonly WikiId[]
 }
 
@@ -56,17 +54,7 @@ export function createSnapshotBuildRequest(
     withGeneratedArmorComponents(snapshot, definition, skillIds, options),
   )
 
-  if (options.pruneDominatedArmor === false) {
-    return request
-  }
-
-  return {
-    ...request,
-    armorBySlot: Object.fromEntries(ARMOR_SLOTS.map(slot => [
-      slot,
-      pruneDominatedArmorVariants(request.armorBySlot[slot], request.requiredSkills),
-    ])) as unknown as typeof request.armorBySlot,
-  }
+  return request
 }
 
 export function searchSnapshotBuild(

@@ -116,7 +116,6 @@ describe('source snapshots', () => {
       armorVariantOptions: { maxComponents: 1, maxVariants: 20 },
       generateArmorVariants: true,
       maxTalismanCandidates: 100,
-      pruneDominatedArmor: false,
     })
 
     expect(Object.values(request.armorBySlot).some(variants => variants.length > 1)).toBe(true)
