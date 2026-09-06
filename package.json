@@ -24,6 +24,7 @@
     "@octohash/eslint-config": "catalog:lint",
     "eslint": "catalog:lint",
     "lint-staged": "catalog:lint",
+    "xlsx": "catalog:prod",
     "vitest": "catalog:test",
     "@types/node": "catalog:types"
   },
