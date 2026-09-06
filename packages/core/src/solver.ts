@@ -1,5 +1,6 @@
 import type { ArmorSlot, ArmorVariant, BuildRequest, BuildSolution, SkillValue } from './model'
 import { collectAvailableSlots, findDecorationPlacements } from './decorations'
+import { getTotalArmorDefense } from './defense'
 import { ARMOR_SLOTS } from './model'
 import { addSkillValues, meetsSkillRequirements } from './skills'
 import { isTalismanLegal } from './talismans'
@@ -67,7 +68,7 @@ export function solveBuild(
         solutions.push({
           armor,
           decorations,
-          defense: Object.values(armor).reduce((total, variant) => total + variant.defense, 0),
+          defense: getTotalArmorDefense(armor),
           id: request.id,
           skills: finalSkills,
           talisman,

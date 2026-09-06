@@ -1,5 +1,6 @@
 export * from './armor'
 export * from './decorations'
+export * from './defense'
 export * from './ids'
 export * from './model'
 export * from './reuse'
