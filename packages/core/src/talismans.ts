@@ -5,6 +5,10 @@ export function isTalismanLegal(talisman: Talisman): boolean {
     return false
   }
 
+  if (talisman.maxSkillCount !== undefined && talisman.skills.length > talisman.maxSkillCount) {
+    return false
+  }
+
   if (!talisman.maxSkills) {
     return true
   }

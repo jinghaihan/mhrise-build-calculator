@@ -54,6 +54,7 @@ function request(id: string, requiredSkills: readonly SkillValue[]): BuildReques
     talismans: [
       {
         allowedSlots: undefined,
+        maxSkillCount: 2,
         maxSkills: [skill(String(attack), 3)],
         ref: createWikiRef('talisman', '3001'),
         skills: [skill(String(attack), 1)],
