@@ -53,6 +53,7 @@ export interface TalismanRule {
 }
 
 export interface TalismanGenerationOptions {
+  /** Explicit enumeration limit for previews; omitted means enumerate all legal records. */
   readonly maxCandidates?: number
   readonly skillIds: readonly WikiId[]
   readonly variants?: readonly ('霸气' | '圆环')[]
@@ -171,7 +172,7 @@ export function generateTalismanRecords(
   snapshot: SourceSnapshot,
   options: TalismanGenerationOptions,
 ): KiranicoTalismanRecord[] {
-  const maxCandidates = options.maxCandidates ?? 50_000
+  const maxCandidates = options.maxCandidates ?? Number.POSITIVE_INFINITY
   const requestedSkillIds = new Set(options.skillIds)
   const variants = options.variants ?? ['霸气', '圆环']
   const rules = snapshot.rules.talismanRules.filter(rule => rule.skillId

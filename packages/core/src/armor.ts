@@ -7,7 +7,7 @@ import type {
   ArmorVariant,
   SkillValue,
 } from './model'
-import { applySkillChanges, countActiveSkills } from './skills'
+import { addSkillValues, applySkillChanges, countActiveSkills } from './skills'
 import { applySlotUpgrades } from './slots'
 
 export const MAX_ARMOR_SKILLS = 5
@@ -41,23 +41,17 @@ export function addArmorResistances(
   }
 }
 
-export function getArmorResistancePenalty(resistances: ArmorResistances): number {
-  const values = ARMOR_ELEMENTS.map(element => resistances[element])
-  const minimum = Math.min(...values)
-  const maximum = Math.max(...values)
-  const negativePenalty = values
-    .filter(value => value < 0)
-    .reduce((total, value) => total + value * value * 100, 0)
-
-  return maximum - minimum + negativePenalty
-}
-
 function baseArmorResistances(base: ArmorPiece): ArmorResistances {
   return base.baseResistances ?? ZERO_ARMOR_RESISTANCES
 }
 
+/** The confirmed in-game limit: one armor piece can receive seven operations. */
+export const MAX_QURIOUS_OPERATIONS = 7
+
 export interface ArmorVariantGenerationOptions {
-  readonly maxComponents?: number
+  /** Explicitly lower the operation count for a bounded test or preview search. */
+  readonly maxOperations?: number
+  /** Explicitly cap returned variants; omitted means do not cap the legal state space. */
   readonly maxVariants?: number
   readonly resistanceStrategy?: 'balanced' | 'source-order'
 }
@@ -131,11 +125,12 @@ export function generateArmorVariants(
   components: readonly ArmorAugmentComponent[],
   options: ArmorVariantGenerationOptions = {},
 ): ArmorVariant[] {
-  const maxComponents = options.maxComponents ?? 7
+  const maxOperations = options.maxOperations ?? MAX_QURIOUS_OPERATIONS
   const maxVariants = options.maxVariants ?? Number.POSITIVE_INFINITY
   const resistanceStrategy = options.resistanceStrategy ?? 'balanced'
   const variants = new Map<string, ArmorVariant>()
-  const visitedStates = new Set<string>()
+  const visitedStates = new Map<string, number>()
+  const uniqueComponents = dedupeComponents(components)
 
   function addVariant(augmentation: ArmorAugmentation): void {
     if (augmentation.cost < 0 || augmentation.cost > base.costBudget) {
@@ -161,7 +156,6 @@ export function generateArmorVariants(
     componentIds: readonly string[],
   ): void {
     const stateKey = [
-      depth,
       cost,
       defenseDelta,
       resistanceDelta.dragon,
@@ -169,13 +163,14 @@ export function generateArmorVariants(
       resistanceDelta.ice,
       resistanceDelta.thunder,
       resistanceDelta.water,
-      skillKey(skillChanges),
+      skillKey(addSkillValues(skillChanges)),
       slotUpgrades,
     ].join('|')
-    if (visitedStates.has(stateKey)) {
+    const previousDepth = visitedStates.get(stateKey)
+    if (previousDepth !== undefined && previousDepth <= depth) {
       return
     }
-    visitedStates.add(stateKey)
+    visitedStates.set(stateKey, depth)
 
     addVariant({
       componentIds,
@@ -186,17 +181,17 @@ export function generateArmorVariants(
       slotUpgrades,
     })
 
-    if (depth >= maxComponents || variants.size >= maxVariants) {
+    if (depth >= maxOperations || variants.size >= maxVariants) {
       return
     }
 
     const nextComponents = resistanceStrategy === 'balanced'
-      ? [...components].sort((left, right) => compareResistancePriority(
+      ? [...uniqueComponents].sort((left, right) => compareResistancePriority(
           left,
           right,
           addArmorResistances(baseArmorResistances(base), resistanceDelta),
         ))
-      : components
+      : uniqueComponents
 
     for (const component of nextComponents) {
       search(
@@ -217,6 +212,27 @@ export function generateArmorVariants(
 
   search(0, 0, 0, ZERO_ARMOR_RESISTANCES, [], 0, [])
   return [...variants.values()]
+}
+
+function dedupeComponents(
+  components: readonly ArmorAugmentComponent[],
+): ArmorAugmentComponent[] {
+  const unique = new Map<string, ArmorAugmentComponent>()
+
+  for (const component of components) {
+    const key = [
+      component.costDelta,
+      component.defenseDelta,
+      component.slotUpgrades,
+      JSON.stringify(component.resistanceDelta ?? {}),
+      skillKey(component.skillChanges),
+    ].join('|')
+    if (!unique.has(key)) {
+      unique.set(key, component)
+    }
+  }
+
+  return [...unique.values()]
 }
 
 function skillKey(skills: readonly SkillValue[]): string {

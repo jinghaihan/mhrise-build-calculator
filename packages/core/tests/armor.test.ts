@@ -4,6 +4,7 @@ import {
   createArmorVariant,
   generateArmorVariants,
   MAX_ARMOR_SKILLS,
+  MAX_QURIOUS_OPERATIONS,
 } from '../src/armor'
 import { createWikiId, createWikiRef } from '../src/ids'
 
@@ -60,13 +61,28 @@ describe('armor legality', () => {
       id: 'slot-plus-one',
       skillChanges: [],
       slotUpgrades: 1,
-    }], { maxComponents: 2 })
+    }], { maxOperations: 2 })
 
     expect(variants.map(variant => variant.slots)).toEqual([
       [2, 1, 0],
       [2, 1, 1],
       [3, 1, 1],
     ])
+  })
+
+  it(`uses the confirmed seven-operation default`, () => {
+    const base = { ...baseArmor(), slots: [1, 0, 0] as const }
+    const variants = generateArmorVariants(base, [{
+      costDelta: 1,
+      defenseDelta: 0,
+      id: 'slot-plus-one',
+      skillChanges: [],
+      slotUpgrades: 1,
+    }])
+
+    expect(MAX_QURIOUS_OPERATIONS).toBe(7)
+    expect(variants).toHaveLength(8)
+    expect(variants.at(-1)?.slots).toEqual([4, 3, 1])
   })
 
   it('applies elemental resistance changes to armor variants', () => {
@@ -122,7 +138,7 @@ describe('armor legality', () => {
       resistanceDelta: { fire: -1 },
       skillChanges: [],
       slotUpgrades: 0,
-    }], { maxComponents: 2 })
+    }], { maxOperations: 2 })
 
     expect(variants[1].augmentation?.componentIds).toEqual(['fire-minus'])
     expect(variants[2].augmentation?.componentIds).toEqual(['fire-minus', 'water-minus'])

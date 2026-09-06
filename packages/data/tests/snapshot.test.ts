@@ -118,7 +118,7 @@ describe('source snapshots', () => {
       requiredSkills: [{ level: 1, skillId: attackId }],
       weaponId: weapon.ref.id,
     }, {
-      armorVariantOptions: { maxComponents: 1, maxVariants: 20 },
+      armorVariantOptions: { maxOperations: 1, maxVariants: 20 },
       generateArmorVariants: true,
       maxTalismanCandidates: 100,
     })
