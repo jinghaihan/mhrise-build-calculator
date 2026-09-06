@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { createWikiRef } from '@mhrise-build-tools/core'
+import { collectAvailableSlots, createArmorVariant, createWikiRef } from '@mhrise-build-tools/core'
 import { describe, expect, it } from 'vitest'
 import { createSnapshotCatalog } from '../src/planner'
 import {
@@ -20,6 +20,31 @@ describe('source snapshots', () => {
     expect(snapshot.catalog.weapons.length).toBeGreaterThan(3000)
     expect(snapshot.rules.armorFamilies.length).toBe(143)
     expect(snapshot.rules.talismanRules.length).toBe(136)
+
+    const weaponWithSlots = snapshot.catalog.weapons.find(record =>
+      record.weapon.slots.some(level => level > 0))
+    const armorRecords = snapshot.catalog.armors.filter(record => record.armor.slot)
+    const armorBySlot = Object.fromEntries(
+      ['head', 'chest', 'arms', 'waist', 'legs'].map(slot => [
+        slot,
+        createArmorVariant(armorRecords.find(record => record.armor.slot === slot)!.armor),
+      ]),
+    ) as Record<'head' | 'chest' | 'arms' | 'waist' | 'legs', ReturnType<typeof createArmorVariant>>
+
+    expect(weaponWithSlots).toBeDefined()
+    expect(collectAvailableSlots(
+      weaponWithSlots!.weapon,
+      armorBySlot,
+      {
+        allowedSlots: undefined,
+        maxSkillCount: undefined,
+        maxSkills: undefined,
+        ref: createWikiRef('talisman', '999999999'),
+        skills: [],
+        slots: [0, 0, 0],
+      },
+    ).some(slot => slot.host === 'weapon')).toBe(true)
+    expect(snapshot.catalog.armors.some(record => record.armor.baseResistances)).toBe(true)
   })
 
   it('builds a planner catalog with on-demand talismans', () => {
