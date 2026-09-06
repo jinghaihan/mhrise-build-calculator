@@ -23,6 +23,8 @@ export function solveBuild(
   }
   const legalTalismans = workingRequest.talismans
   const bounds = createSearchBounds(workingRequest, legalTalismans)
+  const exploredArmorStates = new Map<string, number>()
+  const useStateMemo = maxSolutions === 1
   const armorBySlot = Object.fromEntries(ARMOR_SLOTS.map(slot => [
     slot,
     [...workingRequest.armorBySlot[slot]].sort((left, right) => compareArmorCandidates(
@@ -40,6 +42,16 @@ export function solveBuild(
   function searchArmor(slotIndex: number, skills: readonly SkillValue[]): void {
     if (solutions.length >= maxSolutions) {
       return
+    }
+
+    if (useStateMemo) {
+      const stateKey = createArmorStateKey(slotIndex, skills, selectedArmor)
+      const defense = getPartialArmorDefense(selectedArmor)
+      const previousDefense = exploredArmorStates.get(stateKey)
+      if (previousDefense !== undefined && previousDefense >= defense) {
+        return
+      }
+      exploredArmorStates.set(stateKey, defense)
     }
 
     if (!canReachRequirements(workingRequest, bounds, slotIndex, skills)) {
@@ -141,6 +153,26 @@ function skillKey(skills: readonly SkillValue[]): string {
     .sort((left, right) => String(left.skillId).localeCompare(String(right.skillId)))
     .map(skill => `${skill.skillId}:${skill.level}`)
     .join(',')
+}
+
+function createArmorStateKey(
+  slotIndex: number,
+  skills: readonly SkillValue[],
+  selectedArmor: Partial<Record<ArmorSlot, ArmorVariant>>,
+): string {
+  const slots = ARMOR_SLOTS
+    .slice(0, slotIndex)
+    .flatMap(slot => selectedArmor[slot]?.slots ?? [])
+    .sort((left, right) => right - left)
+    .join(',')
+
+  return `${slotIndex}|${skillKey(skills)}|${slots}`
+}
+
+function getPartialArmorDefense(
+  selectedArmor: Partial<Record<ArmorSlot, ArmorVariant>>,
+): number {
+  return Object.values(selectedArmor).reduce((total, armor) => total + (armor?.defense ?? 0), 0)
 }
 
 function canReachWithDecorations(
