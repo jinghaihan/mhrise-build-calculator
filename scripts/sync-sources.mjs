@@ -127,7 +127,7 @@ function readOfflineWorkbook(book) {
   const augmentationEntries = []
   for (const [poolIndex, start] of [0, 11, 22, 33, 44, 55, 66].entries()) {
     const rows = sheetRows(book, '词条')
-    for (const row of rows.slice(2)) {
+    for (const [rowIndex, row] of rows.slice(2).entries()) {
       const poolId = numberOrUndefined(row[start])
       const gameId = numberOrUndefined(row[start + 1])
       const label = textOrUndefined(row[start + 2])
@@ -150,6 +150,7 @@ function readOfflineWorkbook(book) {
         label,
         levels,
         poolId,
+        role: augmentationRole(rowIndex + 3),
         sourceBlock: poolIndex,
       })
     }
@@ -182,6 +183,16 @@ function readOfflineWorkbook(book) {
   }))
 
   return { armorFamilies, augmentationEntries, skillCosts, talismanRules }
+}
+
+function augmentationRole(rowNumber) {
+  if (rowNumber >= 36 && rowNumber <= 38)
+    return 'cost-fill'
+  if (rowNumber >= 40 && rowNumber <= 44)
+    return 'ignored-special'
+  if (rowNumber === 46)
+    return 'ignored-special'
+  return 'normal'
 }
 
 function sheetRows(book, name) {

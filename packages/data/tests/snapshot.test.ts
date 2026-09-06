@@ -189,6 +189,16 @@ describe('source snapshots', () => {
     })
   })
 
+  it('keeps special augmentation rows distinct from normal rows', () => {
+    const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const components = armorComponentsForPool(snapshot, 1)
+
+    expect(components.find(component => component.id === '1:70:1')?.role).toBe('cost-fill')
+    expect(components.find(component => component.id === '1:91:1')?.role).toBe('ignored-special')
+    expect(components.find(component => component.id === '1:61:1')?.role).toBe('ignored-special')
+  })
+
   it('generates legal talismans only for requested skills', () => {
     const attackId = createWikiRef('skill', '366824395').id
     const snapshot = parseSourceSnapshot({

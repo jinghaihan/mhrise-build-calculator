@@ -1,5 +1,6 @@
 import type {
   ArmorAugmentComponent,
+  ArmorAugmentRole,
   ArmorElement,
   SlotLevels,
   Talisman,
@@ -10,6 +11,8 @@ import { createLocalRef } from '@mhrise-build-tools/core'
 import { createDataCatalog } from './catalog'
 
 export type AugmentationKind = 'defense' | 'resistance' | 'skill' | 'slot'
+
+export type AugmentationRole = ArmorAugmentRole
 
 export interface ArmorFamilyRule {
   readonly costBudget: number
@@ -26,6 +29,7 @@ export interface AugmentationEntry {
   readonly levels: readonly number[]
   readonly poolId: number
   readonly element?: ArmorElement
+  readonly role?: AugmentationRole
   readonly skillId?: WikiId
   readonly sourceBlock: number
 }
@@ -109,6 +113,7 @@ export function armorComponentsForPool(
   const components: ArmorAugmentComponent[] = []
 
   for (const entry of snapshot.rules.augmentationEntries.filter(entry => entry.poolId === poolId)) {
+    const role = entry.role ?? inferredAugmentationRole(entry.gameId)
     const values = entry.levels
       .map((value, level) => ({ level: level + 1, value }))
       .filter(({ value }) => value !== 0)
@@ -120,6 +125,7 @@ export function armorComponentsForPool(
             costDelta: entry.cost,
             defenseDelta: 0,
             id: `${poolId}:${entry.gameId}:${skillId}:${level}`,
+            ...(role && role !== 'normal' ? { role } : {}),
             skillChanges: [{ level: value, skillId }],
             slotUpgrades: 0,
           })
@@ -136,6 +142,7 @@ export function armorComponentsForPool(
           ? { [entry.element]: value }
           : undefined,
         id: `${poolId}:${entry.gameId}:${level}`,
+        ...(role && role !== 'normal' ? { role } : {}),
         skillChanges: [],
         slotUpgrades: entry.kind === 'slot' ? value : 0,
       })
@@ -143,6 +150,23 @@ export function armorComponentsForPool(
   }
 
   return components.sort((left, right) => componentPriority(left) - componentPriority(right))
+}
+
+function inferredAugmentationRole(gameId: number): AugmentationRole | undefined {
+  // These IDs are the extra rows in the offline workbook's augmentation table.
+  if (gameId >= 70 && gameId <= 72) {
+    return 'cost-fill'
+  }
+
+  if ([91, 101, 111, 121, 131].includes(gameId)) {
+    return 'ignored-special'
+  }
+
+  if (gameId === 61) {
+    return 'ignored-special'
+  }
+
+  return undefined
 }
 
 function componentPriority(component: ArmorAugmentComponent): number {

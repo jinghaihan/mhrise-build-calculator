@@ -45,7 +45,7 @@ function baseArmorResistances(base: ArmorPiece): ArmorResistances {
   return base.baseResistances ?? ZERO_ARMOR_RESISTANCES
 }
 
-/** The confirmed in-game limit: one armor piece can receive seven operations. */
+/** The project rule for ordinary Qurious Crafting: one armor piece can receive seven operations. */
 export const MAX_QURIOUS_OPERATIONS = 7
 
 export interface ArmorVariantGenerationOptions {
@@ -129,8 +129,7 @@ export function generateArmorVariants(
   const maxVariants = options.maxVariants ?? Number.POSITIVE_INFINITY
   const resistanceStrategy = options.resistanceStrategy ?? 'balanced'
   const variants = new Map<string, ArmorVariant>()
-  const visitedStates = new Map<string, number>()
-  const uniqueComponents = dedupeComponents(components)
+  const uniqueComponents = pruneDominatedComponents(dedupeComponents(components))
 
   function addVariant(augmentation: ArmorAugmentation): void {
     if (augmentation.cost > base.costBudget) {
@@ -146,6 +145,20 @@ export function generateArmorVariants(
     }
   }
 
+  const visitedStates = new Map<string, number>()
+  const ordinaryComponents = uniqueComponents.filter((component) => {
+    const role = component.role ?? 'normal'
+    return role === 'normal' || role === 'cost-fill'
+  })
+  const componentOrder = new Map(
+    [...ordinaryComponents]
+      .filter(component => component.skillChanges.length === 0
+        && component.role !== 'cost-fill')
+      .sort(compareCommutativeComponents)
+      .map((component, index) => [component.id, index] as const),
+  )
+  search(0, 0, 0, ZERO_ARMOR_RESISTANCES, [], 0, [], -1)
+
   function search(
     depth: number,
     cost: number,
@@ -154,9 +167,10 @@ export function generateArmorVariants(
     skillChanges: readonly SkillValue[],
     slotUpgrades: number,
     componentIds: readonly string[],
+    lastCommutativeIndex: number,
   ): void {
-    // A roll cannot spend more than the initial budget. Once it reaches the
-    // budget, the remaining budget is zero and the roll ends.
+    // A roll cannot spend more than the initial budget. Negative cumulative
+    // cost is legal because drawback rolls restore available budget.
     if (cost > base.costBudget) {
       return
     }
@@ -192,22 +206,43 @@ export function generateArmorVariants(
     }
 
     const nextComponents = resistanceStrategy === 'balanced'
-      ? [...uniqueComponents].sort((left, right) => compareResistancePriority(
+      ? [...ordinaryComponents].sort((left, right) => compareResistancePriority(
           left,
           right,
           addArmorResistances(baseArmorResistances(base), resistanceDelta),
         ))
-      : uniqueComponents
+      : ordinaryComponents
 
     for (const component of nextComponents) {
+      const role = component.role ?? 'normal'
+      const nextCost = cost + component.costDelta
+
+      const commutativeIndex = componentOrder.get(component.id)
+      if (commutativeIndex !== undefined
+        && lastCommutativeIndex >= 0
+        && commutativeIndex < lastCommutativeIndex) {
+        continue
+      }
+
+      if (role === 'cost-fill' && nextCost !== base.costBudget) {
+        continue
+      }
+
+      const nextSkillChanges = [...skillChanges, ...component.skillChanges]
+      const nextSkills = addSkillValues(base.baseSkills, nextSkillChanges)
+      if (nextSkills.some(skill => skill.level < 0)) {
+        continue
+      }
+
       search(
         depth + 1,
-        cost + component.costDelta,
+        nextCost,
         defenseDelta + component.defenseDelta,
         addArmorResistances(resistanceDelta, component.resistanceDelta),
-        [...skillChanges, ...component.skillChanges],
+        nextSkillChanges,
         slotUpgrades + component.slotUpgrades,
         [...componentIds, component.id],
+        commutativeIndex ?? -1,
       )
 
       if (variants.size >= maxVariants) {
@@ -216,8 +251,20 @@ export function generateArmorVariants(
     }
   }
 
-  search(0, 0, 0, ZERO_ARMOR_RESISTANCES, [], 0, [])
   return [...variants.values()]
+}
+
+function compareCommutativeComponents(
+  left: ArmorAugmentComponent,
+  right: ArmorAugmentComponent,
+): number {
+  return left.costDelta - right.costDelta
+    || left.defenseDelta - right.defenseDelta
+    || left.slotUpgrades - right.slotUpgrades
+    || JSON.stringify(left.resistanceDelta ?? {}).localeCompare(
+      JSON.stringify(right.resistanceDelta ?? {}),
+    )
+    || left.id.localeCompare(right.id)
 }
 
 function dedupeComponents(
@@ -230,6 +277,7 @@ function dedupeComponents(
       component.costDelta,
       component.defenseDelta,
       component.slotUpgrades,
+      component.role ?? 'normal',
       JSON.stringify(component.resistanceDelta ?? {}),
       skillKey(component.skillChanges),
     ].join('|')
@@ -239,6 +287,41 @@ function dedupeComponents(
   }
 
   return [...unique.values()]
+}
+
+/**
+ * A same-cost roll is unnecessary when another roll has every final effect at
+ * least as good and the same skill changes/role. Keeping the better roll is
+ * exact for build search and removes duplicate source levels such as
+ * resistance +1/+2 with equal cost.
+ */
+function pruneDominatedComponents(
+  components: readonly ArmorAugmentComponent[],
+): ArmorAugmentComponent[] {
+  return components.filter((component, index) => !components.some((candidate, candidateIndex) => {
+    if (index === candidateIndex
+      || candidate.costDelta !== component.costDelta
+      || (candidate.role ?? 'normal') !== (component.role ?? 'normal')
+      || skillKey(candidate.skillChanges) !== skillKey(component.skillChanges)) {
+      return false
+    }
+
+    const resistanceElements = ARMOR_ELEMENTS.every(element => (
+      (candidate.resistanceDelta?.[element] ?? 0)
+      >= (component.resistanceDelta?.[element] ?? 0)
+    ))
+    const noWorse = candidate.defenseDelta >= component.defenseDelta
+      && candidate.slotUpgrades >= component.slotUpgrades
+      && resistanceElements
+    const strictlyBetter = candidate.defenseDelta > component.defenseDelta
+      || candidate.slotUpgrades > component.slotUpgrades
+      || ARMOR_ELEMENTS.some(element => (
+        (candidate.resistanceDelta?.[element] ?? 0)
+        > (component.resistanceDelta?.[element] ?? 0)
+      ))
+
+    return noWorse && strictlyBetter
+  }))
 }
 
 function skillKey(skills: readonly SkillValue[]): string {

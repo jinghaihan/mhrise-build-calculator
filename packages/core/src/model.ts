@@ -45,10 +45,13 @@ export interface ArmorAugmentation {
   readonly slotUpgrades: number
 }
 
+export type ArmorAugmentRole = 'normal' | 'cost-fill' | 'ignored-special'
+
 export interface ArmorAugmentComponent {
   readonly costDelta: number
   readonly defenseDelta: number
   readonly id: string
+  readonly role?: ArmorAugmentRole
   readonly resistanceDelta?: Partial<ArmorResistances>
   readonly skillChanges: readonly SkillValue[]
   readonly slotUpgrades: number

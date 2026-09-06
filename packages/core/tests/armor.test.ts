@@ -116,6 +116,48 @@ describe('armor legality', () => {
       .toBe(false)
   })
 
+  it('does not resurrect a skill through an invalid negative intermediate state', () => {
+    const variants = generateArmorVariants(baseArmor(), [{
+      costDelta: -1,
+      defenseDelta: 0,
+      id: 'skill-minus',
+      skillChanges: [skill('6000', -1)],
+      slotUpgrades: 0,
+    }, {
+      costDelta: 1,
+      defenseDelta: 0,
+      id: 'skill-plus',
+      skillChanges: [skill('6000', 1)],
+      slotUpgrades: 0,
+    }])
+
+    expect(variants.some(variant => variant.augmentation?.componentIds?.join('|')
+      === 'skill-minus|skill-plus')).toBe(false)
+  })
+
+  it('drops a same-cost augmentation dominated by a better roll', () => {
+    const variants = generateArmorVariants(baseArmor(), [{
+      costDelta: 2,
+      defenseDelta: 0,
+      id: 'fire-plus-one',
+      resistanceDelta: { fire: 1 },
+      skillChanges: [],
+      slotUpgrades: 0,
+    }, {
+      costDelta: 2,
+      defenseDelta: 0,
+      id: 'fire-plus-two',
+      resistanceDelta: { fire: 2 },
+      skillChanges: [],
+      slotUpgrades: 0,
+    }])
+
+    expect(variants.some(variant => variant.augmentation?.componentIds?.includes('fire-plus-one')))
+      .toBe(false)
+    expect(variants.some(variant => variant.augmentation?.componentIds?.includes('fire-plus-two')))
+      .toBe(true)
+  })
+
   it('applies elemental resistance changes to armor variants', () => {
     const base = {
       ...baseArmor(),
