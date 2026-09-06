@@ -27,11 +27,10 @@ export function solveBuild(
   const useStateMemo = maxSolutions === 1
   const armorBySlot = Object.fromEntries(ARMOR_SLOTS.map(slot => [
     slot,
-    [...workingRequest.armorBySlot[slot]].sort((left, right) => compareArmorCandidates(
-      right,
-      left,
+    orderArmorCandidates(
+      workingRequest.armorBySlot[slot],
       workingRequest.requiredSkills,
-    )),
+    ),
   ])) as unknown as typeof request.armorBySlot
   const orderedTalismans = [...legalTalismans].sort((left, right) => compareTalismanCandidates(
     right,
@@ -207,6 +206,17 @@ function compareArmorCandidates(
     || left.slots.reduce((total, level) => total + level, 0)
     - right.slots.reduce((total, level) => total + level, 0)
     || left.defense - right.defense
+}
+
+function orderArmorCandidates(
+  candidates: readonly ArmorVariant[],
+  requirements: readonly SkillValue[],
+): ArmorVariant[] {
+  return [...candidates].sort((left, right) => compareArmorCandidates(
+    right,
+    left,
+    requirements,
+  ))
 }
 
 function compareTalismanCandidates(
