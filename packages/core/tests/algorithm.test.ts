@@ -103,6 +103,22 @@ describe('build solving', () => {
     expect(solutions[0].defense).toBe(600)
     expect(solutions[1].defense).toBe(500)
   })
+
+  it('does not place a decoration into a smaller slot', () => {
+    const build = request('slot-order', [skill(String(attack), 2)])
+    const requestWithOnlySmallSlots = {
+      ...build,
+      decorations: [{
+        ref: createWikiRef('decoration', '2002'),
+        skills: [skill(String(attack), 1)],
+        slotLevel: 2,
+      }],
+      talismans: [{ ...build.talismans[0], slots: [1, 0, 0] as const }],
+      weapon: { ...build.weapon, slots: [1, 0, 0] as const },
+    }
+
+    expect(solveBuild(requestWithOnlySmallSlots)).toHaveLength(0)
+  })
 })
 
 describe('equipment reuse optimization', () => {
