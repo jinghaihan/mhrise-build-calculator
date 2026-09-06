@@ -142,6 +142,9 @@ function readOfflineWorkbook(book) {
 
       augmentationEntries.push({
         cost,
+        element: augmentationKind(label) === 'resistance'
+          ? augmentationElement(gameId)
+          : undefined,
         gameId,
         kind: augmentationKind(label),
         label,
@@ -231,6 +234,7 @@ function parseArmors(html, families) {
       return []
     const cells = tableCells(row)
     const baseDefense = cells[4]?.match(/<div\b[^>]*>\s*(-?\d+)\s*<\/div>/i)?.[1]
+    const baseResistances = armorResistancesFromCells(cells)
     const slot = inferArmorSlot(link.text)
     if (baseDefense === undefined || !slot)
       return []
@@ -239,6 +243,7 @@ function parseArmors(html, families) {
       armor: {
         baseDefense: Number(baseDefense),
         baseSkills: skillValues(row),
+        baseResistances,
         costBudget: family?.costBudget ?? 0,
         ref: { id: link.id, kind: 'armor', source: 'kiranico' },
         slot,
@@ -341,6 +346,35 @@ function augmentationKind(label) {
   if (label === '孔位+')
     return 'slot'
   return 'resistance'
+}
+
+function augmentationElement(gameId) {
+  if (gameId >= 89 && gameId <= 93)
+    return 'fire'
+  if (gameId >= 99 && gameId <= 103)
+    return 'water'
+  if (gameId >= 109 && gameId <= 113)
+    return 'thunder'
+  if (gameId >= 119 && gameId <= 123)
+    return 'ice'
+  if (gameId >= 129 && gameId <= 133)
+    return 'dragon'
+  return undefined
+}
+
+function armorResistancesFromCells(cells) {
+  const resistances = { fire: 0, water: 0, ice: 0, thunder: 0, dragon: 0 }
+  const elementNames = ['fire', 'water', 'ice', 'thunder', 'dragon']
+  const source = cells.slice(4, 6).join(' ')
+  const pattern = /data-key=["']element["']\s+data-value=["'](\d+)["'][\s\S]*?data-key=["']elementAttack["']\s+data-value=["'](-?\d+)["']/gi
+
+  for (const match of source.matchAll(pattern)) {
+    const element = elementNames[Number(match[1]) - 1]
+    if (element)
+      resistances[element] = Number(match[2])
+  }
+
+  return resistances
 }
 
 function parseSlotOptions(value) {

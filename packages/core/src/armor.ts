@@ -1,7 +1,9 @@
 import type {
   ArmorAugmentation,
   ArmorAugmentComponent,
+  ArmorElement,
   ArmorPiece,
+  ArmorResistances,
   ArmorVariant,
   SkillValue,
 } from './model'
@@ -9,6 +11,39 @@ import { applySkillChanges, countActiveSkills } from './skills'
 import { applySlotUpgrades } from './slots'
 
 export const MAX_ARMOR_SKILLS = 5
+
+export const ARMOR_ELEMENTS: readonly ArmorElement[] = [
+  'fire',
+  'water',
+  'thunder',
+  'ice',
+  'dragon',
+]
+
+const ZERO_ARMOR_RESISTANCES: ArmorResistances = {
+  dragon: 0,
+  fire: 0,
+  ice: 0,
+  thunder: 0,
+  water: 0,
+}
+
+export function addArmorResistances(
+  base: ArmorResistances,
+  delta: Partial<ArmorResistances> = {},
+): ArmorResistances {
+  return {
+    dragon: base.dragon + (delta.dragon ?? 0),
+    fire: base.fire + (delta.fire ?? 0),
+    ice: base.ice + (delta.ice ?? 0),
+    thunder: base.thunder + (delta.thunder ?? 0),
+    water: base.water + (delta.water ?? 0),
+  }
+}
+
+function baseArmorResistances(base: ArmorPiece): ArmorResistances {
+  return base.baseResistances ?? ZERO_ARMOR_RESISTANCES
+}
 
 export interface ArmorVariantGenerationOptions {
   readonly maxComponents?: number
@@ -23,6 +58,7 @@ export function createArmorVariant(
     componentIds: [],
     cost: 0,
     defenseDelta: 0,
+    resistanceDelta: {},
     skillChanges: [],
     slotUpgrades: 0,
   }
@@ -49,19 +85,29 @@ export function createArmorVariant(
   }
 
   const slots = applySlotUpgrades(base.slots, appliedAugmentation.slotUpgrades)
-  const variantId = [
+  const resistances = addArmorResistances(
+    baseArmorResistances(base),
+    appliedAugmentation.resistanceDelta,
+  )
+  const variantParts = [
     base.ref.id,
     ...(appliedAugmentation.componentIds ?? []),
     appliedAugmentation.cost,
     appliedAugmentation.defenseDelta,
     appliedAugmentation.slotUpgrades,
     ...appliedAugmentation.skillChanges.map(skill => `${skill.skillId}:${skill.level}`),
-  ].join('|')
+  ]
+  const resistanceDelta = appliedAugmentation.resistanceDelta ?? {}
+  if (Object.values(resistanceDelta).some(value => value !== 0)) {
+    variantParts.push(JSON.stringify(resistanceDelta))
+  }
+  const variantId = variantParts.join('|')
 
   return {
     augmentation,
     base,
     defense,
+    resistances,
     skills,
     slots,
     variantId,
@@ -95,6 +141,7 @@ export function generateArmorVariants(
     depth: number,
     cost: number,
     defenseDelta: number,
+    resistanceDelta: ArmorResistances,
     skillChanges: readonly SkillValue[],
     slotUpgrades: number,
     componentIds: readonly string[],
@@ -103,6 +150,7 @@ export function generateArmorVariants(
       componentIds,
       cost,
       defenseDelta,
+      resistanceDelta,
       skillChanges,
       slotUpgrades,
     })
@@ -116,6 +164,7 @@ export function generateArmorVariants(
         depth + 1,
         cost + component.costDelta,
         defenseDelta + component.defenseDelta,
+        addArmorResistances(resistanceDelta, component.resistanceDelta),
         [...skillChanges, ...component.skillChanges],
         slotUpgrades + component.slotUpgrades,
         [...componentIds, component.id],
@@ -127,6 +176,6 @@ export function generateArmorVariants(
     }
   }
 
-  search(0, 0, 0, [], 0, [])
+  search(0, 0, 0, ZERO_ARMOR_RESISTANCES, [], 0, [])
   return [...variants.values()]
 }

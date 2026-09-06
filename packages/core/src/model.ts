@@ -3,6 +3,16 @@ import type { SlotLevels } from './slots'
 
 export type ArmorSlot = 'arms' | 'chest' | 'head' | 'legs' | 'waist'
 
+export type ArmorElement = 'fire' | 'ice' | 'dragon' | 'thunder' | 'water'
+
+export interface ArmorResistances {
+  readonly dragon: number
+  readonly fire: number
+  readonly ice: number
+  readonly thunder: number
+  readonly water: number
+}
+
 export const ARMOR_SLOTS: readonly ArmorSlot[] = [
   'head',
   'chest',
@@ -20,6 +30,7 @@ export interface ArmorPiece {
   readonly baseSkills: readonly SkillValue[]
   readonly baseDefense: number
   readonly costBudget: number
+  readonly baseResistances?: ArmorResistances
   readonly ref: WikiRef<'armor'>
   readonly slot: ArmorSlot
   readonly slots: SlotLevels
@@ -29,6 +40,7 @@ export interface ArmorAugmentation {
   readonly componentIds?: readonly string[]
   readonly cost: number
   readonly defenseDelta: number
+  readonly resistanceDelta?: Partial<ArmorResistances>
   readonly skillChanges: readonly SkillValue[]
   readonly slotUpgrades: number
 }
@@ -37,6 +49,7 @@ export interface ArmorAugmentComponent {
   readonly costDelta: number
   readonly defenseDelta: number
   readonly id: string
+  readonly resistanceDelta?: Partial<ArmorResistances>
   readonly skillChanges: readonly SkillValue[]
   readonly slotUpgrades: number
 }
@@ -45,6 +58,7 @@ export interface ArmorVariant {
   readonly augmentation: ArmorAugmentation | undefined
   readonly base: ArmorPiece
   readonly defense: number
+  readonly resistances: ArmorResistances
   readonly skills: readonly SkillValue[]
   readonly slots: SlotLevels
   readonly variantId: string

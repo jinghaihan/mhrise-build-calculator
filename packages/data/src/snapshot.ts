@@ -1,5 +1,6 @@
 import type {
   ArmorAugmentComponent,
+  ArmorElement,
   SlotLevels,
   Talisman,
   WikiId,
@@ -24,6 +25,7 @@ export interface AugmentationEntry {
   readonly label: string
   readonly levels: readonly number[]
   readonly poolId: number
+  readonly element?: ArmorElement
   readonly skillId?: WikiId
   readonly sourceBlock: number
 }
@@ -129,6 +131,9 @@ export function armorComponentsForPool(
       components.push({
         costDelta: entry.cost,
         defenseDelta: entry.kind === 'defense' ? value : 0,
+        resistanceDelta: entry.kind === 'resistance' && entry.element
+          ? { [entry.element]: value }
+          : undefined,
         id: `${poolId}:${entry.gameId}:${level}`,
         skillChanges: [],
         slotUpgrades: entry.kind === 'slot' ? value : 0,

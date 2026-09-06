@@ -1,5 +1,7 @@
 import type {
+  ArmorElement,
   ArmorPiece,
+  ArmorResistances,
   ArmorSlot,
   Decoration,
   SkillValue,
@@ -107,6 +109,7 @@ export function parseKiranicoArmors(
     const cells = tableCells(row)
     const slots = slotLevelsFromCell(cells[3] ?? '')
     const baseDefense = firstDivNumber(cells[4] ?? '')
+    const baseResistances = armorResistancesFromCells(cells)
     const baseSkills = skillValuesFromRow(row)
 
     if (baseDefense === undefined) {
@@ -116,6 +119,7 @@ export function parseKiranicoArmors(
     const armor: ArmorPiece = {
       baseDefense,
       baseSkills,
+      baseResistances,
       costBudget: options.costBudget,
       ref: createWikiRef('armor', armorLink.id),
       slot: options.slot,
@@ -227,6 +231,28 @@ function slotLevelsFromCell(cell: string): [number, number, number] {
 function firstDivNumber(cell: string): number | undefined {
   const match = cell.match(/<div\b[^>]*>\s*(-?\d+)\s*<\/div>/i)
   return match ? Number(match[1]) : undefined
+}
+
+function armorResistancesFromCells(cells: readonly string[]): ArmorResistances {
+  const resistances: Record<ArmorElement, number> = {
+    dragon: 0,
+    fire: 0,
+    ice: 0,
+    thunder: 0,
+    water: 0,
+  }
+  const elementNames = ['fire', 'water', 'ice', 'thunder', 'dragon'] as const
+  const source = cells.slice(4, 6).join(' ')
+  const pattern = /data-key=["']element["']\s+data-value=["'](\d+)["'][\s\S]*?data-key=["']elementAttack["']\s+data-value=["'](-?\d+)["']/gi
+
+  for (const match of source.matchAll(pattern)) {
+    const element = elementNames[Number(match[1]) - 1]
+    if (element) {
+      resistances[element] = Number(match[2])
+    }
+  }
+
+  return resistances
 }
 
 function stripMarkup(value: string): string {

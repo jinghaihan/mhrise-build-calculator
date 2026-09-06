@@ -68,4 +68,32 @@ describe('armor legality', () => {
       [3, 1, 1],
     ])
   })
+
+  it('applies elemental resistance changes to armor variants', () => {
+    const base = {
+      ...baseArmor(),
+      baseResistances: {
+        dragon: -2,
+        fire: 1,
+        ice: 0,
+        thunder: 3,
+        water: -1,
+      },
+    }
+    const variant = createArmorVariant(base, {
+      cost: 2,
+      defenseDelta: 0,
+      resistanceDelta: { fire: -1, water: 2 },
+      skillChanges: [],
+      slotUpgrades: 0,
+    })
+
+    expect(variant.resistances).toEqual({
+      dragon: -2,
+      fire: 0,
+      ice: 0,
+      thunder: 3,
+      water: 1,
+    })
+  })
 })

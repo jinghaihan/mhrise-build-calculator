@@ -31,7 +31,9 @@ const armorsHtml = `
       <td><img src="avatar.webp"></td>
       <td><a href="https://mhrise.kiranico.com/zh/data/armors/456">测试头盔</a></td>
       <td><img src="deco2.png"><img src="deco1.png"></td>
-      <td><div>126</div><div>0</div></td>
+      <td><div>126</div><div><span data-key="element" data-value="1">
+        <span data-key="elementAttack" data-value="-2">-2</span>
+      </span></div></td>
       <td><a href="https://mhrise.kiranico.com/zh/data/skills/366824395">攻击</a> Lv1</td>
     </tr>
   </tbody></table>
@@ -78,6 +80,13 @@ describe('kiranico HTML importers', () => {
       slots: [2, 1, 0],
     })
     expect(record.armor.baseSkills).toEqual([{ level: 1, skillId: '366824395' }])
+    expect(record.armor.baseResistances).toEqual({
+      dragon: 0,
+      fire: -2,
+      ice: 0,
+      thunder: 0,
+      water: 0,
+    })
   })
 
   it('imports weapon slots and skills', () => {
