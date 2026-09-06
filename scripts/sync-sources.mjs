@@ -36,7 +36,7 @@ const [skillsHtml, decorationsHtml, ...pages] = await Promise.all([
 
 const armorPages = pages.slice(0, ARMOR_VIEWS)
 const weaponPages = pages.slice(ARMOR_VIEWS)
-const skills = parseSkills(skillsHtml)
+const skills = await enrichSkillMaximums(parseSkills(skillsHtml))
 const skillByName = new Map(skills.map(record => [record.names.zh, record.ref.id]))
 const families = workbookData.armorFamilies.map(family => ({
   ...family,
@@ -204,6 +204,19 @@ function parseSkills(html) {
       ref: { id: link.id, kind: 'skill', source: 'kiranico' },
     }]
   })
+}
+
+async function enrichSkillMaximums(records) {
+  return Promise.all(records.map(async (record) => {
+    const html = await fetchText(`${KIRANICO_BASE_URL}/zh/data/skills/${record.ref.id}`)
+    const levelsTable = html.match(/<h1\b[\s\S]*?<\/h1>[\s\S]*?<table\b[\s\S]*?<tbody\b[^>]*>([\s\S]*?)<\/tbody>/i)?.[1] ?? ''
+    const levels = [...levelsTable.matchAll(/\bLv\s*(\d+)/gi)].map(match => Number(match[1]))
+
+    return {
+      ...record,
+      maxLevel: Math.max(record.maxLevel, ...levels),
+    }
+  }))
 }
 
 function parseDecorations(html) {

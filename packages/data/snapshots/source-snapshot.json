@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-06T07:55:30.568Z",
+  "generatedAt": "2026-09-06T08:15:03.336Z",
   "source": {
     "kiranico": [
       "https://mhrise.kiranico.com/zh/data/skills",
@@ -57207,7 +57207,7 @@
         }
       },
       {
-        "maxLevel": 2,
+        "maxLevel": 3,
         "names": {
           "zh": "抑制偏移"
         },
@@ -57845,7 +57845,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "气血"
         },
@@ -57856,7 +57856,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "伏魔耗命"
         },
@@ -57867,7 +57867,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "激昂"
         },
@@ -57878,7 +57878,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "业铠【修罗】"
         },
@@ -57889,7 +57889,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "因祸得福"
         },
@@ -57900,7 +57900,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "狂龙症【蚀】"
         },
@@ -57911,7 +57911,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 5,
         "names": {
           "zh": "坚如磐石"
         },
@@ -57922,7 +57922,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "偷袭"
         },
@@ -57933,7 +57933,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "巧击"
         },
@@ -57944,7 +57944,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 2,
         "names": {
           "zh": "合气"
         },
@@ -57966,7 +57966,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "蓄力大师"
         },
@@ -57977,7 +57977,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "攻势"
         },
@@ -57988,7 +57988,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 2,
         "names": {
           "zh": "零件改造"
         },
@@ -57999,7 +57999,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "打磨术【锐】"
         },
@@ -58010,7 +58010,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "刃鳞打磨"
         },
@@ -58043,7 +58043,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "弱点特效【属性】"
         },
@@ -58054,7 +58054,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "连击"
         },
@@ -58065,7 +58065,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "毅力"
         },
@@ -58076,7 +58076,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "状态异常必定累积"
         },
@@ -58087,7 +58087,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 2,
         "names": {
           "zh": "刚心"
         },
@@ -58098,7 +58098,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "累积时攻击强化"
         },
@@ -58109,7 +58109,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "嘲讽防御"
         },
@@ -58120,7 +58120,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "风绕"
         },
@@ -58131,7 +58131,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "粉尘绕"
         },
@@ -58142,7 +58142,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 2,
         "names": {
           "zh": "狂化"
         },
@@ -58153,7 +58153,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "奋斗"
         },
@@ -58164,7 +58164,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "寒气炼成"
         },
@@ -58175,7 +58175,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "龙气转换"
         },
@@ -58186,7 +58186,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "天衣无缝"
         },
@@ -58197,7 +58197,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "狂龙症【翔】"
         },
@@ -58208,7 +58208,7 @@
         }
       },
       {
-        "maxLevel": 1,
+        "maxLevel": 3,
         "names": {
           "zh": "气血觉醒"
         },
