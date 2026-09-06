@@ -130,11 +130,20 @@ function parseSkillLine(
 
   for (const name of matches) {
     const normalizedName = normalizeSkillText(name)
+    const suffix = normalizedLine.slice(normalizedName.length)
     if (!normalizedLine.startsWith(normalizedName)) {
       continue
     }
 
-    const levelMatch = normalizedLine.slice(normalizedName.length).match(/^\s*(\d+)/)
+    const levelAlternativeMatch = suffix.match(/^\s*(\d+)\s*\/\s*(\d+)\s*$/u)
+    if (levelAlternativeMatch) {
+      return [[
+        skillRequirement(catalog, name, Number(levelAlternativeMatch[1]), locale),
+        skillRequirement(catalog, name, Number(levelAlternativeMatch[2]), locale),
+      ]]
+    }
+
+    const levelMatch = suffix.match(/^\s*(\d+)\s*$/u)
 
     if (!levelMatch) {
       if (hasAlternativeSyntax) {

@@ -128,4 +128,27 @@ describe('markdown build input', () => {
       { level: 3, skillId: '7102' },
     ])
   })
+
+  it('keeps alternative levels for the same skill', () => {
+    const catalog = {
+      armors: [],
+      decorations: [],
+      skills: [{
+        maxLevel: 3,
+        names: { zh: '弱点特效【属性】' },
+        ref: createWikiRef('skill', '7200'),
+      }],
+      talismans: [],
+      weapons: [],
+    }
+    const [requirements] = parseMarkdownBuildRequirements(`
+#### 属性会心
+- [x] 弱点特效【属性】3/1
+`, catalog)
+
+    expect(requirements.requiredSkillGroups).toEqual([[
+      { level: 3, skillId: '7200' },
+      { level: 1, skillId: '7200' },
+    ]])
+  })
 })
