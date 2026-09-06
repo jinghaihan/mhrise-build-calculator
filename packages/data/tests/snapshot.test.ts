@@ -2,7 +2,11 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createWikiRef } from '@mhrise-build-tools/core'
 import { describe, expect, it } from 'vitest'
-import { armorComponentsForPool, parseSourceSnapshot } from '../src/snapshot'
+import {
+  armorComponentsForPool,
+  generateTalismanRecords,
+  parseSourceSnapshot,
+} from '../src/snapshot'
 
 describe('source snapshots', () => {
   it('loads the synchronized 16.0.0 source snapshot', () => {
@@ -52,5 +56,45 @@ describe('source snapshots', () => {
       skillChanges: [{ level: 1, skillId: '366824395' }],
       slotUpgrades: 0,
     }])
+  })
+
+  it('generates legal talismans only for requested skills', () => {
+    const attackId = createWikiRef('skill', '366824395').id
+    const snapshot = parseSourceSnapshot({
+      catalog: {
+        armors: [],
+        decorations: [],
+        skills: [],
+        talismans: [],
+        weapons: [],
+      },
+      generatedAt: '',
+      rules: {
+        armorFamilies: [],
+        augmentationEntries: [],
+        skillCosts: [],
+        talismanRules: [{
+          firstSkillMax: 2,
+          firstSkillMaxRing: 1,
+          gameId: 1,
+          maxLevel: 7,
+          name: '攻击',
+          rank: 'A',
+          secondSkillMax: 2,
+          secondSkillMaxRing: 1,
+          skillId: attackId,
+          slotOptions: [[4, 1, 1]],
+        }],
+      },
+      source: { kiranico: [], workbook: '' },
+    })
+
+    const [record] = generateTalismanRecords(snapshot, {
+      skillIds: [attackId],
+    })
+
+    expect(record.names.zh).toBe('攻击1 (霸气)')
+    expect(record.talisman.slots).toEqual([4, 1, 1])
+    expect(record.talisman.skills).toEqual([{ level: 1, skillId: '366824395' }])
   })
 })

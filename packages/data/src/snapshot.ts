@@ -1,5 +1,11 @@
-import type { ArmorAugmentComponent, WikiId } from '@mhrise-build-tools/core'
-import type { DataCatalog, KiranicoArmorRecord } from './catalog'
+import type {
+  ArmorAugmentComponent,
+  SlotLevels,
+  Talisman,
+  WikiId,
+} from '@mhrise-build-tools/core'
+import type { DataCatalog, KiranicoArmorRecord, KiranicoTalismanRecord } from './catalog'
+import { createLocalRef } from '@mhrise-build-tools/core'
 import { createDataCatalog } from './catalog'
 
 export type AugmentationKind = 'defense' | 'resistance' | 'skill' | 'slot'
@@ -40,8 +46,14 @@ export interface TalismanRule {
   readonly secondSkillMax: number
   readonly secondSkillMaxRing: number
   readonly skillId?: WikiId
-  readonly slotOptions: readonly (readonly number[])[]
+  readonly slotOptions: readonly SlotLevels[]
   readonly weight?: number
+}
+
+export interface TalismanGenerationOptions {
+  readonly maxCandidates?: number
+  readonly skillIds: readonly WikiId[]
+  readonly variants?: readonly ('霸气' | '圆环')[]
 }
 
 export interface SourceRules {
@@ -132,6 +144,102 @@ export function findArmorFamily(
   snapshot: SourceSnapshot,
 ): ArmorFamilyRule | undefined {
   return snapshot.rules.armorFamilies.find(family => family.id === record.armorFamilyId)
+}
+
+export function generateTalismanRecords(
+  snapshot: SourceSnapshot,
+  options: TalismanGenerationOptions,
+): KiranicoTalismanRecord[] {
+  const maxCandidates = options.maxCandidates ?? 50_000
+  const requestedSkillIds = new Set(options.skillIds)
+  const variants = options.variants ?? ['霸气', '圆环']
+  const rules = snapshot.rules.talismanRules.filter(rule => rule.skillId
+    && requestedSkillIds.has(rule.skillId))
+  const records: KiranicoTalismanRecord[] = []
+
+  for (const variant of variants) {
+    const firstMax = variant === '霸气' ? 'firstSkillMax' : 'firstSkillMaxRing'
+    const secondMax = variant === '霸气' ? 'secondSkillMax' : 'secondSkillMaxRing'
+
+    for (const first of rules) {
+      if (!first.skillId) {
+        continue
+      }
+
+      for (let firstLevel = 1; firstLevel <= first[firstMax]; firstLevel += 1) {
+        addTalisman(first, firstLevel, undefined, 0, first[secondMax], variant)
+
+        for (const second of rules) {
+          if (!second.skillId || second.skillId === first.skillId) {
+            continue
+          }
+
+          for (let secondLevel = 1; secondLevel <= second[secondMax]; secondLevel += 1) {
+            addTalisman(first, firstLevel, second, secondLevel, second[secondMax], variant)
+          }
+        }
+      }
+    }
+  }
+
+  return records
+
+  function addTalisman(
+    first: TalismanRule,
+    firstLevel: number,
+    second: TalismanRule | undefined,
+    secondLevel: number,
+    secondSkillMaximum: number,
+    variant: '霸气' | '圆环',
+  ): void {
+    if (records.length >= maxCandidates || !first.skillId) {
+      return
+    }
+
+    const skills = [{ level: firstLevel, skillId: first.skillId }]
+
+    if (second?.skillId && secondLevel > 0 && secondLevel <= secondSkillMaximum) {
+      skills.push({ level: secondLevel, skillId: second.skillId })
+    }
+
+    const slotOptions: readonly SlotLevels[] = first.slotOptions.length > 0
+      ? first.slotOptions
+      : [[0, 0, 0]]
+
+    for (const slots of slotOptions) {
+      if (records.length >= maxCandidates) {
+        return
+      }
+
+      const id = [
+        variant,
+        first.gameId,
+        firstLevel,
+        second?.gameId ?? 'none',
+        secondLevel,
+        slots.join(''),
+      ].join(':')
+      const ref = createLocalRef('talisman', id)
+      const talisman: Talisman = {
+        allowedSlots: [slots],
+        maxSkillCount: skills.length,
+        maxSkills: skills,
+        ref,
+        skills,
+        slots,
+      }
+
+      records.push({
+        names: {
+          zh: second
+            ? `${first.name}${firstLevel} + ${second.name}${secondLevel} (${variant})`
+            : `${first.name}${firstLevel} (${variant})`,
+        },
+        ref,
+        talisman,
+      })
+    }
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
