@@ -141,7 +141,23 @@ export function armorComponentsForPool(
     }
   }
 
-  return components
+  return components.sort((left, right) => componentPriority(left) - componentPriority(right))
+}
+
+function componentPriority(component: ArmorAugmentComponent): number {
+  if (component.skillChanges.length > 0) {
+    return 0
+  }
+
+  if (component.slotUpgrades > 0) {
+    return 1
+  }
+
+  if (component.resistanceDelta && Object.values(component.resistanceDelta).some(value => value !== 0)) {
+    return 2
+  }
+
+  return 3
 }
 
 export function findArmorFamily(

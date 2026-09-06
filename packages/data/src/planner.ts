@@ -131,7 +131,7 @@ function withGeneratedArmorComponents(
   )
   const records = selectedIds.size > 0
     ? snapshot.catalog.armors.filter(record => selectedIds.has(record.ref.id))
-    : snapshot.catalog.armors
+    : snapshot.catalog.armors.filter(record => record.armorFamilyId)
 
   for (const record of records) {
     if (armorComponentsById[record.ref.id]) {
@@ -151,6 +151,10 @@ function withGeneratedArmorComponents(
   return {
     ...definition,
     armorComponentsById,
+    armorIdsBySlot: definition.armorIdsBySlot ?? Object.fromEntries(ARMOR_SLOTS.map(slot => [
+      slot,
+      records.filter(record => record.armor.slot === slot).map(record => record.ref.id),
+    ])),
     armorVariantOptions: options.armorVariantOptions ?? definition.armorVariantOptions,
   }
 }

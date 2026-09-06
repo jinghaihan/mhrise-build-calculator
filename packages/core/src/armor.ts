@@ -263,6 +263,6 @@ function resistanceReductionValue(
     }
 
     const target = current[element]
-    return score + (-delta) * Math.max(target + 1, 0)
+    return score + (-delta) * Math.max(target, 0)
   }, 0)
 }

@@ -48,7 +48,7 @@ export function findDecorationPlacements(
           && getCurrentSkillLevel(currentSkills, skill.skillId) < requirement.level,
       ),
     ),
-  )
+  ).sort((left, right) => right.slotLevel - left.slotLevel)
   const remainingMaximums = createRemainingMaximums(
     availableSlots,
     usefulDecorations,
