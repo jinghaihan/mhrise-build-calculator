@@ -44,7 +44,7 @@ describe('markdown build input', () => {
     const catalog = {
       armors: [],
       decorations: [],
-      skills: ['火', '水', '雷'].map((element, index) => ({
+      skills: ['火', '水', '雷', '冰', '龙'].map((element, index) => ({
         maxLevel: 5,
         names: { zh: `${element}属性攻击强化` },
         ref: createWikiRef('skill', String(6000 + index)),
@@ -59,12 +59,14 @@ describe('markdown build input', () => {
     const definitions = expandMarkdownBuildRequirements(requirements, { weaponId: 'weapon' })
 
     expect(requirements.requiredSkills).toEqual([])
-    expect(requirements.requiredSkillGroups[0]).toHaveLength(3)
-    expect(definitions).toHaveLength(3)
+    expect(requirements.requiredSkillGroups[0]).toHaveLength(5)
+    expect(definitions).toHaveLength(5)
     expect(definitions.map(definition => definition.requiredSkills[0].skillId)).toEqual([
       '6000',
       '6001',
       '6002',
+      '6003',
+      '6004',
     ])
   })
 })
