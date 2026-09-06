@@ -135,6 +135,7 @@ export function generateArmorVariants(
   const maxVariants = options.maxVariants ?? Number.POSITIVE_INFINITY
   const resistanceStrategy = options.resistanceStrategy ?? 'balanced'
   const variants = new Map<string, ArmorVariant>()
+  const visitedStates = new Set<string>()
 
   function addVariant(augmentation: ArmorAugmentation): void {
     if (augmentation.cost < 0 || augmentation.cost > base.costBudget) {
@@ -159,6 +160,23 @@ export function generateArmorVariants(
     slotUpgrades: number,
     componentIds: readonly string[],
   ): void {
+    const stateKey = [
+      depth,
+      cost,
+      defenseDelta,
+      resistanceDelta.dragon,
+      resistanceDelta.fire,
+      resistanceDelta.ice,
+      resistanceDelta.thunder,
+      resistanceDelta.water,
+      skillKey(skillChanges),
+      slotUpgrades,
+    ].join('|')
+    if (visitedStates.has(stateKey)) {
+      return
+    }
+    visitedStates.add(stateKey)
+
     addVariant({
       componentIds,
       cost,
@@ -199,6 +217,13 @@ export function generateArmorVariants(
 
   search(0, 0, 0, ZERO_ARMOR_RESISTANCES, [], 0, [])
   return [...variants.values()]
+}
+
+function skillKey(skills: readonly SkillValue[]): string {
+  return [...skills]
+    .sort((left, right) => String(left.skillId).localeCompare(String(right.skillId)))
+    .map(skill => `${skill.skillId}:${skill.level}`)
+    .join(',')
 }
 
 function compareResistancePriority(
