@@ -1,4 +1,5 @@
 import type {
+  ArmorVariantGenerationOptions,
   BuildRequest,
   BuildSolution,
   ReusePlan,
@@ -13,9 +14,11 @@ import {
   solveBuild,
 } from '@mhrise-build-tools/core'
 import { createBuildRequest } from './catalog'
-import { generateTalismanRecords } from './snapshot'
+import { armorComponentsForPool, findArmorFamily, generateTalismanRecords } from './snapshot'
 
 export interface SnapshotPlanOptions {
+  readonly armorVariantOptions?: ArmorVariantGenerationOptions
+  readonly generateArmorVariants?: boolean
   readonly maxSolutions?: number
   readonly maxTalismanCandidates?: number
   readonly pruneDominatedArmor?: boolean
@@ -48,7 +51,10 @@ export function createSnapshotBuildRequest(
   const skillIds = options.talismanSkillIds
     ?? definition.requiredSkills.map(requirement => requirement.skillId)
   const catalog = createSnapshotCatalog(snapshot, skillIds, options.maxTalismanCandidates)
-  const request = createBuildRequest(catalog, definition)
+  const request = createBuildRequest(
+    catalog,
+    withGeneratedArmorComponents(snapshot, definition, skillIds, options),
+  )
 
   if (options.pruneDominatedArmor === false) {
     return request
@@ -106,5 +112,45 @@ function toBuildDefinition(query: SnapshotBuildQuery): BuildDefinition {
   return {
     ...query,
     id: query.id ?? `weapon-${query.weaponId}`,
+  }
+}
+
+function withGeneratedArmorComponents(
+  snapshot: SourceSnapshot,
+  definition: BuildDefinition,
+  skillIds: readonly WikiId[],
+  options: Omit<SnapshotPlanOptions, 'maxSolutions'>,
+): BuildDefinition {
+  if (!options.generateArmorVariants) {
+    return definition
+  }
+
+  const armorComponentsById = { ...definition.armorComponentsById }
+  const selectedIds = new Set(
+    Object.values(definition.armorIdsBySlot ?? {}).flatMap(ids => ids ?? []),
+  )
+  const records = selectedIds.size > 0
+    ? snapshot.catalog.armors.filter(record => selectedIds.has(record.ref.id))
+    : snapshot.catalog.armors
+
+  for (const record of records) {
+    if (armorComponentsById[record.ref.id]) {
+      continue
+    }
+
+    const family = findArmorFamily(record, snapshot)
+    if (family) {
+      armorComponentsById[record.ref.id] = armorComponentsForPool(
+        snapshot,
+        family.poolId,
+        skillIds,
+      )
+    }
+  }
+
+  return {
+    ...definition,
+    armorComponentsById,
+    armorVariantOptions: options.armorVariantOptions ?? definition.armorVariantOptions,
   }
 }

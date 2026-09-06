@@ -2,7 +2,11 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { collectAvailableSlots, createArmorVariant, createWikiRef } from '@mhrise-build-tools/core'
 import { describe, expect, it } from 'vitest'
-import { createSnapshotCatalog, searchSnapshotBuild } from '../src/planner'
+import {
+  createSnapshotBuildRequest,
+  createSnapshotCatalog,
+  searchSnapshotBuild,
+} from '../src/planner'
 import {
   armorComponentsForPool,
   generateTalismanRecords,
@@ -88,6 +92,33 @@ describe('source snapshots', () => {
     expect(solutions).toHaveLength(1)
     expect(solutions[0].weapon.ref.id).toBe(weapon.ref.id)
     expect(solutions[0].skills).toContainEqual({ level: 1, skillId: attackId })
+  })
+
+  it('can generate Qurious Crafting variants for selected armor records', () => {
+    const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const attackId = snapshot.catalog.skills.find(skill => skill.names.zh === '攻击')!.ref.id
+    const weapon = snapshot.catalog.weapons.find(record => record.weapon.slots.some(Boolean))!
+    const armorIdsBySlot = Object.fromEntries(
+      ['head', 'chest', 'arms', 'waist', 'legs'].map(slot => [
+        slot,
+        [snapshot.catalog.armors.find(record => record.armor.slot === slot
+          && record.armorFamilyId)!.ref.id],
+      ]),
+    )
+    const request = createSnapshotBuildRequest(snapshot, {
+      armorIdsBySlot,
+      id: 'augmented-build',
+      requiredSkills: [{ level: 1, skillId: attackId }],
+      weaponId: weapon.ref.id,
+    }, {
+      armorVariantOptions: { maxComponents: 1, maxVariants: 20 },
+      generateArmorVariants: true,
+      maxTalismanCandidates: 100,
+      pruneDominatedArmor: false,
+    })
+
+    expect(Object.values(request.armorBySlot).some(variants => variants.length > 1)).toBe(true)
   })
 
   it('loads catalogs and expands generic skill augmentation rules', () => {
