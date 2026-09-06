@@ -11,9 +11,9 @@
     "deps": "taze major -I",
     "lint": "eslint .",
     "prepare": "simple-git-hooks",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "test": "pnpm --recursive --if-present test",
+    "test:run": "pnpm --recursive --if-present test:run",
+    "typecheck": "pnpm --recursive --if-present typecheck"
   },
   "devDependencies": {
     "vite": "catalog:build",
