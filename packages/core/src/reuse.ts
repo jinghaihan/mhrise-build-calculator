@@ -40,8 +40,8 @@ export function optimizeEquipmentReuse(
     talismanKeys: Set<string>,
   ): void {
     if (requestIndex >= candidates.length) {
-      const score = {
-        ...createScore(armorKeys, talismanKeys, requests.length),
+      const score: ReuseScore = {
+        ...createBaseScore(armorKeys, talismanKeys, requests.length),
         totalDefense: selected.reduce((total, solution) => total + solution.defense, 0),
       }
       const plan = createPlan(selected, score)
@@ -56,7 +56,7 @@ export function optimizeEquipmentReuse(
     for (const solution of candidates[requestIndex]) {
       const nextArmorKeys = new Set(armorKeys)
       addArmorKeys(nextArmorKeys, solution.armor)
-      const nextTalismanKeys = new Set(talismanKeys).add(String(solution.talisman.ref.id))
+      const nextTalismanKeys = new Set(talismanKeys).add(solution.talisman.ref.id)
 
       if (best && nextArmorKeys.size > best.score.uniqueArmorPieces) {
         continue
@@ -106,14 +106,13 @@ function createPlan(solutions: readonly BuildSolution[], score: ReuseScore): Reu
   }
 }
 
-function createScore(
+function createBaseScore(
   uniqueArmorPieces: Set<string>,
   uniqueTalismans: Set<string>,
   buildCount: number,
-): ReuseScore {
+): Omit<ReuseScore, 'totalDefense'> {
   return {
     armorReuseCount: buildCount * 5 - uniqueArmorPieces.size,
-    totalDefense: 0,
     uniqueArmorPieces: uniqueArmorPieces.size,
     uniqueTalismans: uniqueTalismans.size,
   }
