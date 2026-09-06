@@ -1,0 +1,18 @@
+packages: []
+
+catalogs:
+  build:
+    vite: ^8.2.2
+  dev:
+    pncat: ^0.13.3
+    simple-git-hooks: ^2.14.0
+    taze: ^21.1.0
+    typescript: ^6.0.3
+  lint:
+    '@octohash/eslint-config': ^0.6.1
+    eslint: ^10.10.0
+    lint-staged: ^17.5.0
+  test:
+    vitest: ^5.0.0
+  types:
+    '@types/node': ^24.10.1

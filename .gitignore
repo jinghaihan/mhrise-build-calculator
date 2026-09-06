@@ -1,0 +1,19 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+coverage
+
+# Local files
+*.local
+.DS_Store
+
+# Logs
+*.log
+pnpm-debug.log*
+
+# Editors
+.idea
+.vscode
+

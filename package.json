@@ -1,0 +1,36 @@
+{
+  "name": "mhrise-build-tools",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "description": "Core build-planning and equipment-reuse optimizer for Monster Hunter Rise: Sunbreak",
+  "author": "jinghaihan",
+  "license": "MIT",
+  "scripts": {
+    "deps": "taze major -I",
+    "lint": "eslint .",
+    "prepare": "simple-git-hooks",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "vite": "catalog:build",
+    "pncat": "catalog:dev",
+    "simple-git-hooks": "catalog:dev",
+    "taze": "catalog:dev",
+    "typescript": "catalog:dev",
+    "@octohash/eslint-config": "catalog:lint",
+    "eslint": "catalog:lint",
+    "lint-staged": "catalog:lint",
+    "vitest": "catalog:test",
+    "@types/node": "catalog:types"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  }
+}
