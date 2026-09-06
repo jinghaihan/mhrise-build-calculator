@@ -122,6 +122,20 @@ describe('source snapshots', () => {
     expect(Object.values(request.armorBySlot).some(variants => variants.length > 1)).toBe(true)
   })
 
+  it('excludes non-master armor from generated Qurious Crafting searches', () => {
+    const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const nonMaster = snapshot.catalog.armors.find(record => !record.armorFamilyId)!
+    expect(() => createSnapshotBuildRequest(snapshot, {
+      armorIdsBySlot: { [nonMaster.armor.slot]: [nonMaster.ref.id] },
+      id: 'master-rank-only',
+      requiredSkills: [],
+      weaponId: snapshot.catalog.weapons[0].ref.id,
+    }, { generateArmorVariants: true })).toThrow(
+      `No armor data found for ${nonMaster.armor.slot} in build master-rank-only`,
+    )
+  })
+
   it('loads catalogs and expands generic skill augmentation rules', () => {
     const snapshot = parseSourceSnapshot({
       catalog: {

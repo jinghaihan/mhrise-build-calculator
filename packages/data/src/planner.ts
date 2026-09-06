@@ -129,9 +129,10 @@ function withGeneratedArmorComponents(
   const selectedIds = new Set(
     Object.values(definition.armorIdsBySlot ?? {}).flatMap(ids => ids ?? []),
   )
-  const records = selectedIds.size > 0
+  const requestedRecords = selectedIds.size > 0
     ? snapshot.catalog.armors.filter(record => selectedIds.has(record.ref.id))
-    : snapshot.catalog.armors.filter(record => record.armorFamilyId)
+    : snapshot.catalog.armors
+  const records = requestedRecords.filter(record => record.armorFamilyId)
 
   for (const record of records) {
     if (armorComponentsById[record.ref.id]) {
@@ -151,10 +152,15 @@ function withGeneratedArmorComponents(
   return {
     ...definition,
     armorComponentsById,
-    armorIdsBySlot: definition.armorIdsBySlot ?? Object.fromEntries(ARMOR_SLOTS.map(slot => [
-      slot,
-      records.filter(record => record.armor.slot === slot).map(record => record.ref.id),
-    ])),
+    armorIdsBySlot: Object.fromEntries(ARMOR_SLOTS.map((slot) => {
+      const requested = definition.armorIdsBySlot?.[slot]
+      const eligible = new Set<string>(records
+        .filter(record => record.armor.slot === slot)
+        .map(record => record.ref.id))
+      return [slot, requested
+        ? requested.filter(id => eligible.has(id))
+        : [...eligible]]
+    })),
     armorVariantOptions: options.armorVariantOptions ?? definition.armorVariantOptions,
   }
 }
