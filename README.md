@@ -2,7 +2,7 @@
 
 Build planner and equipment-reuse optimizer for Monster Hunter Rise: Sunbreak.
 
-The planner combines weapons, armor, decorations, talismans, and Qurious Crafting variants. Results are ranked by the fewest unique armor pieces first, then by total defense.
+Start a search by selecting a weapon and the required skills. The planner then combines that weapon's skills and decoration slots with armor, talismans, decorations, and Qurious Crafting variants. Results prioritize equipment reuse, then total defense; weapon slots are available for decorations too.
 
 > [!WARNING]
 > Data and rules are based on Monster Hunter Rise: Sunbreak version 16.0.0. Back up your build notes before using generated results.
@@ -11,7 +11,7 @@ The planner combines weapons, armor, decorations, talismans, and Qurious Craftin
 
 The repository includes a synchronized source snapshot with Kiranico Wiki IDs and the offline rule workbook used for Qurious Crafting and talisman legality. See [the source data guide](docs/source-data.md) for refreshing it.
 
-Skill and equipment names are localized at the data boundary; algorithms use stable Wiki IDs internally.
+Skill and equipment names are localized at the data boundary; algorithms use stable Wiki IDs internally. `属性攻击强化5` represents five separate searches, one each for Fire, Water, Thunder, Ice, and Dragon Attack Up 5.
 
 ## Packages
 

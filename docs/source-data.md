@@ -2,7 +2,7 @@
 
 The checked-in snapshot is generated from two sources:
 
-- Kiranico provides localized names, Wiki IDs, base armor defense, armor slots, weapon slots, weapon skills, and decorations.
+- Kiranico provides localized names, Wiki IDs, base armor defense and resistances, armor slots, weapon slots and skills, and decorations.
 - `dtlnor rise sunbreak乱七八糟数据合集.xlsx` provides armor-series Cost budgets, Qurious Crafting entries, skill costs, and talisman rules.
 
 Refresh the snapshot with:
@@ -22,6 +22,6 @@ The workbook sheets used by the importer are:
 | `技能` | game skill IDs, names, and skill cost tiers |
 | `护石` | talisman skill limits, slot combinations, weights, and rates |
 
-Use `parseSourceSnapshot` to load the JSON and `generateTalismanRecords` to expand legal talismans only for the skills in a target. `armorComponentsForPool` expands the generic skill/defense/slot entries for a selected Qurious Crafting pool.
+Use `parseSourceSnapshot` to load the JSON and `searchSnapshotBuild` to search from a selected weapon and required skill IDs. `generateTalismanRecords` expands legal talismans only for the skills in a target. `armorComponentsForPool` expands the generic skill/defense/resistance/slot entries for a selected Qurious Crafting pool.
 
 Armor, weapon, and decoration records retain Kiranico numeric IDs. Local talisman candidates use `local:` IDs because talismans are generated states rather than Kiranico equipment records.
