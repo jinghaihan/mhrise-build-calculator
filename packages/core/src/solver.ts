@@ -16,14 +16,19 @@ export function solveBuild(
   const maxSolutions = options.maxSolutions ?? Number.POSITIVE_INFINITY
   const solutions: BuildSolution[] = []
   const selectedArmor: Partial<Record<ArmorSlot, ArmorVariant>> = {}
-  const legalTalismans = request.talismans.filter(isTalismanLegal)
-  const bounds = createSearchBounds(request, legalTalismans)
+  const workingRequest = {
+    ...request,
+    decorations: dedupeDecorations(request.decorations),
+    talismans: dedupeTalismans(request.talismans.filter(isTalismanLegal)),
+  }
+  const legalTalismans = workingRequest.talismans
+  const bounds = createSearchBounds(workingRequest, legalTalismans)
   const armorBySlot = Object.fromEntries(ARMOR_SLOTS.map(slot => [
     slot,
-    [...request.armorBySlot[slot]].sort((left, right) => compareArmorCandidates(
+    [...workingRequest.armorBySlot[slot]].sort((left, right) => compareArmorCandidates(
       right,
       left,
-      request.requiredSkills,
+      workingRequest.requiredSkills,
     )),
   ])) as unknown as typeof request.armorBySlot
   const orderedTalismans = [...legalTalismans].sort((left, right) => compareTalismanCandidates(
@@ -37,7 +42,7 @@ export function solveBuild(
       return
     }
 
-    if (!canReachRequirements(request, bounds, slotIndex, skills)) {
+    if (!canReachRequirements(workingRequest, bounds, slotIndex, skills)) {
       return
     }
 
@@ -65,23 +70,23 @@ export function solveBuild(
         return
       }
 
-      const totalSkills = addSkillValues(skills, request.weapon.skills, talisman.skills)
+      const totalSkills = addSkillValues(skills, workingRequest.weapon.skills, talisman.skills)
       const slots = collectAvailableSlots(request.weapon, armor, talisman)
 
       if (!canReachWithDecorations(
         totalSkills,
         slots,
-        request.decorations,
-        request.requiredSkills,
+        workingRequest.decorations,
+        workingRequest.requiredSkills,
       )) {
         continue
       }
 
       const placements = findDecorationPlacements(
         slots,
-        request.decorations,
+        workingRequest.decorations,
         totalSkills,
-        request.requiredSkills,
+        workingRequest.requiredSkills,
         maxSolutions - solutions.length,
       )
 
@@ -91,7 +96,7 @@ export function solveBuild(
           totalSkills,
         )
 
-        if (!meetsSkillRequirements(finalSkills, request.requiredSkills)) {
+        if (!meetsSkillRequirements(finalSkills, workingRequest.requiredSkills)) {
           continue
         }
 
@@ -99,10 +104,10 @@ export function solveBuild(
           armor,
           decorations,
           defense: getTotalArmorDefense(armor),
-          id: request.id,
+          id: workingRequest.id,
           skills: finalSkills,
           talisman,
-          weapon: request.weapon,
+          weapon: workingRequest.weapon,
         })
       }
     }
@@ -111,6 +116,31 @@ export function solveBuild(
   searchArmor(0, [])
   return solutions.sort((left, right) => right.defense - left.defense
     || left.decorations.length - right.decorations.length)
+}
+
+function dedupeDecorations(
+  decorations: readonly BuildRequest['decorations'][number][],
+): BuildRequest['decorations'] {
+  return [...new Map(decorations.map(decoration => [
+    `${decoration.slotLevel}|${skillKey(decoration.skills)}`,
+    decoration,
+  ])).values()]
+}
+
+function dedupeTalismans(
+  talismans: readonly BuildRequest['talismans'][number][],
+): BuildRequest['talismans'] {
+  return [...new Map(talismans.map(talisman => [
+    `${talisman.slots.join(',')}|${skillKey(talisman.skills)}`,
+    talisman,
+  ])).values()]
+}
+
+function skillKey(skills: readonly SkillValue[]): string {
+  return [...skills]
+    .sort((left, right) => String(left.skillId).localeCompare(String(right.skillId)))
+    .map(skill => `${skill.skillId}:${skill.level}`)
+    .join(',')
 }
 
 function canReachWithDecorations(
