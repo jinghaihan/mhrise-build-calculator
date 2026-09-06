@@ -51,6 +51,7 @@ export interface Decoration {
 }
 
 export interface Talisman {
+  readonly allowedSlots: readonly SlotLevels[] | undefined
   readonly maxSkills: readonly SkillValue[] | undefined
   readonly ref: WikiRef<'talisman'>
   readonly skills: readonly SkillValue[]
