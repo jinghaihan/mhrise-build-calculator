@@ -25,7 +25,10 @@ export function optimizeEquipmentReuse(
     return undefined
   }
 
-  const candidates = requests.map(request => solveBuild(request, options))
+  const candidates = requests.map(request => solveBuild(request, {
+    ...options,
+    preserveEquipmentIdentity: true,
+  }))
 
   if (candidates.some(solutions => solutions.length === 0)) {
     return undefined

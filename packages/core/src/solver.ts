@@ -7,24 +7,33 @@ import { isTalismanLegal } from './talismans'
 
 export interface SolveOptions {
   readonly maxSolutions?: number
+  /** Keep equivalent talismans and partial armor identities for reuse planning. */
+  readonly preserveEquipmentIdentity?: boolean
 }
+
+const DEFAULT_MAX_SOLUTIONS = 200
 
 export function solveBuild(
   request: BuildRequest,
   options: SolveOptions = {},
 ): BuildSolution[] {
-  const maxSolutions = options.maxSolutions ?? Number.POSITIVE_INFINITY
+  const maxSolutions = options.maxSolutions ?? DEFAULT_MAX_SOLUTIONS
   const solutions: BuildSolution[] = []
   const selectedArmor: Partial<Record<ArmorSlot, ArmorVariant>> = {}
+  const preserveEquipmentIdentity = options.preserveEquipmentIdentity ?? false
   const workingRequest = {
     ...request,
-    decorations: dedupeDecorations(request.decorations),
-    talismans: dedupeTalismans(request.talismans.filter(isTalismanLegal)),
+    decorations: preserveEquipmentIdentity
+      ? request.decorations
+      : dedupeDecorations(request.decorations),
+    talismans: preserveEquipmentIdentity
+      ? request.talismans.filter(isTalismanLegal)
+      : dedupeTalismans(request.talismans.filter(isTalismanLegal)),
   }
   const legalTalismans = workingRequest.talismans
   const bounds = createSearchBounds(workingRequest, legalTalismans)
   const exploredArmorStates = new Map<string, number>()
-  const useStateMemo = maxSolutions === 1
+  const useStateMemo = maxSolutions === 1 && !preserveEquipmentIdentity
   const armorBySlot = Object.fromEntries(ARMOR_SLOTS.map(slot => [
     slot,
     orderArmorCandidates(
@@ -32,6 +41,7 @@ export function solveBuild(
       workingRequest.requiredSkills,
     ),
   ])) as unknown as typeof request.armorBySlot
+  const maximumRemainingDefense = createMaximumRemainingDefense(armorBySlot)
   const orderedTalismans = [...legalTalismans].sort((left, right) => compareTalismanCandidates(
     right,
     left,
@@ -39,7 +49,7 @@ export function solveBuild(
   ))
 
   function searchArmor(slotIndex: number, skills: readonly SkillValue[]): void {
-    if (solutions.length >= maxSolutions) {
+    if (cannotImproveResults(slotIndex)) {
       return
     }
 
@@ -111,7 +121,7 @@ export function solveBuild(
           continue
         }
 
-        solutions.push({
+        addSolution({
           armor,
           decorations,
           defense: getTotalArmorDefense(armor),
@@ -124,9 +134,48 @@ export function solveBuild(
     }
   }
 
+  function cannotImproveResults(slotIndex: number): boolean {
+    if (solutions.length < maxSolutions) {
+      return false
+    }
+
+    const partialDefense = getPartialArmorDefense(selectedArmor)
+    const maximumDefense = partialDefense + (maximumRemainingDefense[slotIndex] ?? 0)
+    const lowestStoredDefense = solutions[solutions.length - 1]?.defense ?? Number.NEGATIVE_INFINITY
+    return maximumDefense < lowestStoredDefense
+  }
+
+  function addSolution(solution: BuildSolution): void {
+    solutions.push(solution)
+    solutions.sort(compareSolutions)
+
+    if (solutions.length > maxSolutions) {
+      solutions.pop()
+    }
+  }
+
   searchArmor(0, [])
-  return solutions.sort((left, right) => right.defense - left.defense
-    || left.decorations.length - right.decorations.length)
+  return solutions
+}
+
+function compareSolutions(left: BuildSolution, right: BuildSolution): number {
+  return right.defense - left.defense
+    || left.decorations.length - right.decorations.length
+    || left.talisman.ref.id.localeCompare(right.talisman.ref.id)
+}
+
+function createMaximumRemainingDefense(
+  armorBySlot: Readonly<Record<ArmorSlot, readonly ArmorVariant[]>>,
+): readonly number[] {
+  const maximums: number[] = Array.from({ length: ARMOR_SLOTS.length + 1 }).fill(0) as number[]
+
+  for (let index = ARMOR_SLOTS.length - 1; index >= 0; index -= 1) {
+    const slot = ARMOR_SLOTS[index]
+    const maximum = Math.max(0, ...(armorBySlot[slot]?.map(armor => armor.defense) ?? []))
+    maximums[index] = maximum + maximums[index + 1]
+  }
+
+  return maximums
 }
 
 function dedupeDecorations(
