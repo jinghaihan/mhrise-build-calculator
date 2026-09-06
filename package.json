@@ -9,6 +9,7 @@
   "license": "MIT",
   "scripts": {
     "deps": "taze major -I",
+    "knip": "knip",
     "lint": "eslint .",
     "prepare": "simple-git-hooks",
     "sources:sync": "node scripts/sync-sources.mjs",
@@ -18,6 +19,7 @@
   },
   "devDependencies": {
     "vite": "catalog:build",
+    "knip": "catalog:dev",
     "pncat": "catalog:dev",
     "simple-git-hooks": "catalog:dev",
     "taze": "catalog:dev",

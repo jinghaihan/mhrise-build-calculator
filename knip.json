@@ -1,0 +1,8 @@
+{
+  "ignoreDependencies": [
+    "pncat"
+  ],
+  "ignoreFiles": [
+    "pncat.config.ts"
+  ]
+}
