@@ -192,6 +192,10 @@ function createArmorStates(
       left,
       right,
     ))
+
+    if (!preserveEquipmentIdentity && maxSolutions === 1) {
+      states = pruneDominatedArmorStates(states)
+    }
   }
 
   return states
@@ -204,6 +208,49 @@ function compareArmorStates(
   return getArmorStateDefense(right.armor) - getArmorStateDefense(left.armor)
     || requiredSkillScore(right.requiredLevels) - requiredSkillScore(left.requiredLevels)
     || slotCountScore(right.slotCounts) - slotCountScore(left.slotCounts)
+}
+
+function pruneDominatedArmorStates(states: readonly ArmorSearchState[]): ArmorSearchState[] {
+  const frontier: ArmorSearchState[] = []
+
+  for (const state of states) {
+    if (frontier.some(candidate => dominatesArmorState(candidate, state))) {
+      continue
+    }
+
+    for (let index = frontier.length - 1; index >= 0; index -= 1) {
+      if (dominatesArmorState(state, frontier[index])) {
+        frontier.splice(index, 1)
+      }
+    }
+
+    frontier.push(state)
+  }
+
+  return frontier
+}
+
+function dominatesArmorState(left: ArmorSearchState, right: ArmorSearchState): boolean {
+  return left.requiredLevels.every((level, index) => level >= right.requiredLevels[index])
+    && slotsCoverCounts(left.slotCounts, right.slotCounts)
+    && getArmorStateDefense(left.armor) >= getArmorStateDefense(right.armor)
+    && (
+      left.requiredLevels.some((level, index) => level > right.requiredLevels[index])
+      || left.slotCounts.some((count, index) => count > right.slotCounts[index])
+      || getArmorStateDefense(left.armor) > getArmorStateDefense(right.armor)
+    )
+}
+
+function slotsCoverCounts(left: readonly number[], right: readonly number[]): boolean {
+  for (let level = 1; level <= 4; level += 1) {
+    const leftCount = left.slice(level).reduce((total, count) => total + count, 0)
+    const rightCount = right.slice(level).reduce((total, count) => total + count, 0)
+    if (leftCount < rightCount) {
+      return false
+    }
+  }
+
+  return true
 }
 
 function requiredSkillScore(

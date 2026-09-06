@@ -150,7 +150,7 @@ describe('armor legality', () => {
       resistanceDelta: { fire: 2 },
       skillChanges: [],
       slotUpgrades: 0,
-    }])
+    }], { resistanceStrategy: 'source-order' })
 
     expect(variants.some(variant => variant.augmentation?.componentIds?.includes('fire-plus-one')))
       .toBe(false)
@@ -236,5 +236,36 @@ describe('armor legality', () => {
 
     expect(variants[1].augmentation?.componentIds).toEqual(['fire-minus'])
     expect(variants[2].augmentation?.componentIds).toEqual(['fire-minus', 'water-minus'])
+  })
+
+  it('does not keep reducing an element after it becomes lower than another', () => {
+    const base = {
+      ...baseArmor(),
+      baseResistances: {
+        dragon: 0,
+        fire: 0,
+        ice: 0,
+        thunder: 0,
+        water: 0,
+      },
+    }
+    const variants = generateArmorVariants(base, [{
+      costDelta: -2,
+      defenseDelta: 0,
+      id: 'fire-minus',
+      resistanceDelta: { fire: -1 },
+      skillChanges: [],
+      slotUpgrades: 0,
+    }, {
+      costDelta: -2,
+      defenseDelta: 0,
+      id: 'water-minus',
+      resistanceDelta: { water: -1 },
+      skillChanges: [],
+      slotUpgrades: 0,
+    }], { maxOperations: 2 })
+
+    expect(variants.some(variant => variant.augmentation?.componentIds
+      ?.join('|') === 'fire-minus|water-minus')).toBe(true)
   })
 })

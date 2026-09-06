@@ -149,6 +149,9 @@ function withGeneratedArmorComponents(
         ? requested.filter(id => eligible.has(id))
         : [...eligible]]
     })),
-    armorVariantOptions: options.armorVariantOptions ?? definition.armorVariantOptions,
+    armorVariantOptions: {
+      ...(options.armorVariantOptions ?? definition.armorVariantOptions),
+      requiredSkills: definition.requiredSkills,
+    },
   }
 }
