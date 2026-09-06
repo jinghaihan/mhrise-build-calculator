@@ -175,6 +175,7 @@ export function solveBuild(
       candidates[left].length - candidates[right].length)
     const suffixMaximumDefense = createSuffixMaximumDefense(candidates, searchSlots)
     const bestPartialDefense = searchSlots.map(() => new Map<string, number>())
+    const optimisticDecorationFeasibility = new Map<string, boolean>()
 
     const seedArmor = createGreedyArmorSeed(candidates, searchSlots, searchRequest.requiredSkills)
     if (seedArmor) {
@@ -221,6 +222,26 @@ export function solveBuild(
         skills,
       )) {
         return
+      }
+
+      const optimisticFeasibility = optimisticDecorationFeasibility.get(stateKey)
+      if (optimisticFeasibility === false) {
+        return
+      }
+      if (optimisticFeasibility === undefined) {
+        const feasible = canReachWithOptimisticDecorations(
+          searchRequest,
+          searchBounds,
+          candidates,
+          searchSlots,
+          slotIndex,
+          armor,
+          skills,
+        )
+        optimisticDecorationFeasibility.set(stateKey, feasible)
+        if (!feasible) {
+          return
+        }
       }
 
       if (slotIndex >= searchSlots.length) {
@@ -354,6 +375,54 @@ function canReachRemainingArmorSkills(
       + remainingArmorMaximum
       + decorationMaximum >= requirement.level
   })
+}
+
+function canReachWithOptimisticDecorations(
+  request: BuildRequest,
+  bounds: SearchBounds,
+  candidates: Readonly<Record<ArmorSlot, readonly ArmorVariant[]>>,
+  searchSlots: readonly ArmorSlot[],
+  slotIndex: number,
+  armor: Readonly<Partial<Record<ArmorSlot, ArmorVariant>>>,
+  currentSkills: readonly SkillValue[],
+): boolean {
+  const optimisticSkills = addSkillValues(
+    request.weapon.skills,
+    currentSkills,
+    ...searchSlots.slice(slotIndex).map(slot => request.requiredSkills.map(requirement => ({
+      level: Math.max(
+        0,
+        ...candidates[slot].map(variant => getSkillLevel(
+          variant.skills,
+          requirement.skillId,
+        )),
+      ),
+      skillId: requirement.skillId,
+    }))),
+    request.requiredSkills.map((requirement, index) => ({
+      level: bounds.talismanSkills[index] ?? 0,
+      skillId: requirement.skillId,
+    })),
+  )
+  const slotLevels = [
+    ...request.weapon.slots,
+    ...Object.values(armor).flatMap(variant => variant?.slots ?? []),
+    ...searchSlots.slice(slotIndex).flatMap(slot => bounds.armorSlots[ARMOR_SLOTS.indexOf(slot)]),
+    ...bounds.talismanSlots,
+  ].filter(level => level > 0)
+  const slots = slotLevels.map((level, index) => ({
+    host: 'weapon' as const,
+    index,
+    level,
+  }))
+
+  return findDecorationPlacements(
+    slots,
+    request.decorations,
+    optimisticSkills,
+    request.requiredSkills,
+    1,
+  ).length > 0
 }
 
 function compareSolutions(left: BuildSolution, right: BuildSolution): number {
