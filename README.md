@@ -13,6 +13,8 @@ The repository includes a synchronized source snapshot with Kiranico Wiki IDs an
 
 Skill and equipment names are localized at the data boundary; algorithms use stable Wiki IDs internally. `属性攻击强化5` represents five separate searches, one each for Fire, Water, Thunder, Ice, and Dragon Attack Up 5.
 
+Markdown build-note parsing and its supported alternative syntax are described in [the Markdown input guide](docs/markdown-input.md).
+
 ## Packages
 
 - `packages/core`: domain rules and build optimization algorithms
