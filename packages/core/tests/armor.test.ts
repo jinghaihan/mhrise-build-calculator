@@ -4,6 +4,7 @@ import {
   createArmorVariant,
   generateArmorVariants,
   MAX_ARMOR_SKILLS,
+  pruneDominatedArmorVariants,
 } from '../src/armor'
 import { createWikiId, createWikiRef } from '../src/ids'
 
@@ -126,5 +127,20 @@ describe('armor legality', () => {
 
     expect(variants[1].augmentation?.componentIds).toEqual(['fire-minus'])
     expect(variants[2].augmentation?.componentIds).toEqual(['fire-minus', 'water-minus'])
+  })
+
+  it('removes armor variants dominated by defense, slots, skills, and resistance balance', () => {
+    const base = baseArmor()
+    const dominated = createArmorVariant(base)
+    const stronger = createArmorVariant({
+      ...base,
+      baseDefense: 120,
+      slots: [2, 1, 0],
+    })
+
+    expect(pruneDominatedArmorVariants(
+      [dominated, stronger],
+      [],
+    )).toEqual([stronger])
   })
 })

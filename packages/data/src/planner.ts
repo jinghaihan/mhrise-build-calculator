@@ -6,13 +6,19 @@ import type {
 } from '@mhrise-build-tools/core'
 import type { BuildDefinition, DataCatalog } from './catalog'
 import type { SourceSnapshot } from './snapshot'
-import { optimizeEquipmentReuse, solveBuild } from '@mhrise-build-tools/core'
+import {
+  ARMOR_SLOTS,
+  optimizeEquipmentReuse,
+  pruneDominatedArmorVariants,
+  solveBuild,
+} from '@mhrise-build-tools/core'
 import { createBuildRequest } from './catalog'
 import { generateTalismanRecords } from './snapshot'
 
 export interface SnapshotPlanOptions {
   readonly maxSolutions?: number
   readonly maxTalismanCandidates?: number
+  readonly pruneDominatedArmor?: boolean
   readonly talismanSkillIds?: readonly WikiId[]
 }
 
@@ -42,7 +48,19 @@ export function createSnapshotBuildRequest(
   const skillIds = options.talismanSkillIds
     ?? definition.requiredSkills.map(requirement => requirement.skillId)
   const catalog = createSnapshotCatalog(snapshot, skillIds, options.maxTalismanCandidates)
-  return createBuildRequest(catalog, definition)
+  const request = createBuildRequest(catalog, definition)
+
+  if (options.pruneDominatedArmor === false) {
+    return request
+  }
+
+  return {
+    ...request,
+    armorBySlot: Object.fromEntries(ARMOR_SLOTS.map(slot => [
+      slot,
+      pruneDominatedArmorVariants(request.armorBySlot[slot], request.requiredSkills),
+    ])) as unknown as typeof request.armorBySlot,
+  }
 }
 
 export function searchSnapshotBuild(
