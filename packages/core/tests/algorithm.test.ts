@@ -99,4 +99,24 @@ describe('equipment reuse optimization', () => {
     })
     expect(plan?.sharedArmor['1001|0|0']).toEqual(['build-a', 'build-b'])
   })
+
+  it('backtracks to reuse a shared variant instead of keeping the first candidate', () => {
+    const shared = armor('head', '1001')
+    const buildA = request('build-a', [skill(String(attack), 1)])
+    const buildB = request('build-b', [skill(String(attack), 1)])
+
+    const buildAWithAlternatives = {
+      ...buildA,
+      armorBySlot: { ...buildA.armorBySlot, head: [armor('head', '1006'), shared] },
+    }
+    const buildBWithSharedHead = {
+      ...buildB,
+      armorBySlot: { ...buildB.armorBySlot, head: [shared] },
+    }
+
+    const plan = optimizeEquipmentReuse([buildAWithAlternatives, buildBWithSharedHead])
+
+    expect(plan?.score.uniqueArmorPieces).toBe(5)
+    expect(plan?.sharedArmor['1001|0|0']).toEqual(['build-a', 'build-b'])
+  })
 })

@@ -24,10 +24,14 @@ describe('qurious armor slot upgrades', () => {
   })
 
   it('does not exceed the maximum slot level', () => {
-    expect(applySlotUpgrades([MAX_SLOT_LEVEL, MAX_SLOT_LEVEL, MAX_SLOT_LEVEL], 3)).toEqual([
+    expect(applySlotUpgrades([MAX_SLOT_LEVEL, MAX_SLOT_LEVEL, MAX_SLOT_LEVEL - 1], 1)).toEqual([
       MAX_SLOT_LEVEL,
       MAX_SLOT_LEVEL,
       MAX_SLOT_LEVEL,
     ])
+  })
+
+  it('rejects more upgrades than the physical 4-4-4 limit allows', () => {
+    expect(() => applySlotUpgrades([2, 1, 0], 10)).toThrow('exceeds 4-4-4')
   })
 })

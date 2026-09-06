@@ -15,6 +15,12 @@ export function applySlotUpgrades(base: SlotLevels, upgrades: number): SlotLevel
     throw new Error(`Invalid slot upgrade count: ${upgrades}`)
   }
 
+  const maximumUpgrades = MAX_SLOT_LEVEL * 3 - base.reduce((total, level) => total + level, 0)
+
+  if (upgrades > maximumUpgrades) {
+    throw new Error(`Slot upgrade count exceeds 4-4-4: ${upgrades}`)
+  }
+
   const result = [...base]
 
   for (let index = 0; index < upgrades; index += 1) {
