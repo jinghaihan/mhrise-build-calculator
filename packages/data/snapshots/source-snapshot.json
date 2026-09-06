@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-06T07:29:15.079Z",
+  "generatedAt": "2026-09-06T07:44:39.544Z",
   "source": {
     "kiranico": [
       "https://mhrise.kiranico.com/zh/data/skills",
@@ -1476,6 +1476,38 @@
           "baseSkills": [
             {
               "level": 1,
+              "skillId": "1161896781"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "201570808",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "310",
+        "names": {
+          "zh": "死神脐带"
+        },
+        "ref": {
+          "id": "201570808",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 18,
+          "baseSkills": [
+            {
+              "level": 1,
               "skillId": "1875928865"
             }
           ],
@@ -1700,6 +1732,38 @@
           "baseSkills": [
             {
               "level": 1,
+              "skillId": "1089716995"
+            }
+          ],
+          "costBudget": 18,
+          "ref": {
+            "id": "967360456",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "318",
+        "names": {
+          "zh": "毒蝎护袖"
+        },
+        "ref": {
+          "id": "967360456",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 12,
+          "baseSkills": [
+            {
+              "level": 1,
               "skillId": "303299436"
             }
           ],
@@ -1786,6 +1850,38 @@
         },
         "ref": {
           "id": "662396814",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 12,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1089716995"
+            }
+          ],
+          "costBudget": 18,
+          "ref": {
+            "id": "995843982",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "319",
+        "names": {
+          "zh": "毒蛛护袖"
+        },
+        "ref": {
+          "id": "995843982",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -2822,6 +2918,38 @@
         },
         "ref": {
           "id": "2131984799",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 18,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1907855730"
+            }
+          ],
+          "costBudget": 14,
+          "ref": {
+            "id": "2097381791",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "348",
+        "names": {
+          "zh": "翼蛇龙套装衣装"
+        },
+        "ref": {
+          "id": "2097381791",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -4984,6 +5112,38 @@
           "baseSkills": [
             {
               "level": 1,
+              "skillId": "2069053547"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "207690298",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "309",
+        "names": {
+          "zh": "鱼鳞袖"
+        },
+        "ref": {
+          "id": "207690298",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 24,
+          "baseSkills": [
+            {
+              "level": 1,
               "skillId": "1118724801"
             }
           ],
@@ -5038,6 +5198,38 @@
         },
         "ref": {
           "id": "827038002",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 24,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "892049714",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "313",
+        "names": {
+          "zh": "锹形护袖"
+        },
+        "ref": {
+          "id": "892049714",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -5134,6 +5326,38 @@
         },
         "ref": {
           "id": "856045808",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 24,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "820394224",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "314",
+        "names": {
+          "zh": "凤蝶护袖"
+        },
+        "ref": {
+          "id": "820394224",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -5336,6 +5560,76 @@
           "baseSkills": [
             {
               "level": 1,
+              "skillId": "243411229"
+            },
+            {
+              "level": 1,
+              "skillId": "257661234"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "584097538",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "神凪【白衣】"
+        },
+        "ref": {
+          "id": "584097538",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 24,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            },
+            {
+              "level": 1,
+              "skillId": "1665963842"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "549494530",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "神凪【花袖】"
+        },
+        "ref": {
+          "id": "549494530",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 24,
+          "baseSkills": [
+            {
+              "level": 1,
               "skillId": "381074408"
             }
           ],
@@ -5497,6 +5791,68 @@
         },
         "ref": {
           "id": "642989760",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 24,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1921564947"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "775806598",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "依巫【白衣】"
+        },
+        "ref": {
+          "id": "775806598",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 24,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1921564947"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "741203590",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "依巫【花袖】"
+        },
+        "ref": {
+          "id": "741203590",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -7054,6 +7410,38 @@
       },
       {
         "armor": {
+          "baseDefense": 28,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "274815918"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "826174180",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "380",
+        "names": {
+          "zh": "祸铠【腿甲】"
+        },
+        "ref": {
+          "id": "826174180",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
           "baseDefense": 26,
           "baseSkills": [
             {
@@ -7216,6 +7604,38 @@
         },
         "ref": {
           "id": "945179198",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 26,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1176146786"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "540076540",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "384",
+        "names": {
+          "zh": "旅团战衣"
+        },
+        "ref": {
+          "id": "540076540",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -7553,6 +7973,41 @@
         },
         "ref": {
           "id": "1490407174",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 24,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1309385285"
+            },
+            {
+              "level": 1,
+              "skillId": "1665963842"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "1590021894",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "潜水员皮带"
+        },
+        "ref": {
+          "id": "1590021894",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -8425,6 +8880,42 @@
           "baseDefense": 32,
           "baseSkills": [
             {
+              "level": 1,
+              "skillId": "514312899"
+            },
+            {
+              "level": 1,
+              "skillId": "1089716995"
+            }
+          ],
+          "costBudget": 18,
+          "ref": {
+            "id": "981594089",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            1,
+            1,
+            0
+          ]
+        },
+        "armorFamilyId": "318",
+        "names": {
+          "zh": "毒蝎S护袖"
+        },
+        "ref": {
+          "id": "981594089",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 32,
+          "baseSkills": [
+            {
               "level": 2,
               "skillId": "500079394"
             }
@@ -8520,6 +9011,42 @@
         },
         "ref": {
           "id": "542937007",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 32,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "514312899"
+            },
+            {
+              "level": 1,
+              "skillId": "1089716995"
+            }
+          ],
+          "costBudget": 18,
+          "ref": {
+            "id": "607948719",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            1,
+            1,
+            0
+          ]
+        },
+        "armorFamilyId": "319",
+        "names": {
+          "zh": "毒蛛S护袖"
+        },
+        "ref": {
+          "id": "607948719",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -11453,6 +11980,42 @@
           "baseSkills": [
             {
               "level": 1,
+              "skillId": "1565531242"
+            },
+            {
+              "level": 1,
+              "skillId": "2069053547"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "221923803",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            2,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "309",
+        "names": {
+          "zh": "鱼鳞S袖"
+        },
+        "ref": {
+          "id": "221923803",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 52,
+          "baseSkills": [
+            {
+              "level": 1,
               "skillId": "1118724801"
             }
           ],
@@ -11507,6 +12070,42 @@
         },
         "ref": {
           "id": "185919897",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 52,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "138201299"
+            },
+            {
+              "level": 1,
+              "skillId": "528038624"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "249883033",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            1,
+            1,
+            0
+          ]
+        },
+        "armorFamilyId": "310",
+        "names": {
+          "zh": "死神S脐带"
+        },
+        "ref": {
+          "id": "249883033",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -11851,6 +12450,84 @@
           "baseDefense": 52,
           "baseSkills": [
             {
+              "level": 1,
+              "skillId": "243411229"
+            },
+            {
+              "level": 1,
+              "skillId": "257661234"
+            },
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            },
+            {
+              "level": 1,
+              "skillId": "381074408"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "598331171",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            1,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "神凪・愿【白衣】"
+        },
+        "ref": {
+          "id": "598331171",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 52,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            },
+            {
+              "level": 1,
+              "skillId": "1665963842"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "563728163",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            2,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "神凪・愿【花袖】"
+        },
+        "ref": {
+          "id": "563728163",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 52,
+          "baseSkills": [
+            {
               "level": 2,
               "skillId": "381074408"
             },
@@ -12029,6 +12706,72 @@
         },
         "ref": {
           "id": "657747681",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 52,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1921564947"
+            },
+            {
+              "level": 1,
+              "skillId": "1951027710"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "790040231",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            1,
+            1,
+            0
+          ]
+        },
+        "names": {
+          "zh": "依巫・祈【白衣】"
+        },
+        "ref": {
+          "id": "790040231",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 52,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1921564947"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "755437223",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            3,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "依巫・祈【花袖】"
+        },
+        "ref": {
+          "id": "755437223",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -12476,6 +13219,38 @@
         },
         "ref": {
           "id": "2046095804",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 52,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "485829389"
+            }
+          ],
+          "costBudget": 14,
+          "ref": {
+            "id": "2145710524",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            1,
+            1,
+            0
+          ]
+        },
+        "armorFamilyId": "348",
+        "names": {
+          "zh": "翼蛇龙套装S衣装"
+        },
+        "ref": {
+          "id": "2145710524",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -13731,6 +14506,38 @@
           "baseDefense": 62,
           "baseSkills": [
             {
+              "level": 1,
+              "skillId": "1579764747"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "906807507",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            3,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "313",
+        "names": {
+          "zh": "锹形S护袖"
+        },
+        "ref": {
+          "id": "906807507",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 62,
+          "baseSkills": [
+            {
               "level": 3,
               "skillId": "124406235"
             }
@@ -13822,6 +14629,38 @@
         },
         "ref": {
           "id": "1038051473",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 62,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "834627729",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            3,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "314",
+        "names": {
+          "zh": "凤蝶S护袖"
+        },
+        "ref": {
+          "id": "834627729",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -15792,6 +16631,46 @@
       },
       {
         "armor": {
+          "baseDefense": 64,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1755961030"
+            },
+            {
+              "level": 1,
+              "skillId": "274815918"
+            },
+            {
+              "level": 1,
+              "skillId": "2146828439"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "840424069",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            1,
+            1,
+            0
+          ]
+        },
+        "armorFamilyId": "380",
+        "names": {
+          "zh": "祸铠・霸【腿甲】"
+        },
+        "ref": {
+          "id": "840424069",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
           "baseDefense": 60,
           "baseSkills": [
             {
@@ -15958,6 +16837,42 @@
         },
         "ref": {
           "id": "959429087",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 62,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1251979832"
+            },
+            {
+              "level": 1,
+              "skillId": "1223496314"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "751106387",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            1,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "384",
+        "names": {
+          "zh": "旅团S战衣"
+        },
+        "ref": {
+          "id": "751106387",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -16162,6 +17077,58 @@
           "baseSkills": [],
           "costBudget": 0,
           "ref": {
+            "id": "1463425129",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "染花【浴衣】"
+        },
+        "ref": {
+          "id": "1463425129",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
+            "id": "1428822121",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "染花【袖子】"
+        },
+        "ref": {
+          "id": "1428822121",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
             "id": "1482817443",
             "kind": "armor",
             "source": "kiranico"
@@ -16318,6 +17285,32 @@
           "baseSkills": [],
           "costBudget": 0,
           "ref": {
+            "id": "1596665664",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "公会十字战衣"
+        },
+        "ref": {
+          "id": "1596665664",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
             "id": "1562062656",
             "kind": "armor",
             "source": "kiranico"
@@ -16438,6 +17431,33 @@
         },
         "ref": {
           "id": "1172155992",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 12,
+          "ref": {
+            "id": "1332407772",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "411",
+        "names": {
+          "zh": "博爱绷带"
+        },
+        "ref": {
+          "id": "1332407772",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -16594,6 +17614,32 @@
         },
         "ref": {
           "id": "1275002291",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
+            "id": "1254108496",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "盛装战衣"
+        },
+        "ref": {
+          "id": "1254108496",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -16790,7 +17836,7 @@
             "kind": "armor",
             "source": "kiranico"
           },
-          "slot": "legs",
+          "slot": "waist",
           "slots": [
             0,
             0,
@@ -17920,6 +18966,158 @@
           "baseSkills": [
             {
               "level": 1,
+              "skillId": "1743214542"
+            },
+            {
+              "level": 1,
+              "skillId": "4438520"
+            },
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "1125196621",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            1,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "340",
+        "names": {
+          "zh": "水行【大袖】"
+        },
+        "ref": {
+          "id": "1125196621",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 74,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1743214542"
+            },
+            {
+              "level": 1,
+              "skillId": "4438520"
+            },
+            {
+              "level": 2,
+              "skillId": "395307913"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "1090593613",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            1,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "340",
+        "names": {
+          "zh": "水行【圆带】"
+        },
+        "ref": {
+          "id": "1090593613",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 74,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1743214542"
+            },
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "1089545037",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            2,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "340",
+        "names": {
+          "zh": "水行【腿甲】"
+        },
+        "ref": {
+          "id": "1089545037",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 74,
+          "baseSkills": [
+            {
+              "level": 3,
+              "skillId": "303299436"
+            },
+            {
+              "level": 1,
+              "skillId": "485829389"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "1208652642",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "head",
+          "slots": [
+            1,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "341",
+        "names": {
+          "zh": "帝王冠"
+        },
+        "ref": {
+          "id": "1208652642",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 74,
+          "baseSkills": [
+            {
+              "level": 1,
               "skillId": "1636956044"
             },
             {
@@ -18097,6 +19295,80 @@
         },
         "ref": {
           "id": "92456307",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 70,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "2084266193"
+            },
+            {
+              "level": 1,
+              "skillId": "485829389"
+            },
+            {
+              "level": 1,
+              "skillId": "528038624"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "460506483",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            1,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "金色带"
+        },
+        "ref": {
+          "id": "460506483",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 70,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "485829389"
+            },
+            {
+              "level": 1,
+              "skillId": "514312899"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "425903475",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            1,
+            1,
+            0
+          ]
+        },
+        "names": {
+          "zh": "金色下裳"
+        },
+        "ref": {
+          "id": "425903475",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -18523,6 +19795,58 @@
           "baseSkills": [],
           "costBudget": 0,
           "ref": {
+            "id": "1371402188",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "苍世武士【袖】"
+        },
+        "ref": {
+          "id": "1371402188",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
+            "id": "1471016908",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "苍世武士【带】"
+        },
+        "ref": {
+          "id": "1471016908",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
             "id": "1436413900",
             "kind": "armor",
             "source": "kiranico"
@@ -18753,7 +20077,7 @@
             "kind": "armor",
             "source": "kiranico"
           },
-          "slot": "legs",
+          "slot": "waist",
           "slots": [
             0,
             0,
@@ -23009,6 +24333,42 @@
           "baseDefense": 98,
           "baseSkills": [
             {
+              "level": 1,
+              "skillId": "514312899"
+            },
+            {
+              "level": 1,
+              "skillId": "1089716995"
+            }
+          ],
+          "costBudget": 18,
+          "ref": {
+            "id": "1623563604",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            1,
+            1,
+            4
+          ]
+        },
+        "armorFamilyId": "318",
+        "names": {
+          "zh": "毒蝎X护袖"
+        },
+        "ref": {
+          "id": "1623563604",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 98,
+          "baseSkills": [
+            {
               "level": 2,
               "skillId": "500079394"
             },
@@ -23112,6 +24472,42 @@
         },
         "ref": {
           "id": "1841220981",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 98,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "514312899"
+            },
+            {
+              "level": 1,
+              "skillId": "1089716995"
+            }
+          ],
+          "costBudget": 18,
+          "ref": {
+            "id": "1637797237",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            1,
+            1,
+            4
+          ]
+        },
+        "armorFamilyId": "319",
+        "names": {
+          "zh": "毒蛛X护袖"
+        },
+        "ref": {
+          "id": "1637797237",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -23238,6 +24634,42 @@
           "baseSkills": [
             {
               "level": 1,
+              "skillId": "1176146786"
+            },
+            {
+              "level": 2,
+              "skillId": "152451312"
+            }
+          ],
+          "costBudget": 18,
+          "ref": {
+            "id": "1690871938",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            4,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "424",
+        "names": {
+          "zh": "五行之狩衣"
+        },
+        "ref": {
+          "id": "1690871938",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 100,
+          "baseSkills": [
+            {
+              "level": 1,
               "skillId": "1432800563"
             },
             {
@@ -23264,6 +24696,78 @@
         },
         "ref": {
           "id": "2058922114",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 100,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1176146786"
+            },
+            {
+              "level": 1,
+              "skillId": "1695408169"
+            }
+          ],
+          "costBudget": 18,
+          "ref": {
+            "id": "2024319106",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            4,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "424",
+        "names": {
+          "zh": "五行之衣带"
+        },
+        "ref": {
+          "id": "2024319106",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 100,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1432800563"
+            },
+            {
+              "level": 1,
+              "skillId": "1755961030"
+            }
+          ],
+          "costBudget": 18,
+          "ref": {
+            "id": "2123933826",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            3,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "424",
+        "names": {
+          "zh": "五行之腿甲"
+        },
+        "ref": {
+          "id": "2123933826",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -23383,6 +24887,41 @@
       },
       {
         "armor": {
+          "baseDefense": 100,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "243411229"
+            },
+            {
+              "level": 1,
+              "skillId": "485829389"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "1809862224",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            1,
+            3,
+            0
+          ]
+        },
+        "names": {
+          "zh": "轻装骑士【腿甲】"
+        },
+        "ref": {
+          "id": "1809862224",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
           "baseDefense": 92,
           "baseSkills": [
             {
@@ -23413,6 +24952,86 @@
         },
         "ref": {
           "id": "1699526753",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 92,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "303299436"
+            },
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            },
+            {
+              "level": 1,
+              "skillId": "1389104311"
+            }
+          ],
+          "costBudget": 18,
+          "ref": {
+            "id": "2067576929",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            1,
+            2,
+            0
+          ]
+        },
+        "armorFamilyId": "427",
+        "names": {
+          "zh": "结云带"
+        },
+        "ref": {
+          "id": "2067576929",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 92,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "303299436"
+            },
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            },
+            {
+              "level": 2,
+              "skillId": "1446526160"
+            }
+          ],
+          "costBudget": 18,
+          "ref": {
+            "id": "2032973921",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            2,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "427",
+        "names": {
+          "zh": "结云下裳"
+        },
+        "ref": {
+          "id": "2032973921",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -26027,6 +27646,46 @@
             },
             {
               "level": 1,
+              "skillId": "528038624"
+            },
+            {
+              "level": 1,
+              "skillId": "366824395"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "2112036444",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            1,
+            2,
+            0
+          ]
+        },
+        "armorFamilyId": "310",
+        "names": {
+          "zh": "死神X脐带"
+        },
+        "ref": {
+          "id": "2112036444",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 110,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "138201299"
+            },
+            {
+              "level": 1,
               "skillId": "1875928865"
             },
             {
@@ -26053,6 +27712,46 @@
         },
         "ref": {
           "id": "1943215708",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 104,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1565531242"
+            },
+            {
+              "level": 1,
+              "skillId": "2069053547"
+            },
+            {
+              "level": 1,
+              "skillId": "289049423"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "2098835135",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            2,
+            2,
+            0
+          ]
+        },
+        "armorFamilyId": "309",
+        "names": {
+          "zh": "鱼鳞X袖"
+        },
+        "ref": {
+          "id": "2098835135",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -26129,6 +27828,42 @@
         },
         "ref": {
           "id": "1722215987",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 110,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1579764747"
+            },
+            {
+              "level": 1,
+              "skillId": "303299436"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "2055663155",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            3,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "313",
+        "names": {
+          "zh": "锹形X护袖"
+        },
+        "ref": {
+          "id": "2055663155",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -26241,6 +27976,42 @@
         },
         "ref": {
           "id": "1735941584",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 110,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1579764747"
+            },
+            {
+              "level": 1,
+              "skillId": "303299436"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "2069388752",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            3,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "314",
+        "names": {
+          "zh": "凤蝶X护袖"
+        },
+        "ref": {
+          "id": "2069388752",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -26639,6 +28410,46 @@
           "baseDefense": 106,
           "baseSkills": [
             {
+              "level": 1,
+              "skillId": "1251979832"
+            },
+            {
+              "level": 1,
+              "skillId": "1223496314"
+            },
+            {
+              "level": 1,
+              "skillId": "808327178"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "1457272234",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            2,
+            3,
+            0
+          ]
+        },
+        "armorFamilyId": "384",
+        "names": {
+          "zh": "旅团X战衣"
+        },
+        "ref": {
+          "id": "1457272234",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 106,
+          "baseSkills": [
+            {
               "level": 2,
               "skillId": "1223496314"
             },
@@ -27014,6 +28825,46 @@
         },
         "ref": {
           "id": "760673750",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 110,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1755961030"
+            },
+            {
+              "level": 2,
+              "skillId": "274815918"
+            },
+            {
+              "level": 1,
+              "skillId": "2146828439"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "591853014",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            1,
+            2,
+            0
+          ]
+        },
+        "armorFamilyId": "380",
+        "names": {
+          "zh": "祸铠・真【腿甲】"
+        },
+        "ref": {
+          "id": "591853014",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -28426,6 +30277,32 @@
           "baseSkills": [],
           "costBudget": 0,
           "ref": {
+            "id": "403705132",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "灭龙猎装【腿甲】"
+        },
+        "ref": {
+          "id": "403705132",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
             "id": "119110861",
             "kind": "armor",
             "source": "kiranico"
@@ -28494,6 +30371,32 @@
         },
         "ref": {
           "id": "83459277",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
+            "id": "451509453",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "龙公礼服【腿甲】"
+        },
+        "ref": {
+          "id": "451509453",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -29387,6 +31290,90 @@
           "baseDefense": 110,
           "baseSkills": [
             {
+              "level": 1,
+              "skillId": "243411229"
+            },
+            {
+              "level": 1,
+              "skillId": "257661234"
+            },
+            {
+              "level": 3,
+              "skillId": "1579764747"
+            },
+            {
+              "level": 1,
+              "skillId": "381074408"
+            }
+          ],
+          "costBudget": 14,
+          "ref": {
+            "id": "1834577163",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            1,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "321",
+        "names": {
+          "zh": "神凪・洸【白衣】"
+        },
+        "ref": {
+          "id": "1834577163",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 110,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            },
+            {
+              "level": 1,
+              "skillId": "1665963842"
+            },
+            {
+              "level": 2,
+              "skillId": "366824395"
+            }
+          ],
+          "costBudget": 14,
+          "ref": {
+            "id": "1665756427",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            2,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "321",
+        "names": {
+          "zh": "神凪・洸【花袖】"
+        },
+        "ref": {
+          "id": "1665756427",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 110,
+          "baseSkills": [
+            {
               "level": 2,
               "skillId": "381074408"
             },
@@ -29592,6 +31579,82 @@
           "baseSkills": [
             {
               "level": 1,
+              "skillId": "1921564947"
+            },
+            {
+              "level": 1,
+              "skillId": "1951027710"
+            },
+            {
+              "level": 1,
+              "skillId": "1446526160"
+            }
+          ],
+          "costBudget": 14,
+          "ref": {
+            "id": "1863584969",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            1,
+            2,
+            0
+          ]
+        },
+        "armorFamilyId": "323",
+        "names": {
+          "zh": "依巫・燿【白衣】"
+        },
+        "ref": {
+          "id": "1863584969",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 110,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1921564947"
+            },
+            {
+              "level": 1,
+              "skillId": "1446526160"
+            }
+          ],
+          "costBudget": 14,
+          "ref": {
+            "id": "1828981961",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            4,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "323",
+        "names": {
+          "zh": "依巫・燿【花袖】"
+        },
+        "ref": {
+          "id": "1828981961",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 110,
+          "baseSkills": [
+            {
+              "level": 1,
               "skillId": "1374346390"
             },
             {
@@ -29770,6 +31833,42 @@
         },
         "ref": {
           "id": "240972278",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 112,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "485829389"
+            },
+            {
+              "level": 2,
+              "skillId": "4438520"
+            }
+          ],
+          "costBudget": 14,
+          "ref": {
+            "id": "206369270",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            1,
+            1,
+            3
+          ]
+        },
+        "armorFamilyId": "348",
+        "names": {
+          "zh": "翼蛇龙套装X衣装"
+        },
+        "ref": {
+          "id": "206369270",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -31543,6 +33642,42 @@
           "baseDefense": 116,
           "baseSkills": [
             {
+              "level": 2,
+              "skillId": "381074408"
+            },
+            {
+              "level": 1,
+              "skillId": "138201299"
+            }
+          ],
+          "costBudget": 14,
+          "ref": {
+            "id": "1130433276",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            1,
+            3,
+            0
+          ]
+        },
+        "armorFamilyId": "406",
+        "names": {
+          "zh": "棘龙脐带"
+        },
+        "ref": {
+          "id": "1130433276",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 116,
+          "baseSkills": [
+            {
               "level": 1,
               "skillId": "454558967"
             },
@@ -31691,6 +33826,45 @@
         },
         "ref": {
           "id": "1797201587",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 114,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1032544142"
+            },
+            {
+              "level": 2,
+              "skillId": "988847874"
+            },
+            {
+              "level": 2,
+              "skillId": "243411229"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "1762598579",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            1,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "重装骑士【腿甲】"
+        },
+        "ref": {
+          "id": "1762598579",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -32060,6 +34234,46 @@
               "skillId": "2084266193"
             },
             {
+              "level": 1,
+              "skillId": "528038624"
+            },
+            {
+              "level": 2,
+              "skillId": "514312899"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "966039428",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            3,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "366",
+        "names": {
+          "zh": "齐天衣・真"
+        },
+        "ref": {
+          "id": "966039428",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 116,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "2084266193"
+            },
+            {
               "level": 2,
               "skillId": "514312899"
             }
@@ -32083,6 +34297,86 @@
         },
         "ref": {
           "id": "1065654148",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 116,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "2084266193"
+            },
+            {
+              "level": 1,
+              "skillId": "485829389"
+            },
+            {
+              "level": 1,
+              "skillId": "528038624"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "1031051140",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            4,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "366",
+        "names": {
+          "zh": "齐天带・真"
+        },
+        "ref": {
+          "id": "1031051140",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 116,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "485829389"
+            },
+            {
+              "level": 1,
+              "skillId": "514312899"
+            },
+            {
+              "level": 2,
+              "skillId": "2146828439"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "862230404",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            1,
+            1,
+            1
+          ]
+        },
+        "armorFamilyId": "366",
+        "names": {
+          "zh": "齐天腿甲・真"
+        },
+        "ref": {
+          "id": "862230404",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -32519,6 +34813,162 @@
         },
         "ref": {
           "id": "461009662",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 120,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1743214542"
+            },
+            {
+              "level": 2,
+              "skillId": "4438520"
+            },
+            {
+              "level": 2,
+              "skillId": "1579764747"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "426406654",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            2,
+            2,
+            0
+          ]
+        },
+        "armorFamilyId": "340",
+        "names": {
+          "zh": "水行・真【大袖】"
+        },
+        "ref": {
+          "id": "426406654",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 120,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "1743214542"
+            },
+            {
+              "level": 2,
+              "skillId": "395307913"
+            },
+            {
+              "level": 1,
+              "skillId": "454558967"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "526021374",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            1,
+            1,
+            1
+          ]
+        },
+        "armorFamilyId": "340",
+        "names": {
+          "zh": "水行・真【圆带】"
+        },
+        "ref": {
+          "id": "526021374",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 120,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1743214542"
+            },
+            {
+              "level": 1,
+              "skillId": "395307913"
+            },
+            {
+              "level": 1,
+              "skillId": "4438520"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "491418366",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            2,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "340",
+        "names": {
+          "zh": "水行・真【腿甲】"
+        },
+        "ref": {
+          "id": "491418366",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 120,
+          "baseSkills": [
+            {
+              "level": 3,
+              "skillId": "303299436"
+            },
+            {
+              "level": 1,
+              "skillId": "485829389"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "107192991",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "head",
+          "slots": [
+            1,
+            1,
+            1
+          ]
+        },
+        "armorFamilyId": "341",
+        "names": {
+          "zh": "帝王X冠"
+        },
+        "ref": {
+          "id": "107192991",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -36255,6 +38705,86 @@
       },
       {
         "armor": {
+          "baseDefense": 122,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "37217289"
+            },
+            {
+              "level": 2,
+              "skillId": "408054401"
+            },
+            {
+              "level": 1,
+              "skillId": "243411229"
+            },
+            {
+              "level": 1,
+              "skillId": "257661234"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "1444508974",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            3,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "388",
+        "names": {
+          "zh": "怒天带"
+        },
+        "ref": {
+          "id": "1444508974",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 122,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "398571032"
+            },
+            {
+              "level": 2,
+              "skillId": "1594014760"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "1409905966",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            4,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "388",
+        "names": {
+          "zh": "怒天下裳"
+        },
+        "ref": {
+          "id": "1409905966",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
           "baseDefense": 124,
           "baseSkills": [
             {
@@ -36361,6 +38891,46 @@
         },
         "ref": {
           "id": "1577747457",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 124,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1755961030"
+            },
+            {
+              "level": 2,
+              "skillId": "1862219520"
+            },
+            {
+              "level": 1,
+              "skillId": "1665963842"
+            }
+          ],
+          "costBudget": 16,
+          "ref": {
+            "id": "1576698881",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            4,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "380",
+        "names": {
+          "zh": "祸铠・怨【腿甲】"
+        },
+        "ref": {
+          "id": "1576698881",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -36475,6 +39045,41 @@
           "baseDefense": 118,
           "baseSkills": [
             {
+              "level": 2,
+              "skillId": "1061551948"
+            },
+            {
+              "level": 1,
+              "skillId": "988847874"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "1884961129",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            2,
+            2,
+            0
+          ]
+        },
+        "names": {
+          "zh": "据点司令【腿甲】"
+        },
+        "ref": {
+          "id": "1884961129",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 118,
+          "baseSkills": [
+            {
               "level": 1,
               "skillId": "440849622"
             },
@@ -36571,6 +39176,93 @@
         },
         "ref": {
           "id": "1933797646",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 118,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1061551948"
+            },
+            {
+              "level": 1,
+              "skillId": "988847874"
+            }
+          ],
+          "costBudget": 0,
+          "ref": {
+            "id": "1899194638",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            2,
+            2,
+            0
+          ]
+        },
+        "names": {
+          "zh": "据点司令【腿甲】"
+        },
+        "ref": {
+          "id": "1899194638",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
+            "id": "2052380975",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "head",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "掠夺者王冠"
+        },
+        "ref": {
+          "id": "2052380975",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
+            "id": "529370580",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "head",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "幻想宝冠"
+        },
+        "ref": {
+          "id": "529370580",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -37180,6 +39872,46 @@
           "baseDefense": 118,
           "baseSkills": [
             {
+              "level": 1,
+              "skillId": "469771709"
+            },
+            {
+              "level": 1,
+              "skillId": "485829389"
+            },
+            {
+              "level": 2,
+              "skillId": "381074408"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "1824128997",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            1,
+            3,
+            0
+          ]
+        },
+        "armorFamilyId": "431",
+        "names": {
+          "zh": "月光【铠衣】"
+        },
+        "ref": {
+          "id": "1824128997",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 118,
+          "baseSkills": [
+            {
               "level": 2,
               "skillId": "517576018"
             },
@@ -37253,6 +39985,76 @@
       },
       {
         "armor": {
+          "baseDefense": 118,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "469771709"
+            },
+            {
+              "level": 1,
+              "skillId": "517576018"
+            },
+            {
+              "level": 2,
+              "skillId": "229177724"
+            },
+            {
+              "level": 2,
+              "skillId": "776924665"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "1720319973",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            3,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "431",
+        "names": {
+          "zh": "月光【腿甲】"
+        },
+        "ref": {
+          "id": "1720319973",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
+            "id": "658215403",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "head",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "啮生虫王冠"
+        },
+        "ref": {
+          "id": "658215403",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
           "baseDefense": 120,
           "baseSkills": [
             {
@@ -37283,6 +40085,46 @@
         },
         "ref": {
           "id": "1533105248",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 120,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "531809651"
+            },
+            {
+              "level": 1,
+              "skillId": "500079394"
+            },
+            {
+              "level": 2,
+              "skillId": "869842888"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "1498502240",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            1,
+            2,
+            3
+          ]
+        },
+        "armorFamilyId": "394",
+        "names": {
+          "zh": "阴阳师【狩衣】"
+        },
+        "ref": {
+          "id": "1498502240",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -37412,6 +40254,46 @@
           "baseDefense": 122,
           "baseSkills": [
             {
+              "level": 2,
+              "skillId": "440849622"
+            },
+            {
+              "level": 1,
+              "skillId": "808327178"
+            },
+            {
+              "level": 1,
+              "skillId": "37217289"
+            }
+          ],
+          "costBudget": 14,
+          "ref": {
+            "id": "1740672964",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            1,
+            1,
+            4
+          ]
+        },
+        "armorFamilyId": "406",
+        "names": {
+          "zh": "棘龙Z脐带"
+        },
+        "ref": {
+          "id": "1740672964",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 122,
+          "baseSkills": [
+            {
               "level": 1,
               "skillId": "261970829"
             },
@@ -37443,6 +40325,224 @@
         },
         "ref": {
           "id": "1706069956",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 125,
+          "baseSkills": [
+            {
+              "level": 3,
+              "skillId": "395307913"
+            },
+            {
+              "level": 1,
+              "skillId": "1579764747"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "733524129",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "head",
+          "slots": [
+            2,
+            4,
+            0
+          ]
+        },
+        "armorFamilyId": "340",
+        "names": {
+          "zh": "水行・醒【额饰】"
+        },
+        "ref": {
+          "id": "733524129",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 125,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "141986722"
+            },
+            {
+              "level": 2,
+              "skillId": "1743214542"
+            },
+            {
+              "level": 1,
+              "skillId": "1665963842"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "698921121",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            4,
+            0,
+            0
+          ]
+        },
+        "armorFamilyId": "340",
+        "names": {
+          "zh": "水行・醒【宿衣】"
+        },
+        "ref": {
+          "id": "698921121",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 125,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "141986722"
+            },
+            {
+              "level": 1,
+              "skillId": "1743214542"
+            },
+            {
+              "level": 1,
+              "skillId": "454558967"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "798535841",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            1,
+            2,
+            4
+          ]
+        },
+        "armorFamilyId": "340",
+        "names": {
+          "zh": "水行・醒【大袖】"
+        },
+        "ref": {
+          "id": "798535841",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 125,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1665963842"
+            },
+            {
+              "level": 1,
+              "skillId": "454558967"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "763932833",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            4,
+            4,
+            0
+          ]
+        },
+        "armorFamilyId": "340",
+        "names": {
+          "zh": "水行・醒【圆带】"
+        },
+        "ref": {
+          "id": "763932833",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 125,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "141986722"
+            },
+            {
+              "level": 1,
+              "skillId": "1743214542"
+            },
+            {
+              "level": 2,
+              "skillId": "1579764747"
+            }
+          ],
+          "costBudget": 12,
+          "ref": {
+            "id": "595112097",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            1,
+            1,
+            4
+          ]
+        },
+        "armorFamilyId": "340",
+        "names": {
+          "zh": "水行・醒【腿甲】"
+        },
+        "ref": {
+          "id": "595112097",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 0,
+          "baseSkills": [],
+          "costBudget": 0,
+          "ref": {
+            "id": "586559913",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "head",
+          "slots": [
+            0,
+            0,
+            0
+          ]
+        },
+        "names": {
+          "zh": "海豚王冠"
+        },
+        "ref": {
+          "id": "586559913",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -37773,6 +40873,198 @@
           "baseSkills": [
             {
               "level": 1,
+              "skillId": "169945952"
+            },
+            {
+              "level": 3,
+              "skillId": "1665963842"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "1418846278",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "head",
+          "slots": [
+            1,
+            2,
+            3
+          ]
+        },
+        "armorFamilyId": "492",
+        "names": {
+          "zh": "脉动钢龙强力"
+        },
+        "ref": {
+          "id": "1418846278",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 124,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1622706159"
+            },
+            {
+              "level": 2,
+              "skillId": "366824395"
+            },
+            {
+              "level": 2,
+              "skillId": "243411229"
+            },
+            {
+              "level": 2,
+              "skillId": "257661234"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "713154630",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            1,
+            2,
+            3
+          ]
+        },
+        "armorFamilyId": "492",
+        "names": {
+          "zh": "脉动钢龙逆鳞"
+        },
+        "ref": {
+          "id": "713154630",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 124,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "169945952"
+            },
+            {
+              "level": 2,
+              "skillId": "37217289"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "678551622",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            2,
+            4,
+            0
+          ]
+        },
+        "armorFamilyId": "492",
+        "names": {
+          "zh": "脉动钢龙钩爪"
+        },
+        "ref": {
+          "id": "678551622",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 124,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1622706159"
+            },
+            {
+              "level": 2,
+              "skillId": "366824395"
+            },
+            {
+              "level": 3,
+              "skillId": "1446526160"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "778166342",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            1,
+            3,
+            0
+          ]
+        },
+        "armorFamilyId": "492",
+        "names": {
+          "zh": "脉动钢龙安稳"
+        },
+        "ref": {
+          "id": "778166342",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 124,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "169945952"
+            },
+            {
+              "level": 1,
+              "skillId": "37217289"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "743563334",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            4,
+            4,
+            0
+          ]
+        },
+        "armorFamilyId": "492",
+        "names": {
+          "zh": "脉动钢龙踏实"
+        },
+        "ref": {
+          "id": "743563334",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 124,
+          "baseSkills": [
+            {
+              "level": 1,
               "skillId": "888838913"
             },
             {
@@ -37887,6 +41179,50 @@
         },
         "ref": {
           "id": "792416359",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 124,
+          "baseSkills": [
+            {
+              "level": 2,
+              "skillId": "1636956044"
+            },
+            {
+              "level": 1,
+              "skillId": "500079394"
+            },
+            {
+              "level": 2,
+              "skillId": "408054401"
+            },
+            {
+              "level": 2,
+              "skillId": "437062215"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "757813351",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            1,
+            1,
+            4
+          ]
+        },
+        "armorFamilyId": "493",
+        "names": {
+          "zh": "脉动帝王腿甲"
+        },
+        "ref": {
+          "id": "757813351",
           "kind": "armor",
           "source": "kiranico"
         }
@@ -38275,6 +41611,178 @@
         },
         "ref": {
           "id": "1413691321",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 125,
+          "baseSkills": [
+            {
+              "level": 5,
+              "skillId": "1579764747"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "1566861150",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "head",
+          "slots": [
+            3,
+            4,
+            0
+          ]
+        },
+        "armorFamilyId": "500",
+        "names": {
+          "zh": "风雨 【冠】"
+        },
+        "ref": {
+          "id": "1566861150",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 125,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "932080356"
+            },
+            {
+              "level": 1,
+              "skillId": "485829389"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "1398040414",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "chest",
+          "slots": [
+            1,
+            4,
+            4
+          ]
+        },
+        "armorFamilyId": "500",
+        "names": {
+          "zh": "风雨 【衣】"
+        },
+        "ref": {
+          "id": "1398040414",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 125,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "932080356"
+            },
+            {
+              "level": 1,
+              "skillId": "514312899"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "1363437406",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "arms",
+          "slots": [
+            1,
+            4,
+            4
+          ]
+        },
+        "armorFamilyId": "500",
+        "names": {
+          "zh": "风雨 【袖】"
+        },
+        "ref": {
+          "id": "1363437406",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 125,
+          "baseSkills": [
+            {
+              "level": 4,
+              "skillId": "514312899"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "1463052126",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "waist",
+          "slots": [
+            3,
+            4,
+            0
+          ]
+        },
+        "armorFamilyId": "500",
+        "names": {
+          "zh": "风雨 【带】"
+        },
+        "ref": {
+          "id": "1463052126",
+          "kind": "armor",
+          "source": "kiranico"
+        }
+      },
+      {
+        "armor": {
+          "baseDefense": 125,
+          "baseSkills": [
+            {
+              "level": 1,
+              "skillId": "932080356"
+            },
+            {
+              "level": 2,
+              "skillId": "485829389"
+            }
+          ],
+          "costBudget": 10,
+          "ref": {
+            "id": "1428449118",
+            "kind": "armor",
+            "source": "kiranico"
+          },
+          "slot": "legs",
+          "slots": [
+            4,
+            4,
+            0
+          ]
+        },
+        "armorFamilyId": "500",
+        "names": {
+          "zh": "风雨 【裳】"
+        },
+        "ref": {
+          "id": "1428449118",
           "kind": "armor",
           "source": "kiranico"
         }

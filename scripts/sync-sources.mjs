@@ -297,15 +297,29 @@ function slotLevels(cell) {
 }
 
 function inferArmorSlot(name) {
-  if (['头盔', '头巾', '头', '首'].some(value => name.includes(value)))
+  const specialSets = {
+    脉动钢龙: ['强力', '逆鳞', '钩爪', '安稳', '踏实'],
+  }
+
+  for (const [family, suffixes] of Object.entries(specialSets)) {
+    if (!name.includes(family)) {
+      continue
+    }
+    const suffixIndex = suffixes.findIndex(suffix => name.endsWith(suffix))
+    if (suffixIndex >= 0) {
+      return ['head', 'chest', 'arms', 'waist', 'legs'][suffixIndex]
+    }
+  }
+
+  if (['头盔', '头巾', '头', '首', '冠', '额饰'].some(value => name.includes(value)))
     return 'head'
-  if (['铠甲', '上衣', '胸甲', '躯', '胸'].some(value => name.includes(value)))
+  if (['铠甲', '上衣', '胸甲', '躯', '胸', '衣', '宿衣'].some(value => name.includes(value)))
     return 'chest'
-  if (['腕甲', '手甲', '臂'].some(value => name.includes(value)))
+  if (['腕甲', '手甲', '臂', '袖', '大袖'].some(value => name.includes(value)))
     return 'arms'
-  if (['腰甲', '腰卷', '腰', '尾'].some(value => name.includes(value)))
+  if (['腰甲', '腰卷', '腰', '尾', '带', '圆带'].some(value => name.includes(value)))
     return 'waist'
-  if (['护腿', '绑腿', '足', '脚'].some(value => name.includes(value)))
+  if (['护腿', '绑腿', '足', '脚', '裳', '腿甲'].some(value => name.includes(value)))
     return 'legs'
   return undefined
 }

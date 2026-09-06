@@ -40,7 +40,7 @@ describe('markdown build input', () => {
     }])
   })
 
-  it('expands the elemental shorthand as five required skills', () => {
+  it('expands the elemental shorthand as five build alternatives', () => {
     const catalog = {
       armors: [],
       decorations: [],
@@ -58,13 +58,13 @@ describe('markdown build input', () => {
 `, catalog)
     const definitions = expandMarkdownBuildRequirements(requirements, { weaponId: 'weapon' })
 
-    expect(requirements.requiredSkills).toEqual([
-      { level: 5, skillId: '6000' },
-      { level: 5, skillId: '6001' },
-      { level: 5, skillId: '6002' },
+    expect(requirements.requiredSkills).toEqual([])
+    expect(requirements.requiredSkillGroups[0]).toHaveLength(3)
+    expect(definitions).toHaveLength(3)
+    expect(definitions.map(definition => definition.requiredSkills[0].skillId)).toEqual([
+      '6000',
+      '6001',
+      '6002',
     ])
-    expect(requirements.requiredSkillGroups).toHaveLength(3)
-    expect(definitions).toHaveLength(1)
-    expect(definitions[0].requiredSkills).toEqual(requirements.requiredSkills)
   })
 })

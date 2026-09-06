@@ -121,7 +121,7 @@ function parseSkillLine(
   const alias = matches.filter(name => name.includes(line.replace(/\d.*$/u, '').trim()))
 
   if (level !== undefined && alias.length > 0) {
-    return alias.map(name => [skillRequirement(catalog, name, level, locale)])
+    return [alias.map(name => skillRequirement(catalog, name, level, locale))]
   }
 
   throw new Error(`Skill was not found in ${locale} catalog: ${line}`)
