@@ -96,4 +96,35 @@ describe('armor legality', () => {
       water: 1,
     })
   })
+
+  it('prioritizes reducing the currently highest resistance', () => {
+    const base = {
+      ...baseArmor(),
+      baseResistances: {
+        dragon: 0,
+        fire: 5,
+        ice: 0,
+        thunder: 0,
+        water: 4,
+      },
+    }
+    const variants = generateArmorVariants(base, [{
+      costDelta: 1,
+      defenseDelta: 0,
+      id: 'water-minus',
+      resistanceDelta: { water: -1 },
+      skillChanges: [],
+      slotUpgrades: 0,
+    }, {
+      costDelta: 1,
+      defenseDelta: 0,
+      id: 'fire-minus',
+      resistanceDelta: { fire: -1 },
+      skillChanges: [],
+      slotUpgrades: 0,
+    }], { maxComponents: 2 })
+
+    expect(variants[1].augmentation?.componentIds).toEqual(['fire-minus'])
+    expect(variants[2].augmentation?.componentIds).toEqual(['fire-minus', 'water-minus'])
+  })
 })

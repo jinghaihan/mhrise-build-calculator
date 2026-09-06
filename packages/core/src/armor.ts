@@ -48,6 +48,7 @@ function baseArmorResistances(base: ArmorPiece): ArmorResistances {
 export interface ArmorVariantGenerationOptions {
   readonly maxComponents?: number
   readonly maxVariants?: number
+  readonly resistanceStrategy?: 'balanced' | 'source-order'
 }
 
 export function createArmorVariant(
@@ -121,6 +122,7 @@ export function generateArmorVariants(
 ): ArmorVariant[] {
   const maxComponents = options.maxComponents ?? 7
   const maxVariants = options.maxVariants ?? Number.POSITIVE_INFINITY
+  const resistanceStrategy = options.resistanceStrategy ?? 'balanced'
   const variants = new Map<string, ArmorVariant>()
 
   function addVariant(augmentation: ArmorAugmentation): void {
@@ -159,7 +161,15 @@ export function generateArmorVariants(
       return
     }
 
-    for (const component of components) {
+    const nextComponents = resistanceStrategy === 'balanced'
+      ? [...components].sort((left, right) => compareResistancePriority(
+          left,
+          right,
+          addArmorResistances(baseArmorResistances(base), resistanceDelta),
+        ))
+      : components
+
+    for (const component of nextComponents) {
       search(
         depth + 1,
         cost + component.costDelta,
@@ -178,4 +188,27 @@ export function generateArmorVariants(
 
   search(0, 0, 0, ZERO_ARMOR_RESISTANCES, [], 0, [])
   return [...variants.values()]
+}
+
+function compareResistancePriority(
+  left: ArmorAugmentComponent,
+  right: ArmorAugmentComponent,
+  current: ArmorResistances,
+): number {
+  return resistanceReductionValue(right, current) - resistanceReductionValue(left, current)
+}
+
+function resistanceReductionValue(
+  component: ArmorAugmentComponent,
+  current: ArmorResistances,
+): number {
+  return ARMOR_ELEMENTS.reduce((score, element) => {
+    const delta = component.resistanceDelta?.[element] ?? 0
+    if (delta >= 0) {
+      return score
+    }
+
+    const target = current[element]
+    return score + (-delta) * Math.max(target + 1, 0)
+  }, 0)
 }
