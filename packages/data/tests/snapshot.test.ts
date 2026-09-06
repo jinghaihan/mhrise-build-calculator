@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { collectAvailableSlots, createArmorVariant, createWikiRef } from '@mhrise-build-tools/core'
 import { describe, expect, it } from 'vitest'
-import { createSnapshotCatalog } from '../src/planner'
+import { createSnapshotCatalog, searchSnapshotBuild } from '../src/planner'
 import {
   armorComponentsForPool,
   generateTalismanRecords,
@@ -59,6 +59,35 @@ describe('source snapshots', () => {
     expect(catalog.talismans.length).toBeLessThanOrEqual(100)
     expect(catalog.talismans.every(record => record.talisman.skills
       .every(skill => skill.skillId === attackId))).toBe(true)
+  })
+
+  it('searches from a selected weapon and required skills', () => {
+    const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const attackId = snapshot.catalog.skills.find(skill => skill.names.zh === '攻击')!.ref.id
+    const weapon = snapshot.catalog.weapons.find(record => record.weapon.slots.some(Boolean))!
+    const armorIdsBySlot = Object.fromEntries(
+      ['head', 'chest', 'arms', 'waist', 'legs'].map(slot => [
+        slot,
+        [snapshot.catalog.armors.find(record => record.armor.slot === slot)!.ref.id],
+      ]),
+    )
+    const attackDecoration = snapshot.catalog.decorations.find(record =>
+      record.decoration.skills.some(skill => skill.skillId === attackId))!
+
+    const solutions = searchSnapshotBuild(snapshot, {
+      armorIdsBySlot,
+      decorationIds: [attackDecoration.ref.id],
+      requiredSkills: [{ level: 1, skillId: attackId }],
+      weaponId: weapon.ref.id,
+    }, {
+      maxSolutions: 1,
+      maxTalismanCandidates: 100,
+    })
+
+    expect(solutions).toHaveLength(1)
+    expect(solutions[0].weapon.ref.id).toBe(weapon.ref.id)
+    expect(solutions[0].skills).toContainEqual({ level: 1, skillId: attackId })
   })
 
   it('loads catalogs and expands generic skill augmentation rules', () => {

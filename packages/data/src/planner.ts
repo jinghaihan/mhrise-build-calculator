@@ -16,6 +16,10 @@ export interface SnapshotPlanOptions {
   readonly talismanSkillIds?: readonly WikiId[]
 }
 
+export type SnapshotBuildQuery = Omit<BuildDefinition, 'id'> & {
+  readonly id?: string
+}
+
 export function createSnapshotCatalog(
   snapshot: SourceSnapshot,
   skillIds: readonly WikiId[],
@@ -41,6 +45,14 @@ export function createSnapshotBuildRequest(
   return createBuildRequest(catalog, definition)
 }
 
+export function searchSnapshotBuild(
+  snapshot: SourceSnapshot,
+  query: SnapshotBuildQuery,
+  options: SnapshotPlanOptions = {},
+): BuildSolution[] {
+  return solveSnapshotBuild(snapshot, toBuildDefinition(query), options)
+}
+
 export function planSnapshotBuilds(
   snapshot: SourceSnapshot,
   definitions: readonly BuildDefinition[],
@@ -48,6 +60,18 @@ export function planSnapshotBuilds(
 ): ReusePlan | undefined {
   const requests = definitions.map(definition => createSnapshotBuildRequest(snapshot, definition, options))
   return optimizeEquipmentReuse(requests, { maxSolutions: options.maxSolutions })
+}
+
+export function planSnapshotQueries(
+  snapshot: SourceSnapshot,
+  queries: readonly SnapshotBuildQuery[],
+  options: SnapshotPlanOptions = {},
+): ReusePlan | undefined {
+  return planSnapshotBuilds(
+    snapshot,
+    queries.map(toBuildDefinition),
+    options,
+  )
 }
 
 export function solveSnapshotBuild(
@@ -58,4 +82,11 @@ export function solveSnapshotBuild(
   return solveBuild(createSnapshotBuildRequest(snapshot, definition, options), {
     maxSolutions: options.maxSolutions,
   })
+}
+
+function toBuildDefinition(query: SnapshotBuildQuery): BuildDefinition {
+  return {
+    ...query,
+    id: query.id ?? `weapon-${query.weaponId}`,
+  }
 }
