@@ -85,6 +85,19 @@ importers:
         specifier: catalog:test
         version: 5.0.0(@types/node@26.4.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.7.0)(yaml@2.9.0))
 
+  packages/data:
+    dependencies:
+      '@mhrise-build-tools/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: catalog:dev
+        version: 6.0.3
+      vitest:
+        specifier: catalog:test
+        version: 5.0.0(@types/node@26.4.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.7.0)(yaml@2.9.0))
+
 packages:
 
   '@antfu/eslint-config@9.5.1':
