@@ -693,10 +693,17 @@ function pruneWorseArmorCandidates(
   candidates: readonly ArmorVariant[],
   requirements: readonly SkillValue[],
 ): ArmorVariant[] {
-  if (requirements.length >= 31 || !requirements.every(requirement => requirement.level <= 1)) {
-    return [...candidates]
+  if (requirements.length < 31 && requirements.every(requirement => requirement.level <= 1)) {
+    return pruneBinaryArmorCandidates(candidates, requirements)
   }
 
+  return pruneSameSlotArmorCandidates(candidates, requirements)
+}
+
+function pruneBinaryArmorCandidates(
+  candidates: readonly ArmorVariant[],
+  requirements: readonly SkillValue[],
+): ArmorVariant[] {
   const ordered = [...candidates].sort((left, right) => right.defense - left.defense)
   const slotPatternIds = new Map<string, number>()
   const slotPatterns: number[][] = []
@@ -740,6 +747,46 @@ function pruneWorseArmorCandidates(
   }
 
   return kept
+}
+
+function pruneSameSlotArmorCandidates(
+  candidates: readonly ArmorVariant[],
+  requirements: readonly SkillValue[],
+): ArmorVariant[] {
+  const bySlots = new Map<string, ArmorVariant[]>()
+
+  for (const candidate of candidates) {
+    const key = slotCapacities(candidate.slots).join(',')
+    const group = bySlots.get(key) ?? []
+    group.push(candidate)
+    bySlots.set(key, group)
+  }
+
+  return [...bySlots.values()].flatMap((group) => {
+    const ordered = group.sort((left, right) => right.defense - left.defense)
+    const kept: ArmorVariant[] = []
+
+    for (const candidate of ordered) {
+      const candidateSkills = requirements.map(requirement => Math.min(
+        requirement.level,
+        getSkillLevel(candidate.skills, requirement.skillId),
+      ))
+      const isWorse = kept.some((better) => {
+        const betterSkills = requirements.map(requirement => Math.min(
+          requirement.level,
+          getSkillLevel(better.skills, requirement.skillId),
+        ))
+        return better.defense >= candidate.defense
+          && betterSkills.every((level, index) => level >= candidateSkills[index])
+      })
+
+      if (!isWorse) {
+        kept.push(candidate)
+      }
+    }
+
+    return kept
+  })
 }
 
 function slotCapacities(slots: readonly number[]): number[] {
