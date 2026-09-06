@@ -138,7 +138,11 @@ export function generateArmorVariants(
 
     try {
       const variant = createArmorVariant(base, augmentation)
-      variants.set(variant.variantId, variant)
+      const stateKey = armorVariantStateKey(variant)
+      const existing = variants.get(stateKey)
+      if (!existing || variant.defense > existing.defense) {
+        variants.set(stateKey, variant)
+      }
     }
     catch {
 
@@ -275,6 +279,18 @@ function compareCommutativeComponents(
       JSON.stringify(right.resistanceDelta ?? {}),
     )
     || left.id.localeCompare(right.id)
+}
+
+function armorVariantStateKey(variant: ArmorVariant): string {
+  return [
+    variant.slots.join(','),
+    variant.resistances.dragon,
+    variant.resistances.fire,
+    variant.resistances.ice,
+    variant.resistances.thunder,
+    variant.resistances.water,
+    skillKey(variant.skills),
+  ].join('|')
 }
 
 function dedupeComponents(

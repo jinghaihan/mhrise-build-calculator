@@ -97,7 +97,7 @@ describe('armor legality', () => {
   it('stops when the remaining cost reaches zero', () => {
     const variants = generateArmorVariants(baseArmor(), [{
       costDelta: 20,
-      defenseDelta: 0,
+      defenseDelta: 1,
       id: 'spend-all-cost',
       skillChanges: [],
       slotUpgrades: 0,
