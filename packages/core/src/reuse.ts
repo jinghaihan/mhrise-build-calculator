@@ -6,6 +6,7 @@ export type ReuseOptions = SolveOptions
 
 export interface ReuseScore {
   readonly armorReuseCount: number
+  readonly totalDefense: number
   readonly uniqueArmorPieces: number
   readonly uniqueTalismans: number
 }
@@ -39,7 +40,10 @@ export function optimizeEquipmentReuse(
     talismanKeys: Set<string>,
   ): void {
     if (requestIndex >= candidates.length) {
-      const score = createScore(armorKeys, talismanKeys, requests.length)
+      const score = {
+        ...createScore(armorKeys, talismanKeys, requests.length),
+        totalDefense: selected.reduce((total, solution) => total + solution.defense, 0),
+      }
       const plan = createPlan(selected, score)
 
       if (!best || compareScores(score, best.score) < 0) {
@@ -79,6 +83,7 @@ function addArmorKeys(
 
 function compareScores(left: ReuseScore, right: ReuseScore): number {
   return left.uniqueArmorPieces - right.uniqueArmorPieces
+    || right.totalDefense - left.totalDefense
     || left.uniqueTalismans - right.uniqueTalismans
     || right.armorReuseCount - left.armorReuseCount
 }
@@ -108,6 +113,7 @@ function createScore(
 ): ReuseScore {
   return {
     armorReuseCount: buildCount * 5 - uniqueArmorPieces.size,
+    totalDefense: 0,
     uniqueArmorPieces: uniqueArmorPieces.size,
     uniqueTalismans: uniqueTalismans.size,
   }

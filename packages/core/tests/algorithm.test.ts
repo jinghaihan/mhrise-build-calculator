@@ -11,9 +11,15 @@ function skill(skillId: string, level: number): SkillValue {
   return { skillId: createWikiId(skillId), level }
 }
 
-function armor(slot: ArmorSlot, id: string, slots: [number, number, number] = [1, 0, 0]) {
+function armor(
+  slot: ArmorSlot,
+  id: string,
+  slots: [number, number, number] = [1, 0, 0],
+  baseDefense = 100,
+) {
   const base: ArmorPiece = {
     baseSkills: [],
+    baseDefense,
     costBudget: 20,
     ref: createWikiRef('armor', id),
     slot,
@@ -83,6 +89,20 @@ describe('build solving', () => {
 
     expect(solveBuild(invalidBuild)).toHaveLength(0)
   })
+
+  it('orders individual solutions by total final armor defense', () => {
+    const build = request('defense-order', [skill(String(attack), 1)])
+    const lowerDefense = armor('head', '1007', [1, 0, 0], 100)
+    const higherDefense = armor('head', '1008', [1, 0, 0], 200)
+    const requestWithAlternatives = {
+      ...build,
+      armorBySlot: { ...build.armorBySlot, head: [lowerDefense, higherDefense] },
+    }
+    const solutions = solveBuild(requestWithAlternatives, { maxSolutions: 2 })
+
+    expect(solutions[0].defense).toBe(600)
+    expect(solutions[1].defense).toBe(500)
+  })
 })
 
 describe('equipment reuse optimization', () => {
@@ -94,10 +114,11 @@ describe('equipment reuse optimization', () => {
 
     expect(plan?.score).toEqual({
       armorReuseCount: 5,
+      totalDefense: 1000,
       uniqueArmorPieces: 5,
       uniqueTalismans: 1,
     })
-    expect(plan?.sharedArmor['1001|0|0']).toEqual(['build-a', 'build-b'])
+    expect(plan?.sharedArmor['1001|0|0|0']).toEqual(['build-a', 'build-b'])
   })
 
   it('backtracks to reuse a shared variant instead of keeping the first candidate', () => {
@@ -117,6 +138,6 @@ describe('equipment reuse optimization', () => {
     const plan = optimizeEquipmentReuse([buildAWithAlternatives, buildBWithSharedHead])
 
     expect(plan?.score.uniqueArmorPieces).toBe(5)
-    expect(plan?.sharedArmor['1001|0|0']).toEqual(['build-a', 'build-b'])
+    expect(plan?.sharedArmor['1001|0|0|0']).toEqual(['build-a', 'build-b'])
   })
 })

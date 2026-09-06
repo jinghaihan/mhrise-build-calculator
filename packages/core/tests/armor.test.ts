@@ -10,6 +10,7 @@ function skill(skillId: string, level: number) {
 function baseArmor(): ArmorPiece {
   return {
     baseSkills: [],
+    baseDefense: 100,
     costBudget: 20,
     ref: createWikiRef('armor', '1010'),
     slot: 'head',
@@ -23,6 +24,7 @@ describe('armor legality', () => {
 
     expect(() => createArmorVariant(base, {
       cost: base.costBudget + 1,
+      defenseDelta: 0,
       skillChanges: [],
       slotUpgrades: 0,
     })).toThrow('outside budget')
@@ -40,6 +42,7 @@ describe('armor legality', () => {
 
     expect(() => createArmorVariant(base, {
       cost: 1,
+      defenseDelta: 0,
       skillChanges: [skill('6000', 1)],
       slotUpgrades: 0,
     })).toThrow(`more than ${MAX_ARMOR_SKILLS}`)

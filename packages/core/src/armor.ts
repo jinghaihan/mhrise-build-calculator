@@ -10,6 +10,7 @@ export function createArmorVariant(
 ): ArmorVariant {
   const appliedAugmentation = augmentation ?? {
     cost: 0,
+    defenseDelta: 0,
     skillChanges: [],
     slotUpgrades: 0,
   }
@@ -29,10 +30,17 @@ export function createArmorVariant(
     throw new Error(`Armor has more than ${MAX_ARMOR_SKILLS} active skills: ${base.ref.id}`)
   }
 
+  const defense = base.baseDefense + appliedAugmentation.defenseDelta
+
+  if (defense < 0) {
+    throw new Error(`Armor defense cannot be negative: ${base.ref.id}`)
+  }
+
   const slots = applySlotUpgrades(base.slots, appliedAugmentation.slotUpgrades)
   const variantId = [
     base.ref.id,
     appliedAugmentation.cost,
+    appliedAugmentation.defenseDelta,
     appliedAugmentation.slotUpgrades,
     ...appliedAugmentation.skillChanges.map(skill => `${skill.skillId}:${skill.level}`),
   ].join('|')
@@ -40,6 +48,7 @@ export function createArmorVariant(
   return {
     augmentation,
     base,
+    defense,
     skills,
     slots,
     variantId,

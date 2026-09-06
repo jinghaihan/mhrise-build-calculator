@@ -67,6 +67,7 @@ export function solveBuild(
         solutions.push({
           armor,
           decorations,
+          defense: Object.values(armor).reduce((total, variant) => total + variant.defense, 0),
           id: request.id,
           skills: finalSkills,
           talisman,
@@ -77,7 +78,8 @@ export function solveBuild(
   }
 
   searchArmor(0, [])
-  return solutions
+  return solutions.sort((left, right) => right.defense - left.defense
+    || left.decorations.length - right.decorations.length)
 }
 
 function createCompleteArmor(
