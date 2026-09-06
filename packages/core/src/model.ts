@@ -26,8 +26,17 @@ export interface ArmorPiece {
 }
 
 export interface ArmorAugmentation {
+  readonly componentIds?: readonly string[]
   readonly cost: number
   readonly defenseDelta: number
+  readonly skillChanges: readonly SkillValue[]
+  readonly slotUpgrades: number
+}
+
+export interface ArmorAugmentComponent {
+  readonly costDelta: number
+  readonly defenseDelta: number
+  readonly id: string
   readonly skillChanges: readonly SkillValue[]
   readonly slotUpgrades: number
 }

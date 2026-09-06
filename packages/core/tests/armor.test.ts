@@ -1,6 +1,10 @@
 import type { ArmorPiece } from '../src/model'
 import { describe, expect, it } from 'vitest'
-import { createArmorVariant, MAX_ARMOR_SKILLS } from '../src/armor'
+import {
+  createArmorVariant,
+  generateArmorVariants,
+  MAX_ARMOR_SKILLS,
+} from '../src/armor'
 import { createWikiId, createWikiRef } from '../src/ids'
 
 function skill(skillId: string, level: number) {
@@ -46,5 +50,22 @@ describe('armor legality', () => {
       skillChanges: [skill('6000', 1)],
       slotUpgrades: 0,
     })).toThrow(`more than ${MAX_ARMOR_SKILLS}`)
+  })
+
+  it('generates legal variants from reusable augmentation components', () => {
+    const base = { ...baseArmor(), slots: [2, 1, 0] as const }
+    const variants = generateArmorVariants(base, [{
+      costDelta: 1,
+      defenseDelta: 0,
+      id: 'slot-plus-one',
+      skillChanges: [],
+      slotUpgrades: 1,
+    }], { maxComponents: 2 })
+
+    expect(variants.map(variant => variant.slots)).toEqual([
+      [2, 1, 0],
+      [2, 1, 1],
+      [3, 1, 1],
+    ])
   })
 })
