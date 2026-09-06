@@ -1,7 +1,10 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { createWikiRef } from '@mhrise-build-tools/core'
 import { describe, expect, it } from 'vitest'
 import { parseMarkdownBuildRequirements } from '../src/markdown'
 import { expandMarkdownBuildRequirements } from '../src/markdown-planner'
+import { parseSourceSnapshot } from '../src/snapshot'
 
 describe('markdown build input', () => {
   it('converts localized skill lines to stable Kiranico ids', () => {
@@ -150,5 +153,23 @@ describe('markdown build input', () => {
       { level: 3, skillId: '7200' },
       { level: 1, skillId: '7200' },
     ]])
+  })
+
+  it('parses a real build-note fixture with all alternative groups', () => {
+    const snapshot = parseSourceSnapshot(readFileSync(fileURLToPath(
+      new URL('../snapshots/source-snapshot.json', import.meta.url),
+    ), 'utf8'))
+    const fixturePath = fileURLToPath(new URL('./fixtures/monster-hunter-rise.md', import.meta.url))
+    const [requirements] = parseMarkdownBuildRequirements(
+      readFileSync(fixturePath, 'utf8'),
+      snapshot.catalog,
+    )
+    const definitions = expandMarkdownBuildRequirements(requirements, { weaponId: 'fixture-weapon' })
+
+    expect(requirements.id).toBe('弓-属性配装')
+    expect(requirements.requiredSkills.length).toBe(4)
+    expect(requirements.requiredSkillGroups.filter(group => group.length > 1).map(group => group.length))
+      .toEqual([5, 3, 2])
+    expect(definitions).toHaveLength(30)
   })
 })
