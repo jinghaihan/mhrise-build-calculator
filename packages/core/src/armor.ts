@@ -160,6 +160,11 @@ export function generateArmorVariants(
       return false
     }
 
+    if (component.skillChanges.some(change => change.level < 0
+      && getSkillLevel(base.baseSkills, change.skillId) <= 0)) {
+      return false
+    }
+
     // A positive resistance roll consumes budget without improving the
     // requested skills, slots, or defense. In the default defense-first
     // planner it is dominated by leaving that budget available; source-order
@@ -168,13 +173,9 @@ export function generateArmorVariants(
   })
   const componentOrder = new Map(
     [...ordinaryComponents]
-      .filter(component => component.role !== 'cost-fill'
-        && (component.skillChanges.length === 0
-          || !hasUsableNegativeSkillChange(ordinaryComponents, base)))
       .sort(compareCommutativeComponents)
       .map((component, index) => [component.id, index] as const),
   )
-  const globallyCommutative = !hasUsableNegativeSkillChange(ordinaryComponents, base)
   search(0, 0, 0, ZERO_ARMOR_RESISTANCES, [], 0, [], -1)
 
   function search(
@@ -201,19 +202,29 @@ export function generateArmorVariants(
       return
     }
 
+    const currentSkills = addSkillValues(base.baseSkills, skillChanges)
+    const resistanceStateKey = requiredSkills.length === 0
+      ? [
+          resistanceDelta.dragon,
+          resistanceDelta.fire,
+          resistanceDelta.ice,
+          resistanceDelta.thunder,
+          resistanceDelta.water,
+        ]
+      : []
     const stateKey = [
-      cost,
-      resistanceDelta.dragon,
-      resistanceDelta.fire,
-      resistanceDelta.ice,
-      resistanceDelta.thunder,
-      resistanceDelta.water,
-      skillKey(addSkillValues(skillChanges)),
-      depth,
+      ...resistanceStateKey,
+      activeSkillSetKey(currentSkills),
       lastCommutativeIndex,
     ].join('|')
     const previousStates = frontierStates.get(stateKey) ?? []
-    const currentState = { defenseDelta, resistances: resistanceDelta, slots }
+    const currentState = {
+      cost,
+      defenseDelta,
+      depth,
+      skills: currentSkills,
+      slots,
+    }
     if (previousStates.some(previous => dominates(previous, currentState))) {
       return
     }
@@ -291,9 +302,7 @@ export function generateArmorVariants(
         nextSkillChanges,
         slotUpgrades + component.slotUpgrades,
         [...componentIds, component.id],
-        globallyCommutative || commutativeIndex !== undefined
-          ? commutativeIndex ?? -1
-          : -1,
+        commutativeIndex ?? -1,
       )
 
       if (variants.size >= maxVariants) {
@@ -305,43 +314,66 @@ export function generateArmorVariants(
   return [...variants.values()]
 }
 
-function hasUsableNegativeSkillChange(
-  components: readonly ArmorAugmentComponent[],
-  base: ArmorPiece,
-): boolean {
-  return components.some(component => component.skillChanges.some(change => (
-    change.level < 0 && getSkillLevel(base.baseSkills, change.skillId) > 0
-  )))
-}
-
 interface FrontierState {
+  readonly cost: number
   readonly defenseDelta: number
-  readonly resistances: ArmorResistances
+  readonly depth: number
+  readonly skills: readonly SkillValue[]
   readonly slots: SlotLevels
 }
 
 function dominates(left: FrontierState, right: FrontierState): boolean {
-  return left.defenseDelta >= right.defenseDelta
+  return left.cost <= right.cost
+    && left.depth <= right.depth
+    && left.defenseDelta >= right.defenseDelta
     && left.slots.every((level, index) => level >= right.slots[index])
-    && ARMOR_ELEMENTS.every(element => left.resistances[element] >= right.resistances[element])
+    && left.skills.every(skill => getSkillLevel(left.skills, skill.skillId)
+      >= getSkillLevel(right.skills, skill.skillId))
     && (
-      left.defenseDelta > right.defenseDelta
+      left.cost < right.cost
+      || left.depth < right.depth
+      || left.defenseDelta > right.defenseDelta
       || left.slots.some((level, index) => level > right.slots[index])
-      || ARMOR_ELEMENTS.some(element => left.resistances[element] > right.resistances[element])
+      || left.skills.some(skill => getSkillLevel(left.skills, skill.skillId)
+        > getSkillLevel(right.skills, skill.skillId))
     )
+}
+
+function activeSkillSetKey(skills: readonly SkillValue[]): string {
+  return skills
+    .filter(skill => skill.level > 0)
+    .map(skill => skill.skillId)
+    .sort()
+    .join(',')
 }
 
 function compareCommutativeComponents(
   left: ArmorAugmentComponent,
   right: ArmorAugmentComponent,
 ): number {
-  return left.costDelta - right.costDelta
+  return skillDirection(left) - skillDirection(right)
+    || left.costDelta - right.costDelta
     || left.defenseDelta - right.defenseDelta
     || left.slotUpgrades - right.slotUpgrades
     || JSON.stringify(left.resistanceDelta ?? {}).localeCompare(
       JSON.stringify(right.resistanceDelta ?? {}),
     )
     || left.id.localeCompare(right.id)
+}
+
+function skillDirection(component: ArmorAugmentComponent): number {
+  const level = component.skillChanges.reduce((total, change) => total + change.level, 0)
+  if (level < 0) {
+    return -1
+  }
+  return level > 0 ? 1 : 0
+}
+
+function getRequiredSkillLevel(
+  requirements: readonly SkillValue[],
+  skillId: SkillValue['skillId'],
+): number {
+  return requirements.find(requirement => requirement.skillId === skillId)?.level ?? 0
 }
 
 function isNegativeResistanceComponent(component: ArmorAugmentComponent): boolean {
@@ -395,13 +427,18 @@ function armorVariantStateKey(
   variant: ArmorVariant,
   requiredSkills: readonly SkillValue[],
 ): string {
+  const resistanceStateKey = requiredSkills.length === 0
+    ? [
+        variant.resistances.dragon,
+        variant.resistances.fire,
+        variant.resistances.ice,
+        variant.resistances.thunder,
+        variant.resistances.water,
+      ]
+    : []
   return [
     variant.slots.join(','),
-    variant.resistances.dragon,
-    variant.resistances.fire,
-    variant.resistances.ice,
-    variant.resistances.thunder,
-    variant.resistances.water,
+    ...resistanceStateKey,
     requiredSkills.length > 0
       ? requiredSkills.map(requirement => `${requirement.skillId}:${Math.min(
           getSkillLevel(variant.skills, requirement.skillId),
@@ -409,13 +446,6 @@ function armorVariantStateKey(
         )}`).join(',')
       : skillKey(variant.skills),
   ].join('|')
-}
-
-function getRequiredSkillLevel(
-  requirements: readonly SkillValue[],
-  skillId: SkillValue['skillId'],
-): number {
-  return requirements.find(requirement => requirement.skillId === skillId)?.level ?? 0
 }
 
 function dedupeComponents(
@@ -441,17 +471,16 @@ function dedupeComponents(
 }
 
 /**
- * A same-cost roll is unnecessary when another roll has every final effect at
- * least as good and the same skill changes/role. Keeping the better roll is
- * exact for build search and removes duplicate source levels such as
- * resistance +1/+2 with equal cost.
+ * A roll is unnecessary when another roll has every final effect at least as
+ * good, costs no more, and has the same skill changes/role. Keeping the better
+ * roll is exact for build search and removes redundant skill+ cost tiers.
  */
 function pruneDominatedComponents(
   components: readonly ArmorAugmentComponent[],
 ): ArmorAugmentComponent[] {
   return components.filter((component, index) => !components.some((candidate, candidateIndex) => {
     if (index === candidateIndex
-      || candidate.costDelta !== component.costDelta
+      || candidate.costDelta > component.costDelta
       || (candidate.role ?? 'normal') !== (component.role ?? 'normal')
       || skillKey(candidate.skillChanges) !== skillKey(component.skillChanges)) {
       return false
@@ -464,7 +493,8 @@ function pruneDominatedComponents(
     const noWorse = candidate.defenseDelta >= component.defenseDelta
       && candidate.slotUpgrades >= component.slotUpgrades
       && resistanceElements
-    const strictlyBetter = candidate.defenseDelta > component.defenseDelta
+    const strictlyBetter = candidate.costDelta < component.costDelta
+      || candidate.defenseDelta > component.defenseDelta
       || candidate.slotUpgrades > component.slotUpgrades
       || ARMOR_ELEMENTS.some(element => (
         (candidate.resistanceDelta?.[element] ?? 0)

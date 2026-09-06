@@ -40,18 +40,23 @@ export function solveBuild(
       maxSolutions,
     ), workingRequest.requiredSkills),
   ])) as unknown as typeof request.armorBySlot
-  const armorStates = createArmorStates(
-    armorBySlot,
-    workingRequest.requiredSkills,
-    preserveEquipmentIdentity,
-    maxSolutions,
-  )
   const orderedTalismans = orderTalismanCandidates(
     legalTalismans,
     request.requiredSkills,
     preserveEquipmentIdentity,
   )
 
+  if (!preserveEquipmentIdentity && maxSolutions === 1) {
+    searchBestArmorCombination(workingRequest, armorBySlot, bounds, searchTalismans)
+    return solutions
+  }
+
+  const armorStates = createArmorStates(
+    armorBySlot,
+    workingRequest.requiredSkills,
+    preserveEquipmentIdentity,
+    maxSolutions,
+  )
   function searchTalismans(
     skills: readonly SkillValue[],
     armor: Readonly<Record<ArmorSlot, ArmorVariant>>,
@@ -129,6 +134,199 @@ export function solveBuild(
     )
   }
   return solutions
+
+  function searchBestArmorCombination(
+    searchRequest: BuildRequest,
+    candidates: Readonly<Record<ArmorSlot, readonly ArmorVariant[]>>,
+    searchBounds: SearchBounds,
+    finish: (
+      skills: readonly SkillValue[],
+      armor: Readonly<Record<ArmorSlot, ArmorVariant>>,
+    ) => void,
+  ): void {
+    const searchSlots = [...ARMOR_SLOTS].sort((left, right) =>
+      candidates[left].length - candidates[right].length)
+    const suffixMaximumDefense = createSuffixMaximumDefense(candidates, searchSlots)
+    const bestPartialDefense = searchSlots.map(() => new Map<string, number>())
+
+    const seedArmor = createGreedyArmorSeed(candidates, searchSlots, searchRequest.requiredSkills)
+    if (seedArmor) {
+      finish(
+        getArmorSkills(seedArmor),
+        seedArmor,
+      )
+    }
+
+    search(0, {}, [], [0, 0, 0, 0], 0)
+
+    function search(
+      slotIndex: number,
+      armor: Readonly<Partial<Record<ArmorSlot, ArmorVariant>>>,
+      skills: readonly SkillValue[],
+      slotCapacities: readonly number[],
+      defense: number,
+    ): void {
+      const bestDefense = solutions[solutions.length - 1]?.defense
+      if (bestDefense !== undefined
+        && defense + suffixMaximumDefense[slotIndex] < bestDefense) {
+        return
+      }
+
+      const stateKey = [
+        ...searchRequest.requiredSkills.map(requirement => Math.min(
+          requirement.level,
+          getSkillLevel(skills, requirement.skillId),
+        )),
+        ...slotCapacities,
+      ].join('|')
+      const previousDefense = bestPartialDefense[slotIndex]?.get(stateKey)
+      if (previousDefense !== undefined && previousDefense >= defense) {
+        return
+      }
+      bestPartialDefense[slotIndex]?.set(stateKey, defense)
+
+      if (!canReachRemainingArmorSkills(
+        searchRequest,
+        searchBounds,
+        candidates,
+        searchSlots,
+        slotIndex,
+        skills,
+      )) {
+        return
+      }
+
+      if (slotIndex >= searchSlots.length) {
+        finish(skills, armor as Record<ArmorSlot, ArmorVariant>)
+        return
+      }
+
+      const slot = searchSlots[slotIndex]
+      for (const variant of candidates[slot]) {
+        search(
+          slotIndex + 1,
+          { ...armor, [slot]: variant },
+          addSkillValues(skills, variant.skills),
+          addSlotCapacities(slotCapacities, variant.slots),
+          defense + variant.defense,
+        )
+      }
+    }
+  }
+}
+
+function addSlotCapacities(
+  current: readonly number[],
+  slots: readonly number[],
+): number[] {
+  const next = [...current]
+
+  for (const level of slots) {
+    for (let minimumLevel = 1; minimumLevel <= level; minimumLevel += 1) {
+      next[minimumLevel - 1] += 1
+    }
+  }
+
+  return next
+}
+
+function createGreedyArmorSeed(
+  candidates: Readonly<Record<ArmorSlot, readonly ArmorVariant[]>>,
+  searchSlots: readonly ArmorSlot[],
+  requirements: readonly SkillValue[],
+): Record<ArmorSlot, ArmorVariant> | undefined {
+  const selected = {} as Record<ArmorSlot, ArmorVariant>
+  let skills: SkillValue[] = []
+
+  for (const slot of searchSlots) {
+    const candidate = candidates[slot].reduce<ArmorVariant | undefined>((best, current) => {
+      if (!best) {
+        return current
+      }
+
+      const bestGain = skillGain(best, skills, requirements)
+      const currentGain = skillGain(current, skills, requirements)
+      if (currentGain !== bestGain) {
+        return currentGain > bestGain ? current : best
+      }
+
+      return current.defense > best.defense ? current : best
+    }, undefined)
+
+    if (!candidate) {
+      return undefined
+    }
+
+    selected[slot] = candidate
+    skills = addSkillValues(skills, candidate.skills)
+  }
+
+  return selected
+}
+
+function skillGain(
+  candidate: ArmorVariant,
+  current: readonly SkillValue[],
+  requirements: readonly SkillValue[],
+): number {
+  return requirements.reduce((total, requirement) => total + Math.max(
+    0,
+    Math.min(
+      requirement.level,
+      getSkillLevel(current, requirement.skillId) + getSkillLevel(
+        candidate.skills,
+        requirement.skillId,
+      ),
+    ) - getSkillLevel(current, requirement.skillId),
+  ), 0)
+}
+
+function createSuffixMaximumDefense(
+  candidates: Readonly<Record<ArmorSlot, readonly ArmorVariant[]>>,
+  searchSlots: readonly ArmorSlot[],
+): readonly number[] {
+  const maximums = Array.from({ length: searchSlots.length + 1 }).fill(0) as number[]
+
+  for (let index = searchSlots.length - 1; index >= 0; index -= 1) {
+    const slot = searchSlots[index]
+    maximums[index] = maximums[index + 1] + Math.max(
+      0,
+      ...candidates[slot].map(variant => variant.defense),
+    )
+  }
+
+  return maximums
+}
+
+function canReachRemainingArmorSkills(
+  request: BuildRequest,
+  bounds: SearchBounds,
+  candidates: Readonly<Record<ArmorSlot, readonly ArmorVariant[]>>,
+  searchSlots: readonly ArmorSlot[],
+  slotIndex: number,
+  currentSkills: readonly SkillValue[],
+): boolean {
+  return request.requiredSkills.every((requirement) => {
+    const remainingArmorMaximum = searchSlots.slice(slotIndex).reduce((total, slot) => total
+      + Math.max(0, ...candidates[slot].map(armor => getSkillLevel(
+        armor.skills,
+        requirement.skillId,
+      ))), 0)
+    const requirementIndex = request.requiredSkills.indexOf(requirement)
+    const potentialSlotLevels = [
+      ...request.weapon.slots,
+      ...bounds.armorSlots.flat(),
+      ...bounds.talismanSlots,
+    ]
+    const decorationMaximum = potentialSlotLevels.reduce((total, slotLevel) => total
+      + (bounds.decorationSkillsBySlotLevel[slotLevel]?.[requirementIndex] ?? 0), 0)
+
+    return getSkillLevel(currentSkills, requirement.skillId)
+      + getSkillLevel(request.weapon.skills, requirement.skillId)
+      + (bounds.talismanSkills[requirementIndex] ?? 0)
+      + remainingArmorMaximum
+      + decorationMaximum >= requirement.level
+  })
 }
 
 function compareSolutions(left: BuildSolution, right: BuildSolution): number {
@@ -152,11 +350,11 @@ function createArmorStates(
   let states: ArmorSearchState[] = [{
     armor: {},
     requiredLevels: requirements.map(() => 0),
-    slotCounts: [0, 0, 0, 0, 0],
+    slotCounts: [0, 0, 0, 0],
   }]
 
   for (const slot of ARMOR_SLOTS) {
-    const next = new Map<string, ArmorSearchState[]>()
+    const next = new Map<string, ArmorSearchState | ArmorSearchState[]>()
 
     for (const state of states) {
       for (const variant of armorBySlot[slot]) {
@@ -167,7 +365,9 @@ function createArmorStates(
         ))
         const slotCounts = [...state.slotCounts]
         for (const level of variant.slots) {
-          slotCounts[level] += 1
+          for (let minimumLevel = 1; minimumLevel <= level; minimumLevel += 1) {
+            slotCounts[minimumLevel - 1] += 1
+          }
         }
         const nextState = { armor, requiredLevels, slotCounts }
 
@@ -177,24 +377,32 @@ function createArmorStates(
         }
 
         const key = `${requiredLevels.join(',')}|${slotCounts.join(',')}`
+        if (maxSolutions === 1) {
+          const previous = next.get(key) as ArmorSearchState | undefined
+          if (!previous || getArmorStateDefense(nextState.armor) > getArmorStateDefense(previous.armor)) {
+            next.set(key, nextState)
+          }
+          continue
+        }
+
         const alternatives = next.get(key) ?? []
-        alternatives.push(nextState)
-        alternatives.sort((left, right) => getArmorStateDefense(right.armor)
+        ;(alternatives as ArmorSearchState[]).push(nextState)
+        ;(alternatives as ArmorSearchState[]).sort((left, right) => getArmorStateDefense(right.armor)
           - getArmorStateDefense(left.armor))
-        if (alternatives.length > maxSolutions) {
-          alternatives.pop()
+        if ((alternatives as ArmorSearchState[]).length > maxSolutions) {
+          ;(alternatives as ArmorSearchState[]).pop()
         }
         next.set(key, alternatives)
       }
     }
 
-    states = [...next.values()].flat().sort((left, right) => compareArmorStates(
+    states = [...next.values()].flatMap(value => Array.isArray(value) ? value : [value]).sort((left, right) => compareArmorStates(
       left,
       right,
     ))
 
     if (!preserveEquipmentIdentity && maxSolutions === 1) {
-      states = pruneDominatedArmorStates(states)
+      states = pruneWorseArmorStates(states)
     }
   }
 
@@ -210,16 +418,28 @@ function compareArmorStates(
     || slotCountScore(right.slotCounts) - slotCountScore(left.slotCounts)
 }
 
-function pruneDominatedArmorStates(states: readonly ArmorSearchState[]): ArmorSearchState[] {
+function pruneWorseArmorStates(states: readonly ArmorSearchState[]): ArmorSearchState[] {
+  if ((states[0]?.requiredLevels.length ?? 0) >= 31) {
+    return pruneGenericArmorStates(states)
+  }
+
+  if (states.every(state => state.requiredLevels.every(level => level <= 1))) {
+    return pruneBinarySkillArmorStates(states)
+  }
+
+  return pruneGenericArmorStates(states)
+}
+
+function pruneGenericArmorStates(states: readonly ArmorSearchState[]): ArmorSearchState[] {
   const frontier: ArmorSearchState[] = []
 
   for (const state of states) {
-    if (frontier.some(candidate => dominatesArmorState(candidate, state))) {
+    if (frontier.some(candidate => isNoWorseArmorState(candidate, state))) {
       continue
     }
 
     for (let index = frontier.length - 1; index >= 0; index -= 1) {
-      if (dominatesArmorState(state, frontier[index])) {
+      if (isNoWorseArmorState(state, frontier[index])) {
         frontier.splice(index, 1)
       }
     }
@@ -230,7 +450,60 @@ function pruneDominatedArmorStates(states: readonly ArmorSearchState[]): ArmorSe
   return frontier
 }
 
-function dominatesArmorState(left: ArmorSearchState, right: ArmorSearchState): boolean {
+function pruneBinarySkillArmorStates(
+  states: readonly ArmorSearchState[],
+): ArmorSearchState[] {
+  const ordered = [...states].sort((left, right) => getArmorStateDefense(right.armor)
+    - getArmorStateDefense(left.armor))
+  const slotPatternIds = new Map<string, number>()
+  const slotCoverMasks: bigint[] = []
+  const slotPatterns: number[][] = []
+
+  for (const state of ordered) {
+    const key = state.slotCounts.join(',')
+    if (!slotPatternIds.has(key)) {
+      slotPatternIds.set(key, slotPatterns.length)
+      slotPatterns.push([...state.slotCounts])
+    }
+  }
+
+  for (const counts of slotPatterns) {
+    let coverMask = 0n
+    for (const [key, patternId] of slotPatternIds) {
+      const candidate = key.split(',').map(Number)
+      if (slotsCoverCounts(candidate, counts)) {
+        coverMask |= 1n << BigInt(patternId)
+      }
+    }
+    slotCoverMasks.push(coverMask)
+  }
+
+  const coveringSlotsByMask = new Map<number, bigint>()
+  const kept: ArmorSearchState[] = []
+
+  for (const state of ordered) {
+    const mask = state.requiredLevels.reduce(
+      (value, level, index) => value | (level > 0 ? 1 << index : 0),
+      0,
+    )
+    const slotId = slotPatternIds.get(state.slotCounts.join(','))!
+    const dominated = ((coveringSlotsByMask.get(mask) ?? 0n) & slotCoverMasks[slotId]) !== 0n
+
+    if (!dominated) {
+      kept.push(state)
+      const slotBit = 1n << BigInt(slotId)
+      let subset = mask
+      do {
+        coveringSlotsByMask.set(subset, (coveringSlotsByMask.get(subset) ?? 0n) | slotBit)
+        subset = (subset - 1) & mask
+      } while (subset !== mask)
+    }
+  }
+
+  return kept
+}
+
+function isNoWorseArmorState(left: ArmorSearchState, right: ArmorSearchState): boolean {
   return left.requiredLevels.every((level, index) => level >= right.requiredLevels[index])
     && slotsCoverCounts(left.slotCounts, right.slotCounts)
     && getArmorStateDefense(left.armor) >= getArmorStateDefense(right.armor)
@@ -242,10 +515,8 @@ function dominatesArmorState(left: ArmorSearchState, right: ArmorSearchState): b
 }
 
 function slotsCoverCounts(left: readonly number[], right: readonly number[]): boolean {
-  for (let level = 1; level <= 4; level += 1) {
-    const leftCount = left.slice(level).reduce((total, count) => total + count, 0)
-    const rightCount = right.slice(level).reduce((total, count) => total + count, 0)
-    if (leftCount < rightCount) {
+  for (let index = 0; index < 4; index += 1) {
+    if ((left[index] ?? 0) < (right[index] ?? 0)) {
       return false
     }
   }
@@ -260,7 +531,7 @@ function requiredSkillScore(
 }
 
 function slotCountScore(counts: readonly number[]): number {
-  return counts.reduce((total, count, level) => total + count * level, 0)
+  return counts.reduce((total, count, index) => total + count * (index + 1), 0)
 }
 
 function getArmorStateDefense(
@@ -290,7 +561,7 @@ function createSearchCandidates(
     return [...candidates]
   }
 
-  const equivalent = new Map<string, ArmorVariant[]>()
+  const equivalent = new Map<string, ArmorVariant | ArmorVariant[]>()
 
   for (const candidate of candidates) {
     const key = [
@@ -298,14 +569,17 @@ function createSearchCandidates(
         getSkillLevel(candidate.skills, requirement.skillId),
         requirement.level,
       )}`).join(','),
-      candidate.slots.join(','),
-      candidate.resistances.dragon,
-      candidate.resistances.fire,
-      candidate.resistances.ice,
-      candidate.resistances.thunder,
-      candidate.resistances.water,
+      slotCapacities(candidate.slots).join(','),
     ].join('|')
-    const alternatives = equivalent.get(key) ?? []
+    if (maxSolutions === 1) {
+      const previous = equivalent.get(key) as ArmorVariant | undefined
+      if (!previous || candidate.defense > previous.defense) {
+        equivalent.set(key, candidate)
+      }
+      continue
+    }
+
+    const alternatives = (equivalent.get(key) as ArmorVariant[] | undefined) ?? []
     alternatives.push(candidate)
     alternatives.sort((left, right) => right.defense - left.defense)
     if (alternatives.length > maxSolutions) {
@@ -314,7 +588,72 @@ function createSearchCandidates(
     equivalent.set(key, alternatives)
   }
 
-  return [...equivalent.values()].flat()
+  const reduced = [...equivalent.values()].flatMap(value => Array.isArray(value) ? value : [value])
+  const pruned = maxSolutions === 1 ? pruneWorseArmorCandidates(reduced, requirements) : reduced
+  return pruned
+}
+
+function pruneWorseArmorCandidates(
+  candidates: readonly ArmorVariant[],
+  requirements: readonly SkillValue[],
+): ArmorVariant[] {
+  if (requirements.length >= 31 || !requirements.every(requirement => requirement.level <= 1)) {
+    return [...candidates]
+  }
+
+  const ordered = [...candidates].sort((left, right) => right.defense - left.defense)
+  const slotPatternIds = new Map<string, number>()
+  const slotPatterns: number[][] = []
+
+  for (const candidate of ordered) {
+    const capacities = slotCapacities(candidate.slots)
+    const key = capacities.join(',')
+    if (!slotPatternIds.has(key)) {
+      slotPatternIds.set(key, slotPatterns.length)
+      slotPatterns.push(capacities)
+    }
+  }
+
+  const slotCoverMasks = slotPatterns.map((counts) => {
+    let mask = 0n
+    for (const [key, patternId] of slotPatternIds) {
+      if (slotsCoverCounts(key.split(',').map(Number), counts)) {
+        mask |= 1n << BigInt(patternId)
+      }
+    }
+    return mask
+  })
+  const coveringSlotsByMask = new Map<number, bigint>()
+  const kept: ArmorVariant[] = []
+
+  for (const candidate of ordered) {
+    const mask = requirements.reduce((value, requirement, index) => value
+      | (getSkillLevel(candidate.skills, requirement.skillId) > 0 ? 1 << index : 0), 0)
+    const slotId = slotPatternIds.get(slotCapacities(candidate.slots).join(','))!
+    const isWorse = !!((coveringSlotsByMask.get(mask) ?? 0n) & slotCoverMasks[slotId])
+
+    if (!isWorse) {
+      kept.push(candidate)
+      const slotBit = 1n << BigInt(slotId)
+      let subset = mask
+      do {
+        coveringSlotsByMask.set(subset, (coveringSlotsByMask.get(subset) ?? 0n) | slotBit)
+        subset = (subset - 1) & mask
+      } while (subset !== mask)
+    }
+  }
+
+  return kept
+}
+
+function slotCapacities(slots: readonly number[]): number[] {
+  const capacities = [0, 0, 0, 0]
+  for (const level of slots) {
+    for (let minimumLevel = 1; minimumLevel <= level; minimumLevel += 1) {
+      capacities[minimumLevel - 1] += 1
+    }
+  }
+  return capacities
 }
 
 function dedupeDecorations(
