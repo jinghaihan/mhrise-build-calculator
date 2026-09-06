@@ -24,4 +24,6 @@ The workbook sheets used by the importer are:
 
 Use `parseSourceSnapshot` to load the JSON and `searchSnapshotBuild` to search from a selected weapon and required skill IDs. `generateTalismanRecords` expands legal talismans only for the skills in a target. `armorComponentsForPool` expands the generic skill/defense/resistance/slot entries for a selected Qurious Crafting pool.
 
+Snapshot searches prune variants that are strictly worse in defense, slots, requested skills, and resistance balance. Set `pruneDominatedArmor: false` in the planner options to inspect the unpruned candidate set.
+
 Armor, weapon, and decoration records retain Kiranico numeric IDs. Local talisman candidates use `local:` IDs because talismans are generated states rather than Kiranico equipment records.

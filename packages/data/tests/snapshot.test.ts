@@ -127,6 +127,18 @@ describe('source snapshots', () => {
     }])
   })
 
+  it('imports resistance reduction rules from the synchronized workbook', () => {
+    const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const components = armorComponentsForPool(snapshot, 1)
+    const fireReduction = components.find(component => component.resistanceDelta?.fire === -1)
+
+    expect(fireReduction).toMatchObject({
+      costDelta: -2,
+      resistanceDelta: { fire: -1 },
+    })
+  })
+
   it('generates legal talismans only for requested skills', () => {
     const attackId = createWikiRef('skill', '366824395').id
     const snapshot = parseSourceSnapshot({
