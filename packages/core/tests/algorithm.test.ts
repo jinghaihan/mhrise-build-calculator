@@ -120,6 +120,10 @@ describe('build solving', () => {
 
     expect(solveBuild(requestWithOnlySmallSlots)).toHaveLength(0)
   })
+
+  it('short-circuits decoration searches that cannot reach a requirement', () => {
+    expect(solveBuild(request('unreachable-skill', [skill(String(attack), 10)]))).toHaveLength(0)
+  })
 })
 
 describe('equipment reuse optimization', () => {
