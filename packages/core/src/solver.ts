@@ -171,8 +171,12 @@ export function solveBuild(
       armor: Readonly<Record<ArmorSlot, ArmorVariant>>,
     ) => void,
   ): void {
-    const searchSlots = [...ARMOR_SLOTS].sort((left, right) =>
-      candidates[left].length - candidates[right].length)
+    const searchSlots = [...ARMOR_SLOTS].sort((left, right) => {
+      const rightConstraint = armorSlotConstraintScore(right, candidates, searchRequest.requiredSkills)
+      const leftConstraint = armorSlotConstraintScore(left, candidates, searchRequest.requiredSkills)
+      return rightConstraint - leftConstraint
+        || candidates[left].length - candidates[right].length
+    })
     const suffixMaximumDefense = createSuffixMaximumDefense(candidates, searchSlots)
     const bestPartialDefense = searchSlots.map(() => new Map<string, number>())
     const optimisticDecorationFeasibility = new Map<string, boolean>()
@@ -327,6 +331,18 @@ function skillGain(
       ),
     ) - getSkillLevel(current, requirement.skillId),
   ), 0)
+}
+
+function armorSlotConstraintScore(
+  slot: ArmorSlot,
+  candidates: Readonly<Record<ArmorSlot, readonly ArmorVariant[]>>,
+  requirements: readonly SkillValue[],
+): number {
+  return requirements.reduce((total, requirement) => {
+    const providers = candidates[slot].filter(variant =>
+      getSkillLevel(variant.skills, requirement.skillId) > 0).length
+    return total + (providers > 0 ? 1 / providers : 0)
+  }, 0)
 }
 
 function createSuffixMaximumDefense(
