@@ -35,6 +35,15 @@ describe('armor legality', () => {
     })).toThrow('outside budget')
   })
 
+  it('allows negative cumulative cost from drawback components', () => {
+    expect(() => createArmorVariant(baseArmor(), {
+      cost: -1,
+      defenseDelta: 0,
+      skillChanges: [],
+      slotUpgrades: 0,
+    })).not.toThrow()
+  })
+
   it(`rejects more than ${MAX_ARMOR_SKILLS} active skills`, () => {
     const base: ArmorPiece = {
       ...baseArmor(),
@@ -83,6 +92,28 @@ describe('armor legality', () => {
     expect(MAX_QURIOUS_OPERATIONS).toBe(7)
     expect(variants).toHaveLength(8)
     expect(variants.at(-1)?.slots).toEqual([4, 3, 1])
+  })
+
+  it('stops when the remaining cost reaches zero', () => {
+    const variants = generateArmorVariants(baseArmor(), [{
+      costDelta: 20,
+      defenseDelta: 0,
+      id: 'spend-all-cost',
+      skillChanges: [],
+      slotUpgrades: 0,
+    }, {
+      costDelta: 1,
+      defenseDelta: 0,
+      id: 'slot-plus-one',
+      skillChanges: [],
+      slotUpgrades: 1,
+    }])
+
+    expect(variants.some(variant => variant.augmentation?.componentIds?.includes('spend-all-cost')))
+      .toBe(true)
+    expect(variants.some(variant => variant.augmentation?.componentIds?.includes('spend-all-cost')
+      && variant.augmentation.componentIds.length === 2))
+      .toBe(false)
   })
 
   it('applies elemental resistance changes to armor variants', () => {

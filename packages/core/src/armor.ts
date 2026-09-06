@@ -70,7 +70,7 @@ export function createArmorVariant(
   }
   const skills = applySkillChanges(base.baseSkills, appliedAugmentation.skillChanges)
 
-  if (appliedAugmentation.cost < 0 || appliedAugmentation.cost > base.costBudget) {
+  if (appliedAugmentation.cost > base.costBudget) {
     throw new Error(
       `Armor augmentation cost ${appliedAugmentation.cost} is outside budget ${base.costBudget}`,
     )
@@ -133,7 +133,7 @@ export function generateArmorVariants(
   const uniqueComponents = dedupeComponents(components)
 
   function addVariant(augmentation: ArmorAugmentation): void {
-    if (augmentation.cost < 0 || augmentation.cost > base.costBudget) {
+    if (augmentation.cost > base.costBudget) {
       return
     }
 
@@ -155,6 +155,12 @@ export function generateArmorVariants(
     slotUpgrades: number,
     componentIds: readonly string[],
   ): void {
+    // A roll cannot spend more than the initial budget. Once it reaches the
+    // budget, the remaining budget is zero and the roll ends.
+    if (cost > base.costBudget) {
+      return
+    }
+
     const stateKey = [
       cost,
       defenseDelta,
@@ -181,7 +187,7 @@ export function generateArmorVariants(
       slotUpgrades,
     })
 
-    if (depth >= maxOperations || variants.size >= maxVariants) {
+    if (cost === base.costBudget || depth >= maxOperations || variants.size >= maxVariants) {
       return
     }
 

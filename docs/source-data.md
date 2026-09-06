@@ -24,7 +24,7 @@ The workbook sheets used by the importer are:
 
 Use `parseSourceSnapshot` to load the JSON and `searchSnapshotBuild` to search from a selected weapon and required skill IDs. `generateTalismanRecords` expands legal talismans only for the skills in a target. `armorComponentsForPool` expands the generic skill/defense/resistance/slot entries for a selected Qurious Crafting pool.
 
-Pass `generateArmorVariants: true` to a snapshot search to derive Qurious Crafting variants automatically for the requested armor records. Use `armorVariantOptions` to cap the generated depth or count while exploring a search space.
+Pass `generateArmorVariants: true` to a snapshot search to derive Qurious Crafting variants automatically for the requested armor records. The default generation limit is the confirmed seven operations per armor. `maxOperations` and `maxVariants` are explicit preview/test limits; they are not game rules and are not used by default.
 
 Snapshot searches retain armor variant identities. The solver may merge equivalent partial search states only when the selected equipment identity is not needed by the caller; reuse planning keeps identities so a locally weaker-looking piece can still be shared by multiple builds.
 
