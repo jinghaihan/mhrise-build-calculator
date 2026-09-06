@@ -11,6 +11,7 @@
     "deps": "taze major -I",
     "lint": "eslint .",
     "prepare": "simple-git-hooks",
+    "sources:sync": "node scripts/sync-sources.mjs",
     "test": "pnpm --recursive --if-present test",
     "test:run": "pnpm --recursive --if-present test:run",
     "typecheck": "pnpm --recursive --if-present typecheck"

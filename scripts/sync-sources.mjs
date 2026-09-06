@@ -1,0 +1,382 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
+import { basename, resolve } from 'node:path'
+import { argv } from 'node:process'
+
+const require = createRequire(import.meta.url)
+const XLSX = require('xlsx')
+
+const KIRANICO_BASE_URL = 'https://mhrise.kiranico.com'
+const DEFAULT_OUTPUT = resolve('packages/data/snapshots')
+const ARMOR_VIEWS = 10
+const WEAPON_VIEWS = 14
+
+const args = parseArgs(argv.slice(2))
+const workbookPath = args.workbook
+  ? resolve(args.workbook)
+  : undefined
+const outputDir = resolve(args.output ?? DEFAULT_OUTPUT)
+
+if (!workbookPath) {
+  throw new Error('Usage: node scripts/sync-sources.mjs --workbook <path> [--output <dir>]')
+}
+
+const workbook = XLSX.read(await readFile(workbookPath), { cellDates: false })
+const workbookData = readOfflineWorkbook(workbook)
+const [skillsHtml, decorationsHtml, ...pages] = await Promise.all([
+  fetchText(`${KIRANICO_BASE_URL}/zh/data/skills`),
+  fetchText(`${KIRANICO_BASE_URL}/zh/data/decorations`),
+  ...Array.from({ length: ARMOR_VIEWS }, (_, view) => fetchText(
+    `${KIRANICO_BASE_URL}/zh/data/armors?view=${view}`,
+  )),
+  ...Array.from({ length: WEAPON_VIEWS }, (_, view) => fetchText(
+    `${KIRANICO_BASE_URL}/zh/data/weapons?view=${view}`,
+  )),
+])
+
+const armorPages = pages.slice(0, ARMOR_VIEWS)
+const weaponPages = pages.slice(ARMOR_VIEWS)
+const skills = parseSkills(skillsHtml)
+const skillByName = new Map(skills.map(record => [record.names.zh, record.ref.id]))
+const families = workbookData.armorFamilies.map(family => ({
+  ...family,
+  key: familyKey(family.name),
+}))
+const armors = armorPages.flatMap(page => parseArmors(page, families))
+const decorations = parseDecorations(decorationsHtml)
+const weapons = weaponPages.flatMap(page => parseWeapons(page))
+
+const snapshot = {
+  generatedAt: new Date().toISOString(),
+  source: {
+    kiranico: [
+      `${KIRANICO_BASE_URL}/zh/data/skills`,
+      `${KIRANICO_BASE_URL}/zh/data/decorations`,
+      `${KIRANICO_BASE_URL}/zh/data/armors?view=0..9`,
+      `${KIRANICO_BASE_URL}/zh/data/weapons?view=0..13`,
+    ],
+    workbook: basename(workbookPath),
+  },
+  catalog: {
+    armors: deduplicate(armors),
+    decorations: deduplicate(decorations),
+    skills: deduplicate(skills),
+    talismans: [],
+    weapons: deduplicate(weapons),
+  },
+  rules: {
+    armorFamilies: workbookData.armorFamilies,
+    augmentationEntries: workbookData.augmentationEntries.map(entry => ({
+      ...entry,
+      skillId: entry.skillName ? skillByName.get(entry.skillName) : undefined,
+    })),
+    skillCosts: workbookData.skillCosts.map(entry => ({
+      ...entry,
+      skillId: skillByName.get(entry.name),
+    })),
+    talismanRules: workbookData.talismanRules.map(entry => ({
+      ...entry,
+      skillId: skillByName.get(entry.name),
+    })),
+  },
+}
+
+await mkdir(outputDir, { recursive: true })
+await writeFile(
+  resolve(outputDir, 'source-snapshot.json'),
+  `${JSON.stringify(snapshot, (_, value) => value === undefined ? undefined : value, 2)}\n`,
+)
+
+console.log(JSON.stringify({
+  output: resolve(outputDir, 'source-snapshot.json'),
+  counts: {
+    skills: snapshot.catalog.skills.length,
+    decorations: snapshot.catalog.decorations.length,
+    armors: snapshot.catalog.armors.length,
+    weapons: snapshot.catalog.weapons.length,
+    armorFamilies: snapshot.rules.armorFamilies.length,
+    augmentationEntries: snapshot.rules.augmentationEntries.length,
+    skillCosts: snapshot.rules.skillCosts.length,
+    talismanRules: snapshot.rules.talismanRules.length,
+  },
+  unmatchedArmorFamilies: snapshot.catalog.armors.filter(armor => !armor.armorFamilyId).length,
+  unmatchedSkills: snapshot.rules.skillCosts.filter(skill => !skill.skillId).length,
+}, null, 2))
+
+async function fetchText(url) {
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(`Kiranico request failed (${response.status}): ${url}`)
+  }
+
+  return response.text()
+}
+
+function readOfflineWorkbook(book) {
+  const armorRows = sheetRows(book, '装备')
+  const armorFamilies = armorRows.slice(2)
+    .filter(row => row[0] && Number.isInteger(Number(row[1])))
+    .map(row => ({
+      costBudget: Number(row[3]),
+      id: String(row[1]),
+      name: String(row[0]),
+      poolId: Number(row[2]),
+    }))
+
+  const augmentationEntries = []
+  for (const [poolIndex, start] of [0, 11, 22, 33, 44, 55, 66].entries()) {
+    const rows = sheetRows(book, '词条')
+    for (const row of rows.slice(2)) {
+      const poolId = numberOrUndefined(row[start])
+      const gameId = numberOrUndefined(row[start + 1])
+      const label = textOrUndefined(row[start + 2])
+      const cost = numberOrUndefined(row[start + 9])
+
+      if (poolId === undefined || gameId === undefined || !label || cost === undefined) {
+        continue
+      }
+
+      const levels = [row[start + 3], row[start + 4], row[start + 5]]
+        .map(value => Number(value ?? 0))
+
+      augmentationEntries.push({
+        cost,
+        gameId,
+        kind: augmentationKind(label),
+        label,
+        levels,
+        poolId,
+        sourceBlock: poolIndex,
+      })
+    }
+  }
+
+  const skillCosts = []
+  for (const start of [0, 4, 8, 12, 16]) {
+    for (const row of sheetRows(book, '技能').slice(2)) {
+      const id = numberOrUndefined(row[start])
+      const cost = numberOrUndefined(row[start + 1])
+      const name = textOrUndefined(row[start + 2])
+      if (id !== undefined && cost !== undefined && name) {
+        skillCosts.push({ cost, gameId: id, name })
+      }
+    }
+  }
+
+  const talismanRules = sheetRows(book, '护石').slice(2).filter(row => numberOrUndefined(row[0]) !== undefined && textOrUndefined(row[1])).map(row => ({
+    firstSkillMax: countFilled(row[5]),
+    firstSkillMaxRing: countFilled(row[8]),
+    gameId: Number(row[0]),
+    maxLevel: countSymbols(row[3]),
+    name: String(row[1]),
+    rank: String(row[2] ?? ''),
+    rate: numberOrUndefined(row[13]),
+    secondSkillMax: countFilled(row[6]),
+    secondSkillMaxRing: countFilled(row[9]),
+    slotOptions: parseSlotOptions(row[14]),
+    weight: numberOrUndefined(row[11]),
+  }))
+
+  return { armorFamilies, augmentationEntries, skillCosts, talismanRules }
+}
+
+function sheetRows(book, name) {
+  const sheet = book.Sheets[name]
+  if (!sheet) {
+    throw new Error(`Workbook sheet not found: ${name}`)
+  }
+  return XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null, raw: true })
+}
+
+function parseSkills(html) {
+  return rows(html).flatMap((row) => {
+    const link = firstLink(row, '/data/skills/')
+    if (!link)
+      return []
+    const levels = [...row.matchAll(/\bLv\s*(\d+)/gi)].map(match => Number(match[1]))
+    return [{
+      maxLevel: Math.max(...levels, 1),
+      names: { zh: link.text },
+      ref: { id: link.id, kind: 'skill', source: 'kiranico' },
+    }]
+  })
+}
+
+function parseDecorations(html) {
+  return rows(html).flatMap((row) => {
+    const link = firstLink(row, '/data/decorations/')
+    if (!link)
+      return []
+    const slotLevel = link.text.match(/[【[]([1-4])[】\]]/)?.[1]
+    const skills = skillValues(row)
+    if (!slotLevel || skills.length === 0)
+      return []
+    return [{
+      decoration: {
+        ref: { id: link.id, kind: 'decoration', source: 'kiranico' },
+        skills,
+        slotLevel: Number(slotLevel),
+      },
+      names: { zh: link.text },
+      ref: { id: link.id, kind: 'decoration', source: 'kiranico' },
+    }]
+  })
+}
+
+function parseArmors(html, families) {
+  return rows(html).flatMap((row) => {
+    const link = firstLink(row, '/data/armors/')
+    if (!link)
+      return []
+    const cells = tableCells(row)
+    const baseDefense = cells[4]?.match(/<div\b[^>]*>\s*(-?\d+)\s*<\/div>/i)?.[1]
+    const slot = inferArmorSlot(link.text)
+    if (baseDefense === undefined || !slot)
+      return []
+    const family = families.find(candidate => matchesFamily(link.text, candidate.key))
+    return [{
+      armor: {
+        baseDefense: Number(baseDefense),
+        baseSkills: skillValues(row),
+        costBudget: family?.costBudget ?? 0,
+        ref: { id: link.id, kind: 'armor', source: 'kiranico' },
+        slot,
+        slots: slotLevels(cells[3] ?? ''),
+      },
+      armorFamilyId: family?.id,
+      names: { zh: link.text },
+      ref: { id: link.id, kind: 'armor', source: 'kiranico' },
+    }]
+  })
+}
+
+function parseWeapons(html) {
+  return rows(html).flatMap((row) => {
+    const link = firstLink(row, '/data/weapons/')
+    if (!link)
+      return []
+    const cells = tableCells(row)
+    return [{
+      names: { zh: link.text },
+      ref: { id: link.id, kind: 'weapon', source: 'kiranico' },
+      weapon: {
+        ref: { id: link.id, kind: 'weapon', source: 'kiranico' },
+        skills: skillValues(row),
+        slots: slotLevels(cells[2] ?? ''),
+      },
+    }]
+  })
+}
+
+function rows(html) {
+  return [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(match => match[1])
+}
+
+function tableCells(row) {
+  return [...row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map(match => match[1])
+}
+
+function firstLink(row, path) {
+  const match = row.match(new RegExp(
+    `href=["'][^"']*${path.replaceAll('/', '\\/')}(\\d+)["'][^>]*>([\\s\\S]*?)<\\/a>`,
+    'i',
+  ))
+  return match ? { id: String(match[1]), text: stripMarkup(match[2]) } : undefined
+}
+
+function skillValues(row) {
+  return [...row.matchAll(
+    /href=["'][^"']*\/data\/skills\/(\d+)["'][^>]*>([\s\S]*?)<\/a>\s*Lv\s*(\d+)/gi,
+  )].map(match => ({ level: Number(match[3]), skillId: String(match[1]) }))
+}
+
+function slotLevels(cell) {
+  const levels = [...cell.matchAll(/deco([1-4])\.png/gi)].map(match => Number(match[1]))
+  return [levels[0] ?? 0, levels[1] ?? 0, levels[2] ?? 0]
+}
+
+function inferArmorSlot(name) {
+  if (['头盔', '头巾', '头', '首'].some(value => name.includes(value)))
+    return 'head'
+  if (['铠甲', '上衣', '胸甲', '躯', '胸'].some(value => name.includes(value)))
+    return 'chest'
+  if (['腕甲', '手甲', '臂'].some(value => name.includes(value)))
+    return 'arms'
+  if (['腰甲', '腰卷', '腰', '尾'].some(value => name.includes(value)))
+    return 'waist'
+  if (['护腿', '绑腿', '足', '脚'].some(value => name.includes(value)))
+    return 'legs'
+  return undefined
+}
+
+function familyKey(name) {
+  return name.replace(/[・･ＺZ真X]/gu, '').replace(/[【】]/gu, '').trim()
+}
+
+function matchesFamily(name, key) {
+  const normalized = familyKey(name)
+  return normalized.startsWith(key) || key.startsWith(normalized)
+}
+
+function augmentationKind(label) {
+  if (label === '防禦+' || label === '防禦-')
+    return 'defense'
+  if (label === '技能+' || label === '技能-')
+    return 'skill'
+  if (label === '孔位+')
+    return 'slot'
+  return 'resistance'
+}
+
+function parseSlotOptions(value) {
+  return String(value ?? '')
+    .match(/\[[0-4],[0-4],[0-4]\]/g)
+    ?.map(option => option.slice(1, -1).split(',').map(Number)) ?? []
+}
+
+function countSymbols(value) {
+  return String(value ?? '').match(/[▱▰]/gu)?.length ?? 0
+}
+
+function countFilled(value) {
+  return String(value ?? '').match(/▰/gu)?.length ?? 0
+}
+
+function numberOrUndefined(value) {
+  return value === null || value === undefined || value === '' || Number.isNaN(Number(value))
+    ? undefined
+    : Number(value)
+}
+
+function textOrUndefined(value) {
+  return value === null || value === undefined || value === '' ? undefined : String(value)
+}
+
+function stripMarkup(value) {
+  return decodeHtml(value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim())
+}
+
+function decodeHtml(value) {
+  return value
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, '\'')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+}
+
+function deduplicate(records) {
+  return [...new Map(records.map(record => [record.ref.id, record])).values()]
+}
+
+function parseArgs(values) {
+  const result = {}
+  for (let index = 0; index < values.length; index += 1) {
+    const value = values[index]
+    if (!value.startsWith('--'))
+      continue
+    result[value.slice(2)] = values[index + 1]?.startsWith('--') ? true : values[++index]
+  }
+  return result
+}

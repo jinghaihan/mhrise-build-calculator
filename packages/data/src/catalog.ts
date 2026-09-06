@@ -36,6 +36,7 @@ export interface SkillRecord extends KiranicoRecord<'skill'> {
 }
 
 export interface KiranicoArmorRecord extends KiranicoRecord<'armor'> {
+  readonly armorFamilyId?: string
   readonly armor: ArmorPiece
 }
 
