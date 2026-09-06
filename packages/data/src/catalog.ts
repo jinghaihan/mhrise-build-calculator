@@ -80,6 +80,47 @@ export function createDataCatalog(input: DataCatalog): DataCatalog {
   return input
 }
 
+export function findRecordByName<K extends WikiEntityKind>(
+  records: readonly KiranicoRecord<K>[],
+  name: string,
+  locale: LocaleCode,
+): KiranicoRecord<K> {
+  const matches = records.filter(record => record.names[locale] === name)
+
+  if (matches.length === 0) {
+    throw new Error(`No ${locale} ${name} record was found`)
+  }
+
+  if (matches.length > 1) {
+    throw new Error(`Multiple ${locale} records match: ${name}`)
+  }
+
+  return matches[0]
+}
+
+export function findSkillByName(
+  catalog: DataCatalog,
+  name: string,
+  locale: LocaleCode,
+): SkillRecord {
+  return findRecordByName(catalog.skills, name, locale) as SkillRecord
+}
+
+export function skillRequirement(
+  catalog: DataCatalog,
+  name: string,
+  level: number,
+  locale: LocaleCode,
+): SkillValue {
+  const record = findSkillByName(catalog, name, locale)
+
+  if (!Number.isInteger(level) || level < 1 || level > record.maxLevel) {
+    throw new Error(`Invalid ${name} level: ${level}; maximum is ${record.maxLevel}`)
+  }
+
+  return skillValue(record.ref, level)
+}
+
 export function createBuildRequest(
   catalog: DataCatalog,
   definition: BuildDefinition,

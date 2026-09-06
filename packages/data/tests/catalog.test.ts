@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   createBuildRequest,
   createDataCatalog,
+  findSkillByName,
   getLocalizedName,
   skillValue,
 } from '../src/catalog'
@@ -25,6 +26,22 @@ describe('localized Kiranico records', () => {
       level: 3,
       skillId: ref.id,
     })
+  })
+
+  it('resolves display names only at the data boundary', () => {
+    const skill = findSkillByName({
+      armors: [],
+      decorations: [],
+      skills: [{
+        maxLevel: 3,
+        names: { 'zh-Hans': '弱点特效' },
+        ref: createWikiRef('skill', '500079394'),
+      }],
+      talismans: [],
+      weapons: [],
+    }, '弱点特效', 'zh-Hans')
+
+    expect(skill.ref.id).toBe('500079394')
   })
 
   it('resolves a build definition into a solver request', () => {
