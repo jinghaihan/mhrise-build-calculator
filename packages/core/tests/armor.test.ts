@@ -158,6 +158,27 @@ describe('armor legality', () => {
       .toBe(true)
   })
 
+  it('keeps the higher-defense representative for an equivalent state', () => {
+    const variants = generateArmorVariants(baseArmor(), [{
+      costDelta: 1,
+      defenseDelta: 3,
+      id: 'defense-plus-three',
+      skillChanges: [],
+      slotUpgrades: 0,
+    }, {
+      costDelta: 1,
+      defenseDelta: 6,
+      id: 'defense-plus-six',
+      skillChanges: [],
+      slotUpgrades: 0,
+    }])
+
+    expect(variants.some(variant => variant.augmentation?.componentIds?.includes('defense-plus-three')))
+      .toBe(false)
+    expect(variants.some(variant => variant.augmentation?.componentIds?.includes('defense-plus-six')))
+      .toBe(true)
+  })
+
   it('applies elemental resistance changes to armor variants', () => {
     const base = {
       ...baseArmor(),

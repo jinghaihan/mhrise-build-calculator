@@ -145,7 +145,7 @@ export function generateArmorVariants(
     }
   }
 
-  const visitedStates = new Map<string, number>()
+  const visitedStates = new Map<string, VisitedState[]>()
   const ordinaryComponents = uniqueComponents.filter((component) => {
     const role = component.role ?? 'normal'
     return role === 'normal' || role === 'cost-fill'
@@ -177,7 +177,6 @@ export function generateArmorVariants(
 
     const stateKey = [
       cost,
-      defenseDelta,
       resistanceDelta.dragon,
       resistanceDelta.fire,
       resistanceDelta.ice,
@@ -185,12 +184,18 @@ export function generateArmorVariants(
       resistanceDelta.water,
       skillKey(addSkillValues(skillChanges)),
       slotUpgrades,
+      lastCommutativeIndex,
     ].join('|')
-    const previousDepth = visitedStates.get(stateKey)
-    if (previousDepth !== undefined && previousDepth <= depth) {
+    const previousStates = visitedStates.get(stateKey) ?? []
+    if (previousStates.some(previous => previous.depth <= depth
+      && previous.defenseDelta >= defenseDelta)) {
       return
     }
-    visitedStates.set(stateKey, depth)
+    visitedStates.set(stateKey, [
+      ...previousStates.filter(previous => previous.depth < depth
+        || previous.defenseDelta > defenseDelta),
+      { depth, defenseDelta },
+    ])
 
     addVariant({
       componentIds,
@@ -252,6 +257,11 @@ export function generateArmorVariants(
   }
 
   return [...variants.values()]
+}
+
+interface VisitedState {
+  readonly defenseDelta: number
+  readonly depth: number
 }
 
 function compareCommutativeComponents(
