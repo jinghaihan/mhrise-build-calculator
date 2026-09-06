@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createWikiRef } from '@mhrise-build-tools/core'
 import { describe, expect, it } from 'vitest'
+import { createSnapshotCatalog } from '../src/planner'
 import {
   armorComponentsForPool,
   generateTalismanRecords,
@@ -19,6 +20,20 @@ describe('source snapshots', () => {
     expect(snapshot.catalog.weapons.length).toBeGreaterThan(3000)
     expect(snapshot.rules.armorFamilies.length).toBe(143)
     expect(snapshot.rules.talismanRules.length).toBe(136)
+  })
+
+  it('builds a planner catalog with on-demand talismans', () => {
+    const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const attackId = snapshot.catalog.skills.find(skill => skill.names.zh === '攻击')?.ref.id
+
+    expect(attackId).toBeDefined()
+    const catalog = createSnapshotCatalog(snapshot, [attackId!], 100)
+
+    expect(catalog.talismans.length).toBeGreaterThan(0)
+    expect(catalog.talismans.length).toBeLessThanOrEqual(100)
+    expect(catalog.talismans.every(record => record.talisman.skills
+      .every(skill => skill.skillId === attackId))).toBe(true)
   })
 
   it('loads catalogs and expands generic skill augmentation rules', () => {
