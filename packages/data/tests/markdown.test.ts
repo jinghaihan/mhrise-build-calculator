@@ -25,6 +25,7 @@ describe('markdown build input', () => {
     }
     const requirements = parseMarkdownBuildRequirements(`
 #### 物理配装
++ 武器：凶刀【催花雨】
 - [x] 攻击7
 - [x] 弱点特效3
     `, catalog, { locale: 'zh' })
@@ -40,6 +41,7 @@ describe('markdown build input', () => {
         [{ level: 3, skillId: '500079394' }],
       ],
       title: '物理配装',
+      weaponOptions: [{ name: '凶刀【催花雨】', type: 'explicit' }],
     }])
   })
 
@@ -73,6 +75,38 @@ describe('markdown build input', () => {
     ])
   })
 
+  it('expands the ammo shorthand as normal, spread, and pierce alternatives', () => {
+    const catalog = {
+      armors: [],
+      decorations: [],
+      skills: [{
+        maxLevel: 3,
+        names: { zh: '通常弹・连射箭强化' },
+        ref: createWikiRef('skill', '599465498'),
+      }, {
+        maxLevel: 3,
+        names: { zh: '散弹・扩散箭强化' },
+        ref: createWikiRef('skill', '762691032'),
+      }, {
+        maxLevel: 3,
+        names: { zh: '贯穿弹・贯穿箭强化' },
+        ref: createWikiRef('skill', '748441147'),
+      }],
+      talismans: [],
+      weapons: [],
+    }
+    const [requirements] = parseMarkdownBuildRequirements(`
+#### 弓弹种
+- [x] 弹种强化3
+`, catalog)
+
+    expect(requirements.requiredSkillGroups).toEqual([[
+      { level: 3, skillId: '599465498' },
+      { level: 3, skillId: '762691032' },
+      { level: 3, skillId: '748441147' },
+    ]])
+  })
+
   it('recognizes nested elemental sections and preserves their parent in the id', () => {
     const catalog = {
       armors: [],
@@ -103,6 +137,7 @@ describe('markdown build input', () => {
       requiredSkills: [{ level: 5, skillId: '7000' }],
       requiredSkillGroups: [[{ level: 5, skillId: '7000' }]],
       title: '属性配装',
+      weaponOptions: [],
     }])
     expect(requirements.id).toBe('弓-属性配装')
   })
@@ -171,5 +206,12 @@ describe('markdown build input', () => {
     expect(requirements.requiredSkillGroups.filter(group => group.length > 1).map(group => group.length))
       .toEqual([5, 3, 2])
     expect(definitions).toHaveLength(30)
+    expect(requirements.weaponOptions).toEqual(expect.arrayContaining([
+      { element: 'fire', name: '开天的亥伯龙神', type: '连射' },
+      { element: 'fire', name: '穿杨蛮炎弓·改', type: '连射' },
+      { element: 'water', name: '投箭远境真射弓·改', type: '连射' },
+      { element: 'dragon', name: '出现', type: '连射' },
+      { element: 'dragon', name: '湮没', type: '连射' },
+    ]))
   })
 })

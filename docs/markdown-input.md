@@ -13,8 +13,8 @@ Supported patterns include:
 - [x] 弹种强化3：通常弹·连射箭强化3/散弹·扩散箭强化3/贯穿弹·贯穿箭强化3
 ```
 
-`属性攻击强化5` is treated as five alternatives for Fire, Water, Thunder, Ice, and Dragon Attack Up 5. A slash between levels, such as `3/1`, is treated as an alternative level for the same skill. Questionable lines marked `[?]` and informational lines marked `[I]` are included by default; pass `includeQuestionable: false` to omit `[?]` lines.
+`属性攻击强化5` is treated as five alternatives for Fire, Water, Thunder, Ice, and Dragon Attack Up 5. `弹种强化3` is treated as three alternatives for Normal, Spread, and Pierce Shot Up 3. A slash between levels, such as `3/1`, is treated as an alternative level for the same skill. Questionable lines marked `[?]` and informational lines marked `[I]` are included by default; pass `includeQuestionable: false` to omit `[?]` lines.
 
-The parser recognizes level-four build headings and a `### 属性配装` section nested below a higher-level weapon heading. Equipment notes and weapon tables are intentionally not converted into a weapon choice: the planner still requires a canonical `weaponId` for each search.
+The parser recognizes level-four build headings and a `### 属性配装` section nested below a higher-level weapon heading. A sibling `### 武器` table is attached to the requirement as `weaponOptions`, including its type and element column; inline `+ 武器：...` notes are also captured. The planner still requires a canonical `weaponId` for each search, so callers can resolve or present these localized names at the data boundary.
 
 The repository keeps a representative input at `packages/data/tests/fixtures/monster-hunter-rise.md` and tests it against the synchronized source snapshot.

@@ -7,7 +7,16 @@ export interface MarkdownBuildRequirements {
   readonly requiredSkills: readonly SkillValue[]
   readonly requiredSkillGroups: readonly (readonly SkillValue[])[]
   readonly title: string
+  readonly weaponOptions: readonly MarkdownWeaponOption[]
 }
+
+export interface MarkdownWeaponOption {
+  readonly element?: MarkdownWeaponElement
+  readonly name: string
+  readonly type: string
+}
+
+export type MarkdownWeaponElement = 'dragon' | 'fire' | 'ice' | 'thunder' | 'water'
 
 export interface MarkdownParserOptions {
   readonly locale: LocaleCode
@@ -75,11 +84,15 @@ export function parseMarkdownBuildRequirements(
       .find(heading => heading.index < section.index && heading.level < section.level)
     const idTitle = section.level === 3 && parent ? `${parent.title}-${title}` : title
 
+    const inlineWeaponOptions = parseInlineWeaponOptions(body)
     results.push({
       id: slugify(idTitle, index),
       requiredSkills,
       requiredSkillGroups,
       title,
+      weaponOptions: inlineWeaponOptions.length > 0
+        ? inlineWeaponOptions
+        : parent ? parseWeaponOptions(markdown, headings, parent) : [],
     })
   }
 
@@ -92,6 +105,105 @@ function nextHeadingIndex(
 ): number {
   return headings.find(heading => heading.index > section.index && heading.level <= section.level)?.index
     ?? Number.POSITIVE_INFINITY
+}
+
+function parseWeaponOptions(
+  markdown: string,
+  headings: readonly { index: number, level: number, title: string }[],
+  parent: { index: number, level: number },
+): MarkdownWeaponOption[] {
+  const parentEnd = nextHeadingIndex(headings, parent)
+  const weaponHeading = headings.find(heading => heading.index > parent.index
+    && heading.index < parentEnd
+    && heading.level === parent.level + 1
+    && heading.title === '武器')
+
+  if (!weaponHeading) {
+    return []
+  }
+
+  const start = weaponHeading.index + markdown.slice(weaponHeading.index).indexOf('\n') + 1
+  const body = markdown.slice(start, nextHeadingIndex(headings, weaponHeading))
+  const lines = body.split(/\r?\n/).filter(line => line.trim().startsWith('|'))
+  const header = lines.find(line => parseTableCells(line).length > 1)
+
+  if (!header) {
+    return []
+  }
+
+  const headers = parseTableCells(header)
+  const options: MarkdownWeaponOption[] = []
+
+  for (const line of lines.slice(lines.indexOf(header) + 1)) {
+    const cells = parseTableCells(line)
+    if (cells.length !== headers.length || cells.every(isTableSeparator)) {
+      continue
+    }
+
+    const type = cells[0]
+    if (!type || isTableSeparator(type)) {
+      continue
+    }
+
+    for (let index = 1; index < cells.length; index += 1) {
+      const element = markdownWeaponElement(headers[index])
+      for (const name of splitWeaponNames(cells[index])) {
+        options.push({ element, name, type })
+      }
+    }
+  }
+
+  return options
+}
+
+function parseInlineWeaponOptions(body: string): MarkdownWeaponOption[] {
+  const options: MarkdownWeaponOption[] = []
+
+  for (const line of body.split(/\r?\n/)) {
+    const content = line.trim()
+    const marker = content.startsWith('+ 武器：')
+      ? '武器：'
+      : content.startsWith('+ 武器:')
+        ? '武器:'
+        : undefined
+    if (!marker) {
+      continue
+    }
+
+    for (const name of splitWeaponNames(content.slice(('+ ').length + marker.length))) {
+      options.push({ name, type: 'explicit' })
+    }
+  }
+
+  return options
+}
+
+function parseTableCells(line: string): string[] {
+  const value = line.trim()
+  const content = value.startsWith('|') ? value.slice(1) : value
+  const withoutTrailingPipe = content.endsWith('|') ? content.slice(0, -1) : content
+  return withoutTrailingPipe.split('|').map(cell => cell.trim())
+}
+
+function isTableSeparator(value: string): boolean {
+  return /^:?-{3,}:?$/u.test(value)
+}
+
+function markdownWeaponElement(value: string): MarkdownWeaponElement | undefined {
+  return {
+    火: 'fire',
+    水: 'water',
+    冰: 'ice',
+    雷: 'thunder',
+    龙: 'dragon',
+  }[value] as MarkdownWeaponElement | undefined
+}
+
+function splitWeaponNames(value: string): string[] {
+  return value
+    .split(/\s*(?:\/|／|\bor\b)\s*/iu)
+    .map(name => name.trim())
+    .filter(name => name && name !== '-')
 }
 
 function parseSkillLines(
@@ -127,6 +239,11 @@ function parseSkillLine(
     .sort((left, right) => right.length - left.length)
   const normalizedLine = normalizeSkillText(line)
   const hasAlternativeSyntax = /[/:：、]/u.test(line)
+
+  const shorthand = parseShorthand(line, catalog, locale)
+  if (shorthand) {
+    return shorthand
+  }
 
   for (const name of matches) {
     const normalizedName = normalizeSkillText(name)
@@ -176,6 +293,36 @@ function parseSkillLine(
   }
 
   throw new Error(`Skill was not found in ${locale} catalog: ${line}`)
+}
+
+function parseShorthand(
+  line: string,
+  catalog: DataCatalog,
+  locale: LocaleCode,
+): SkillValue[][] | undefined {
+  if (locale !== 'zh') {
+    return undefined
+  }
+
+  const match = line.match(/^(属性攻击强化|弹种强化)\s*(\d+)$/u)
+  if (!match) {
+    return undefined
+  }
+
+  const prefixes = match[1] === '属性攻击强化'
+    ? ['火属性攻击强化', '水属性攻击强化', '雷属性攻击强化', '冰属性攻击强化', '龙属性攻击强化']
+    : ['通常弹・', '散弹・', '贯穿弹・']
+  const level = Number(match[2])
+  const values = prefixes.flatMap(prefix => catalog.skills
+    .filter(record => record.names[locale]
+      && normalizeSkillText(record.names[locale]).startsWith(normalizeSkillText(prefix)))
+    .map(record => skillRequirement(catalog, record.names[locale]!, level, locale)))
+
+  if (values.length !== prefixes.length) {
+    throw new Error(`Shorthand ${match[1]} could not be resolved in ${locale} catalog`)
+  }
+
+  return [values]
 }
 
 function normalizeSkillText(value: string): string {
