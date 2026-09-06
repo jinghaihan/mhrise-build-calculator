@@ -18,6 +18,19 @@ export function solveBuild(
   const selectedArmor: Partial<Record<ArmorSlot, ArmorVariant>> = {}
   const legalTalismans = request.talismans.filter(isTalismanLegal)
   const bounds = createSearchBounds(request, legalTalismans)
+  const armorBySlot = Object.fromEntries(ARMOR_SLOTS.map(slot => [
+    slot,
+    [...request.armorBySlot[slot]].sort((left, right) => compareArmorCandidates(
+      right,
+      left,
+      request.requiredSkills,
+    )),
+  ])) as unknown as typeof request.armorBySlot
+  const orderedTalismans = [...legalTalismans].sort((left, right) => compareTalismanCandidates(
+    right,
+    left,
+    request.requiredSkills,
+  ))
 
   function searchArmor(slotIndex: number, skills: readonly SkillValue[]): void {
     if (solutions.length >= maxSolutions) {
@@ -34,7 +47,7 @@ export function solveBuild(
     }
 
     const slot = ARMOR_SLOTS[slotIndex]
-    const candidates = request.armorBySlot[slot]
+    const candidates = armorBySlot[slot]
 
     for (const armor of candidates) {
       selectedArmor[slot] = armor
@@ -45,14 +58,25 @@ export function solveBuild(
   }
 
   function searchTalismans(skills: readonly SkillValue[]): void {
-    for (const talisman of legalTalismans) {
+    const armor = createCompleteArmor(selectedArmor)
+
+    for (const talisman of orderedTalismans) {
       if (solutions.length >= maxSolutions) {
         return
       }
 
       const totalSkills = addSkillValues(skills, request.weapon.skills, talisman.skills)
-      const armor = createCompleteArmor(selectedArmor)
       const slots = collectAvailableSlots(request.weapon, armor, talisman)
+
+      if (!canReachWithDecorations(
+        totalSkills,
+        slots,
+        request.decorations,
+        request.requiredSkills,
+      )) {
+        continue
+      }
+
       const placements = findDecorationPlacements(
         slots,
         request.decorations,
@@ -87,6 +111,55 @@ export function solveBuild(
   searchArmor(0, [])
   return solutions.sort((left, right) => right.defense - left.defense
     || left.decorations.length - right.decorations.length)
+}
+
+function canReachWithDecorations(
+  currentSkills: readonly SkillValue[],
+  slots: readonly { level: number }[],
+  decorations: readonly BuildRequest['decorations'][number][],
+  requirements: readonly SkillValue[],
+): boolean {
+  return requirements.every((requirement) => {
+    const maximum = slots.reduce((total, slot) => total + Math.max(
+      0,
+      ...decorations
+        .filter(decoration => decoration.slotLevel <= slot.level)
+        .map(decoration => getSkillLevel(decoration.skills, requirement.skillId)),
+    ), 0)
+
+    return getSkillLevel(currentSkills, requirement.skillId) + maximum >= requirement.level
+  })
+}
+
+function compareArmorCandidates(
+  left: ArmorVariant,
+  right: ArmorVariant,
+  requirements: readonly SkillValue[],
+): number {
+  const leftSkillScore = requirements.reduce((total, requirement) => total
+    + Math.min(getSkillLevel(left.skills, requirement.skillId), requirement.level), 0)
+  const rightSkillScore = requirements.reduce((total, requirement) => total
+    + Math.min(getSkillLevel(right.skills, requirement.skillId), requirement.level), 0)
+
+  return leftSkillScore - rightSkillScore
+    || left.slots.reduce((total, level) => total + level, 0)
+    - right.slots.reduce((total, level) => total + level, 0)
+    || left.defense - right.defense
+}
+
+function compareTalismanCandidates(
+  left: BuildRequest['talismans'][number],
+  right: BuildRequest['talismans'][number],
+  requirements: readonly SkillValue[],
+): number {
+  const leftSkillScore = requirements.reduce((total, requirement) => total
+    + Math.min(getSkillLevel(left.skills, requirement.skillId), requirement.level), 0)
+  const rightSkillScore = requirements.reduce((total, requirement) => total
+    + Math.min(getSkillLevel(right.skills, requirement.skillId), requirement.level), 0)
+
+  return leftSkillScore - rightSkillScore
+    || left.slots.reduce((total, level) => total + level, 0)
+    - right.slots.reduce((total, level) => total + level, 0)
 }
 
 interface SearchBounds {
