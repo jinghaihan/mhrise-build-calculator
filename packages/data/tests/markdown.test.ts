@@ -210,8 +210,7 @@ describe('markdown build input', () => {
       { element: 'fire', name: '开天的亥伯龙神', type: '连射' },
       { element: 'fire', name: '穿杨蛮炎弓·改', type: '连射' },
       { element: 'water', name: '投箭远境真射弓·改', type: '连射' },
-      { element: 'dragon', name: '出现', type: '连射' },
-      { element: 'dragon', name: '湮没', type: '连射' },
+      { element: 'dragon', name: '出现or湮没', type: '连射' },
     ]))
   })
 })

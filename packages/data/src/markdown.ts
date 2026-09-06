@@ -13,7 +13,7 @@ export interface MarkdownBuildRequirements {
 export interface MarkdownWeaponOption {
   readonly element?: MarkdownWeaponElement
   readonly name: string
-  readonly type: string
+  readonly type?: string
 }
 
 export type MarkdownWeaponElement = 'dragon' | 'fire' | 'ice' | 'thunder' | 'water'
@@ -140,15 +140,21 @@ function parseWeaponOptions(
       continue
     }
 
-    const type = cells[0]
-    if (!type || isTableSeparator(type)) {
+    const hasTypeColumn = markdownWeaponElement(headers[0]) === undefined
+    const type = hasTypeColumn ? cells[0] : undefined
+    if (hasTypeColumn && (!type || isTableSeparator(type))) {
       continue
     }
 
-    for (let index = 1; index < cells.length; index += 1) {
+    const firstWeaponColumn = hasTypeColumn ? 1 : 0
+    for (let index = firstWeaponColumn; index < cells.length; index += 1) {
       const element = markdownWeaponElement(headers[index])
       for (const name of splitWeaponNames(cells[index])) {
-        options.push({ element, name, type })
+        options.push({
+          ...(element ? { element } : {}),
+          ...(type ? { type } : {}),
+          name,
+        })
       }
     }
   }
@@ -201,7 +207,8 @@ function markdownWeaponElement(value: string): MarkdownWeaponElement | undefined
 
 function splitWeaponNames(value: string): string[] {
   return value
-    .split(/\s*(?:\/|／|\bor\b)\s*/iu)
+    .split(/[／/]/u)
+    .flatMap(name => name.split(/\s+or\s+/iu))
     .map(name => name.trim())
     .filter(name => name && name !== '-')
 }
