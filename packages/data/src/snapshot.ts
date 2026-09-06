@@ -74,7 +74,7 @@ export interface SourceSnapshot {
   readonly catalog: DataCatalog
   readonly generatedAt: string
   readonly rules: SourceRules
-  readonly source: {
+  readonly source?: {
     readonly kiranico: readonly string[]
     readonly workbook: string
   }

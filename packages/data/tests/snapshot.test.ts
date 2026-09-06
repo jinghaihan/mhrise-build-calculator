@@ -31,6 +31,17 @@ describe('source snapshots', () => {
     expect(snapshot.rules.talismanRules.length).toBe(136)
     expect(snapshot.catalog.skills.find(skill => skill.names.zh === '坚如磐石')?.maxLevel).toBe(5)
 
+    expect(snapshot.catalog.armors.find(record => record.names.zh === '皮制头饰')?.armorFamilyId)
+      .toBeUndefined()
+    expect(snapshot.catalog.armors.find(record => record.names.zh === '皮制X头饰')).toMatchObject({
+      armor: { baseDefense: 80, costBudget: 20 },
+      armorFamilyId: '301',
+    })
+    expect(snapshot.catalog.armors.find(record => record.names.zh === '炎火装束【头巾】继')).toMatchObject({
+      armor: { baseDefense: 80, costBudget: 20 },
+      armorFamilyId: '300',
+    })
+
     const weaponWithSlots = snapshot.catalog.weapons.find(record =>
       record.weapon.slots.some(level => level > 0))
     const armorRecords = snapshot.catalog.armors.filter(record => record.armor.slot)

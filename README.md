@@ -15,6 +15,11 @@ Skill and equipment names are localized at the data boundary; algorithms use sta
 
 Markdown build-note parsing and its supported alternative syntax are described in [the Markdown input guide](docs/markdown-input.md).
 
+## Credits
+
+- [Kiranico](https://mhrise.kiranico.com/) for localized Monster Hunter Rise data and Wiki IDs
+- [dtlnor](https://docs.qq.com/sheet/DRndRRWRrU3hxV0Nh?tab=BB08J2) for the offline legality and cost tables
+
 ## Packages
 
 - `packages/core`: domain rules and build optimization algorithms

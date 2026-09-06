@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
-import { basename, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { argv } from 'node:process'
 
 const require = createRequire(import.meta.url)
@@ -40,7 +40,7 @@ const skills = await enrichSkillMaximums(parseSkills(skillsHtml))
 const skillByName = new Map(skills.map(record => [record.names.zh, record.ref.id]))
 const families = workbookData.armorFamilies.map(family => ({
   ...family,
-  key: familyKey(family.name),
+  key: family.name,
 }))
 const armors = armorPages.flatMap(page => parseArmors(page, families))
 const decorations = parseDecorations(decorationsHtml)
@@ -48,15 +48,6 @@ const weapons = weaponPages.flatMap(page => parseWeapons(page))
 
 const snapshot = {
   generatedAt: new Date().toISOString(),
-  source: {
-    kiranico: [
-      `${KIRANICO_BASE_URL}/zh/data/skills`,
-      `${KIRANICO_BASE_URL}/zh/data/decorations`,
-      `${KIRANICO_BASE_URL}/zh/data/armors?view=0..9`,
-      `${KIRANICO_BASE_URL}/zh/data/weapons?view=0..13`,
-    ],
-    workbook: basename(workbookPath),
-  },
   catalog: {
     armors: deduplicate(armors),
     decorations: deduplicate(decorations),
@@ -354,12 +345,21 @@ function inferArmorSlot(name) {
 }
 
 function familyKey(name) {
-  return name.replace(/[・･ＺZ真X]/gu, '').replace(/[【】]/gu, '').trim()
+  return name
+    .replace(/【[^】]*】/gu, '')
+    .replace(/[・･ＺZX真继霸]/gu, '')
+    .replace(/(?:头盔|头巾|头饰|额饰|铠甲|上衣|胸甲|宿衣|腕甲|手甲|大袖|腰甲|腰卷|护腿|绑腿|腿甲|[头首冠躯胸衣臂袖腰尾带圆足脚裳])$/gu, '')
+    .trim()
 }
 
 function matchesFamily(name, key) {
+  const marker = key.match(/[ＺZX真继霸]/u)?.[0]
+  if (marker && !name.includes(marker))
+    return false
+
   const normalized = familyKey(name)
-  return normalized.startsWith(key) || key.startsWith(normalized)
+  const family = familyKey(key)
+  return normalized === family || normalized.startsWith(family)
 }
 
 function augmentationKind(label) {
