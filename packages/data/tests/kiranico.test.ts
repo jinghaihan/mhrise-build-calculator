@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { parseKiranicoArmors, parseKiranicoDecorations, parseKiranicoSkills } from '../src/kiranico'
+import {
+  parseKiranicoArmors,
+  parseKiranicoDecorations,
+  parseKiranicoSkills,
+  parseKiranicoWeapons,
+} from '../src/kiranico'
 
 const skillsHtml = `
   <table><tbody>
@@ -28,6 +33,17 @@ const armorsHtml = `
       <td><img src="deco2.png"><img src="deco1.png"></td>
       <td><div>126</div><div>0</div></td>
       <td><a href="https://mhrise.kiranico.com/zh/data/skills/366824395">攻击</a> Lv1</td>
+    </tr>
+  </tbody></table>
+`
+
+const weaponsHtml = `
+  <table><tbody>
+    <tr>
+      <td><img src="avatar.webp"></td>
+      <td><a href="https://mhrise.kiranico.com/zh/data/weapons/789">测试武器</a></td>
+      <td>插槽 <img src="deco4.png"><img src="deco2.png"> 百龙插槽</td>
+      <td>350</td>
     </tr>
   </tbody></table>
 `
@@ -62,5 +78,15 @@ describe('kiranico HTML importers', () => {
       slots: [2, 1, 0],
     })
     expect(record.armor.baseSkills).toEqual([{ level: 1, skillId: '366824395' }])
+  })
+
+  it('imports weapon slots and skills', () => {
+    const [record] = parseKiranicoWeapons(weaponsHtml)
+
+    expect(record.weapon).toEqual({
+      ref: { id: '789', kind: 'weapon', source: 'kiranico' },
+      skills: [],
+      slots: [4, 2, 0],
+    })
   })
 })

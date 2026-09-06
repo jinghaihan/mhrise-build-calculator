@@ -3,11 +3,13 @@ import type {
   ArmorSlot,
   Decoration,
   SkillValue,
+  Weapon,
   WikiEntityKind,
 } from '@mhrise-build-tools/core'
 import type {
   KiranicoArmorRecord,
   KiranicoDecorationRecord,
+  KiranicoWeaponRecord,
   SkillRecord,
 } from './catalog'
 import { createWikiId, createWikiRef } from '@mhrise-build-tools/core'
@@ -124,6 +126,37 @@ export function parseKiranicoArmors(
       armor,
       names: { [locale]: stripMarkup(armorLink.text) },
       ref: armor.ref,
+    })
+  }
+
+  return deduplicate(records)
+}
+
+export function parseKiranicoWeapons(
+  html: string,
+  options: KiranicoParseOptions = {},
+): KiranicoWeaponRecord[] {
+  const locale = options.locale ?? 'zh'
+  const records: KiranicoWeaponRecord[] = []
+
+  for (const row of tableRows(html)) {
+    const weaponLink = firstLink(row, '/data/weapons/')
+
+    if (!weaponLink) {
+      continue
+    }
+
+    const cells = tableCells(row)
+    const weapon: Weapon = {
+      ref: createWikiRef('weapon', weaponLink.id),
+      skills: skillValuesFromRow(row),
+      slots: slotLevelsFromCell(cells[2] ?? ''),
+    }
+
+    records.push({
+      names: { [locale]: stripMarkup(weaponLink.text) },
+      ref: weapon.ref,
+      weapon,
     })
   }
 
