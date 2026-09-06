@@ -5,6 +5,7 @@ import { skillRequirement } from './catalog'
 export interface MarkdownBuildRequirements {
   readonly id: string
   readonly requiredSkills: readonly SkillValue[]
+  readonly requiredSkillGroups: readonly (readonly SkillValue[])[]
   readonly title: string
 }
 
@@ -39,15 +40,19 @@ export function parseMarkdownBuildRequirements(
     const start = section.index + title.length + 5
     const end = sections[index + 1]?.index ?? markdown.length
     const body = markdown.slice(start, end)
-    const requiredSkills = parseSkillLines(body, catalog, parserOptions)
+    const requiredSkillGroups = parseSkillLines(body, catalog, parserOptions)
+    const requiredSkills = requiredSkillGroups
+      .filter(group => group.length === 1)
+      .map(([skill]) => skill)
 
-    if (requiredSkills.length === 0) {
+    if (requiredSkillGroups.length === 0) {
       continue
     }
 
     results.push({
       id: slugify(title, index),
       requiredSkills,
+      requiredSkillGroups,
       title,
     })
   }
@@ -59,8 +64,8 @@ function parseSkillLines(
   body: string,
   catalog: DataCatalog,
   options: MarkdownParserOptions,
-): SkillValue[] {
-  const values: SkillValue[] = []
+): SkillValue[][] {
+  const values: SkillValue[][] = []
 
   for (const line of body.split(/\r?\n/)) {
     const match = line.match(/^[ \t]*-[ \t]*\[([x?I])\]/i)
@@ -71,9 +76,7 @@ function parseSkillLines(
 
     const parsed = parseSkillLine(line.slice(match[0].length).trim(), catalog, options.locale)
 
-    if (parsed) {
-      values.push(parsed)
-    }
+    values.push(...parsed)
   }
 
   return values
@@ -83,7 +86,7 @@ function parseSkillLine(
   line: string,
   catalog: DataCatalog,
   locale: LocaleCode,
-): SkillValue | undefined {
+): SkillValue[][] {
   const matches = catalog.skills
     .map(record => record.names[locale])
     .filter((name): name is string => Boolean(name))
@@ -100,7 +103,25 @@ function parseSkillLine(
       throw new Error(`Missing skill level in Markdown line: ${line}`)
     }
 
-    return skillRequirement(catalog, name, Number(levelMatch[1]), locale)
+    return [[skillRequirement(catalog, name, Number(levelMatch[1]), locale)]]
+  }
+
+  const levelMatch = line.match(/\b(\d+)/)
+  const level = levelMatch ? Number(levelMatch[1]) : undefined
+  const inlineAlternatives = level === undefined
+    ? []
+    : matches
+        .filter(name => line.includes(name))
+        .map(name => skillRequirement(catalog, name, level, locale))
+
+  if (inlineAlternatives.length > 0) {
+    return [inlineAlternatives]
+  }
+
+  const alias = matches.filter(name => name.includes(line.replace(/\d.*$/u, '').trim()))
+
+  if (level !== undefined && alias.length > 0) {
+    return alias.map(name => [skillRequirement(catalog, name, level, locale)])
   }
 
   throw new Error(`Skill was not found in ${locale} catalog: ${line}`)
