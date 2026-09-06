@@ -349,15 +349,15 @@ function augmentationKind(label) {
 }
 
 function augmentationElement(gameId) {
-  if (gameId >= 89 && gameId <= 93)
+  if (gameId >= 89 && gameId <= 94)
     return 'fire'
-  if (gameId >= 99 && gameId <= 103)
+  if (gameId >= 99 && gameId <= 104)
     return 'water'
-  if (gameId >= 109 && gameId <= 113)
+  if (gameId >= 109 && gameId <= 114)
     return 'thunder'
-  if (gameId >= 119 && gameId <= 123)
+  if (gameId >= 119 && gameId <= 124)
     return 'ice'
-  if (gameId >= 129 && gameId <= 133)
+  if (gameId >= 129 && gameId <= 134)
     return 'dragon'
   return undefined
 }
