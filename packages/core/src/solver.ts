@@ -29,6 +29,7 @@ export function solveBuild(
       ? request.talismans.filter(isTalismanLegal)
       : dedupeTalismans(request.talismans.filter(isTalismanLegal)),
   }
+  const decorationFeasibility = new Map<string, boolean>()
   const legalTalismans = workingRequest.talismans
   const bounds = createSearchBounds(workingRequest, legalTalismans)
   const armorBySlot = Object.fromEntries(ARMOR_SLOTS.map(slot => [
@@ -81,6 +82,32 @@ export function solveBuild(
         workingRequest.requiredSkills,
       )) {
         continue
+      }
+
+      const decorationKey = [
+        workingRequest.requiredSkills.map(requirement => `${requirement.skillId}:${Math.min(
+          getSkillLevel(totalSkills, requirement.skillId),
+          requirement.level,
+        )}`).join(','),
+        slots.map(slot => slot.level).sort((left, right) => right - left).join(','),
+      ].join('|')
+      const knownFeasibility = decorationFeasibility.get(decorationKey)
+      if (knownFeasibility === false) {
+        continue
+      }
+
+      if (knownFeasibility === undefined) {
+        const feasible = findDecorationPlacements(
+          slots,
+          workingRequest.decorations,
+          totalSkills,
+          workingRequest.requiredSkills,
+          1,
+        ).length > 0
+        decorationFeasibility.set(decorationKey, feasible)
+        if (!feasible) {
+          continue
+        }
       }
 
       const placements = findDecorationPlacements(
