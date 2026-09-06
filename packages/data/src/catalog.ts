@@ -127,6 +127,7 @@ export function createBuildRequest(
   definition: BuildDefinition,
 ): BuildRequest {
   const armorBySlot = {} as Record<ArmorSlot, readonly ReturnType<typeof createArmorVariant>[]>
+  const generatedAugmentations = new Map<string, readonly (ArmorAugmentation | undefined)[]>()
 
   for (const slot of ARMOR_SLOTS) {
     const selectedIds = definition.armorIdsBySlot?.[slot]
@@ -137,7 +138,11 @@ export function createBuildRequest(
       throw new Error(`No armor data found for ${slot} in build ${definition.id}`)
     }
 
-    armorBySlot[slot] = records.flatMap(record => armorVariantsFor(record.armor, definition))
+    armorBySlot[slot] = records.flatMap(record => armorVariantsFor(
+      record.armor,
+      definition,
+      generatedAugmentations,
+    ))
   }
 
   const weapon = findById(catalog.weapons, definition.weaponId, 'weapon').weapon
@@ -180,12 +185,36 @@ export function skillValue(skillId: WikiRef<'skill'>, level: number): SkillValue
   }
 }
 
-function armorVariantsFor(base: ArmorPiece, definition: BuildDefinition) {
+function armorVariantsFor(
+  base: ArmorPiece,
+  definition: BuildDefinition,
+  generatedAugmentations: Map<string, readonly (ArmorAugmentation | undefined)[]>,
+) {
   const explicitAugmentations = definition.armorAugmentationsById?.[base.ref.id] ?? []
   const components = definition.armorComponentsById?.[base.ref.id] ?? []
-  const generated = components.length > 0
-    ? generateArmorVariants(base, components, definition.armorVariantOptions)
-    : [createArmorVariant(base)]
+  const generatedKey = components.length > 0
+    ? JSON.stringify({
+        baseSkills: base.baseSkills,
+        baseResistances: base.baseResistances,
+        components,
+        costBudget: base.costBudget,
+        options: definition.armorVariantOptions,
+        slots: base.slots,
+      })
+    : undefined
+  let augmentations = generatedKey ? generatedAugmentations.get(generatedKey) : undefined
+
+  if (!augmentations) {
+    augmentations = components.length > 0
+      ? generateArmorVariants(base, components, definition.armorVariantOptions)
+          .map(variant => variant.augmentation)
+      : [undefined]
+    if (generatedKey) {
+      generatedAugmentations.set(generatedKey, augmentations)
+    }
+  }
+
+  const generated = augmentations.map(augmentation => createArmorVariant(base, augmentation))
 
   return [
     ...generated,
