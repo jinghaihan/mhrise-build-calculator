@@ -181,12 +181,19 @@ export function solveBuild(
     const bestPartialDefense = searchSlots.map(() => new Map<string, number>())
     const optimisticDecorationFeasibility = new Map<string, boolean>()
 
-    const seedArmor = createGreedyArmorSeed(candidates, searchSlots, searchRequest.requiredSkills)
-    if (seedArmor) {
-      finish(
-        getArmorSkills(seedArmor),
-        seedArmor,
-      )
+    const seedKeys = new Set<string>()
+    for (const seedOrder of createSlotOrderings(searchSlots)) {
+      const seedArmor = createGreedyArmorSeed(candidates, seedOrder, searchRequest.requiredSkills)
+      if (!seedArmor) {
+        continue
+      }
+
+      const seedKey = Object.values(seedArmor).map(variant => variant.variantId).join('|')
+      if (seedKeys.has(seedKey)) {
+        continue
+      }
+      seedKeys.add(seedKey)
+      finish(getArmorSkills(seedArmor), seedArmor)
     }
 
     search(0, {}, [], [0, 0, 0, 0], 0)
@@ -315,6 +322,17 @@ function createGreedyArmorSeed(
   }
 
   return selected
+}
+
+function createSlotOrderings(slots: readonly ArmorSlot[]): ArmorSlot[][] {
+  if (slots.length <= 1) {
+    return [[...slots]]
+  }
+
+  return slots.flatMap((slot, index) => createSlotOrderings([
+    ...slots.slice(0, index),
+    ...slots.slice(index + 1),
+  ]).map(order => [slot, ...order]))
 }
 
 function skillGain(
