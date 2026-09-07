@@ -188,13 +188,10 @@ onBeforeUnmount(() => {
       </header>
 
       <section class="rounded-lg border border-base bg-elevated p-5 sm:p-6">
-        <div class="grid gap-5 md:grid-cols-[minmax(0,1fr)_8rem] md:items-end">
+        <div class="grid gap-5">
           <FormField label="Weapon" required>
             <SearchSelect v-model="selectedWeaponId" :options="weaponOptions" placeholder="Search weapons…" />
           </FormField>
-          <div class="text-sm color-tertiary md:pb-2">
-            {{ weaponOptions.length }} available
-          </div>
         </div>
 
         <div class="mt-6 border-t border-base pt-5">
