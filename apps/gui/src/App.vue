@@ -7,7 +7,7 @@ import FormField from '@antfu/design/components/Form/FormField.vue'
 import FormNumberInput from '@antfu/design/components/Form/FormNumberInput.vue'
 import { provideColorScheme } from '@antfu/design/composables/colorScheme'
 import { createWikiId } from '@mhrise-build-tools/core'
-import { defaultSnapshot, getLocalizedName, LOCALE_LABEL, SUPPORTED_LOCALES } from '@mhrise-build-tools/data'
+import { defaultSnapshot, generateTalismanRecords, getLocalizedName, LOCALE_LABEL, SUPPORTED_LOCALES } from '@mhrise-build-tools/data'
 import * as Comlink from 'comlink'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -27,6 +27,7 @@ const theme = ref<ColorScheme>(storedTheme === 'dark' || storedTheme === 'light'
   ? storedTheme
   : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
 const selectedWeaponId = ref('')
+const selectedTalismanId = ref('')
 const selectedArmorIds = ref<Record<ArmorSlot, string>>({
   arms: '',
   chest: '',
@@ -83,6 +84,14 @@ const armorOptionsBySlot = computed<Record<ArmorSlot, SearchSelectOption[]>>(() 
     }))
     .sort((left, right) => left.label.localeCompare(right.label, locale.value))]),
 ) as Record<ArmorSlot, SearchSelectOption[]>)
+
+const talismanOptions = computed<SearchSelectOption[]>(() => generateTalismanRecords(defaultSnapshot, {
+  maxCandidates: 2000,
+  skillIds: selectedSkills.value.map(skill => createWikiId(skill.skillId)),
+}).map(record => ({
+  label: getLocalizedName(record, locale.value, 'zh') ?? String(record.ref.id),
+  value: String(record.ref.id),
+})))
 
 const hasArmorFilters = computed(() => Object.values(selectedArmorIds.value).some(Boolean))
 
@@ -160,6 +169,9 @@ function startSearch() {
       level,
       skillId: createWikiId(skillId),
     })),
+    ...(talismanOptions.value.some(option => option.value === selectedTalismanId.value)
+      ? { talismanIds: [selectedTalismanId.value] }
+      : {}),
     weaponId: selectedWeaponId.value,
   }
   void currentApi.search(request, Comlink.proxy((update: BuildWorkerProgress) => {
@@ -239,32 +251,31 @@ onBeforeUnmount(() => {
       <section class="rounded-lg border border-base bg-elevated p-5 sm:p-6">
         <div class="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
           <div>
-            <h2 class="mb-4 text-base font-600">
-              {{ t('ui.equipment') }}
-            </h2>
-            <FormField :label="t('ui.weapon')" required>
-              <SearchSelect
-                v-model="selectedWeaponId"
-                :options="weaponOptions"
-                :placeholder="t('ui.searchWeapons')"
-                :empty-text="t('ui.noMatches')"
-              />
-            </FormField>
-
-            <div class="mt-5 flex items-center justify-between">
-              <h3 class="text-sm font-600">
-                {{ t('ui.armor') }}
-              </h3>
+            <div class="mb-4 flex items-center justify-between">
+              <h2 class="text-base font-600">
+                {{ t('ui.equipment') }}
+              </h2>
               <ActionButton size="sm" variant="text" :disabled="running || !hasArmorFilters" @click="clearArmorFilters">
                 {{ t('ui.clearArmor') }}
               </ActionButton>
             </div>
-            <div class="mt-3 space-y-3">
-              <div v-for="slot in armorSlots" :key="slot" class="grid items-center gap-2 sm:grid-cols-[2rem_minmax(0,1fr)]">
+            <div class="space-y-3">
+              <div class="grid items-center gap-3 rounded-md border border-base bg-raised p-2 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
+                <img src="/armor/weapon.png" :alt="t('ui.weapon')" class="h-8 w-8 object-contain opacity-80">
+                <SearchSelect
+                  v-model="selectedWeaponId"
+                  :options="weaponOptions"
+                  :placeholder="t('ui.searchWeapons')"
+                  :empty-text="t('ui.noMatches')"
+                  :aria-label="t('ui.weapon')"
+                  required
+                />
+              </div>
+              <div v-for="slot in armorSlots" :key="slot" class="grid items-center gap-3 rounded-md border border-base bg-raised p-2 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
                 <img
-                  :src="`/armor/${slot}.svg`"
+                  :src="`/armor/${slot}.png`"
                   :alt="t(`slot.${slot}`)"
-                  class="h-7 w-7 object-contain opacity-70"
+                  class="h-8 w-8 object-contain opacity-80"
                 >
                 <SearchSelect
                   v-model="selectedArmorIds[slot]"
@@ -273,6 +284,17 @@ onBeforeUnmount(() => {
                   :empty-text="t('ui.noMatches')"
                   :disabled="running"
                   :aria-label="t(`slot.${slot}`)"
+                />
+              </div>
+              <div class="grid items-center gap-3 rounded-md border border-base bg-raised p-2 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
+                <img src="/armor/talisman.png" :alt="t('ui.talisman')" class="h-8 w-8 object-contain opacity-80">
+                <SearchSelect
+                  v-model="selectedTalismanId"
+                  :options="talismanOptions"
+                  :placeholder="t('ui.searchTalisman')"
+                  :empty-text="t('ui.noMatches')"
+                  :disabled="running || selectedSkills.length === 0"
+                  :aria-label="t('ui.talisman')"
                 />
               </div>
             </div>

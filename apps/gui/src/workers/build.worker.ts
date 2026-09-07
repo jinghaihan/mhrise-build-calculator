@@ -6,6 +6,7 @@ export interface BuildSearchRequest {
   readonly armorIdsBySlot?: Partial<Readonly<Record<ArmorSlot, readonly string[]>>>
   readonly maxSolutions?: number
   readonly requiredSkills: readonly SkillValue[]
+  readonly talismanIds?: readonly string[]
   readonly weaponId: string
 }
 
@@ -26,6 +27,7 @@ const api: BuildWorkerApi = {
     return searchSnapshotBuild(defaultSnapshot, {
       armorIdsBySlot: request.armorIdsBySlot,
       requiredSkills: request.requiredSkills,
+      talismanIds: request.talismanIds,
       weaponId: request.weaponId,
     }, {
       generateArmorVariants: true,
