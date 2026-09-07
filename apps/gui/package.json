@@ -14,6 +14,7 @@
     "@antfu/utils": "catalog:frontend",
     "@iconify-json/ph": "catalog:frontend",
     "colorjs.io": "catalog:frontend",
+    "comlink": "catalog:frontend",
     "reka-ui": "catalog:frontend",
     "vue": "catalog:frontend",
     "@mhrise-build-tools/core": "workspace:*",

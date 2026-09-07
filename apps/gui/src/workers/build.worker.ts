@@ -1,10 +1,10 @@
-import type { SkillValue } from '@mhrise-build-tools/core'
+import type { BuildSolution, SkillValue } from '@mhrise-build-tools/core'
 import { defaultSnapshot, searchSnapshotBuild } from '@mhrise-build-tools/data'
+import * as Comlink from 'comlink'
 
-export interface BuildSearchMessage {
+export interface BuildSearchRequest {
   readonly maxSolutions?: number
   readonly requiredSkills: readonly SkillValue[]
-  readonly type: 'search'
   readonly weaponId: string
 }
 
@@ -14,54 +14,27 @@ export interface BuildWorkerProgress {
   readonly total: number
 }
 
-export interface BuildWorkerProgressMessage {
-  readonly progress: BuildWorkerProgress
-  readonly type: 'progress'
+export type BuildProgressCallback = (progress: BuildWorkerProgress) => void
+
+export interface BuildWorkerApi {
+  search: (request: BuildSearchRequest, onProgress?: BuildProgressCallback) => BuildSolution[]
 }
 
-export interface BuildWorkerResultMessage {
-  readonly solutions: ReturnType<typeof searchSnapshotBuild>
-  readonly type: 'result'
-}
-
-export interface BuildWorkerErrorMessage {
-  readonly message: string
-  readonly type: 'error'
-}
-
-export type BuildWorkerMessage = BuildWorkerErrorMessage | BuildWorkerProgressMessage | BuildWorkerResultMessage
-
-const workerScope = globalThis as typeof globalThis & {
-  onmessage: ((event: MessageEvent<BuildSearchMessage>) => void) | null
-  postMessage: (message: BuildWorkerMessage) => void
-}
-
-workerScope.onmessage = (event) => {
-  if (event.data.type !== 'search')
-    return
-
-  try {
-    const solutions = searchSnapshotBuild(defaultSnapshot, {
-      requiredSkills: event.data.requiredSkills,
-      weaponId: event.data.weaponId,
+const api: BuildWorkerApi = {
+  search(request, onProgress) {
+    return searchSnapshotBuild(defaultSnapshot, {
+      requiredSkills: request.requiredSkills,
+      weaponId: request.weaponId,
     }, {
       generateArmorVariants: true,
-      maxSolutions: event.data.maxSolutions ?? 5,
-      onProgress: progress => workerScope.postMessage({
-        progress: {
-          current: progress.current,
-          stage: progress.stage === 'generating' ? 'generating' : 'searching',
-          total: progress.total,
-        },
-        type: 'progress',
+      maxSolutions: request.maxSolutions ?? 5,
+      onProgress: progress => onProgress?.({
+        current: progress.current,
+        stage: progress.stage,
+        total: progress.total,
       }),
     })
-    workerScope.postMessage({ solutions, type: 'result' })
-  }
-  catch (error) {
-    workerScope.postMessage({
-      message: error instanceof Error ? error.message : String(error),
-      type: 'error',
-    })
-  }
+  },
 }
+
+Comlink.expose(api)

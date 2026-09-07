@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import type { BuildSolution, SkillValue } from '@mhrise-build-tools/core'
 import type { SearchSelectOption } from './components/SearchSelect.vue'
-import type { BuildWorkerMessage, BuildWorkerProgress } from './workers/build.worker'
+import type { BuildSearchRequest, BuildWorkerApi, BuildWorkerProgress } from './workers/build.worker'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import FormField from '@antfu/design/components/Form/FormField.vue'
 import FormNumberInput from '@antfu/design/components/Form/FormNumberInput.vue'
 import { provideColorScheme } from '@antfu/design/composables/colorScheme'
 import { createWikiId } from '@mhrise-build-tools/core'
 import { defaultSnapshot, getLocalizedName } from '@mhrise-build-tools/data'
+import * as Comlink from 'comlink'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import SearchSelect from './components/SearchSelect.vue'
 
@@ -31,6 +32,7 @@ const running = ref(false)
 const errorMessage = ref('')
 const progress = ref<BuildWorkerProgress>()
 let worker: Worker | undefined
+let workerApi: Comlink.Remote<BuildWorkerApi> | undefined
 
 const isDark = computed(() => theme.value === 'dark')
 
@@ -116,50 +118,54 @@ function startSearch() {
   errorMessage.value = ''
   progress.value = undefined
   running.value = true
-  worker = new Worker(new URL('./workers/build.worker.ts', import.meta.url), { type: 'module' })
-  worker.onmessage = (event: MessageEvent<BuildWorkerMessage>) => {
-    const message = event.data
-    if (message.type === 'progress') {
-      progress.value = message.progress
-    }
-    else if (message.type === 'result') {
-      solutions.value = message.solutions
-      running.value = false
-      worker?.terminate()
-      worker = undefined
-    }
-    else {
-      errorMessage.value = message.message
-      running.value = false
-      worker?.terminate()
-      worker = undefined
-    }
-  }
-  worker.onerror = (event) => {
-    errorMessage.value = event.message || 'The calculation worker stopped unexpectedly.'
-    running.value = false
-    worker?.terminate()
-    worker = undefined
-  }
-  worker.postMessage({
+  const currentWorker = new Worker(new URL('./workers/build.worker.ts', import.meta.url), { type: 'module' })
+  const currentApi = Comlink.wrap<BuildWorkerApi>(currentWorker)
+  worker = currentWorker
+  workerApi = currentApi
+  const request: BuildSearchRequest = {
     maxSolutions: 5,
     requiredSkills: selectedSkills.value.map(({ level, skillId }): SkillValue => ({
       level,
       skillId: createWikiId(skillId),
     })),
-    type: 'search',
     weaponId: selectedWeaponId.value,
+  }
+  void currentApi.search(request, Comlink.proxy((update: BuildWorkerProgress) => {
+    if (worker === currentWorker)
+      progress.value = update
+  })).then((result) => {
+    if (worker !== currentWorker)
+      return
+    solutions.value = result
+    running.value = false
+  }).catch((error: unknown) => {
+    if (worker !== currentWorker)
+      return
+    errorMessage.value = error instanceof Error ? error.message : String(error)
+    running.value = false
+  }).finally(() => {
+    currentApi[Comlink.releaseProxy]()
+    currentWorker.terminate()
+    if (worker === currentWorker) {
+      worker = undefined
+      workerApi = undefined
+    }
   })
 }
 
 function cancelSearch() {
+  workerApi?.[Comlink.releaseProxy]()
   worker?.terminate()
   worker = undefined
+  workerApi = undefined
   running.value = false
   progress.value = undefined
 }
 
-onBeforeUnmount(() => worker?.terminate())
+onBeforeUnmount(() => {
+  workerApi?.[Comlink.releaseProxy]()
+  worker?.terminate()
+})
 </script>
 
 <template>
