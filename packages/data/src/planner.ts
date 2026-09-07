@@ -3,9 +3,10 @@ import type {
   BuildRequest,
   BuildSolution,
   ReusePlan,
+  SolveProgress,
   WikiId,
 } from '@mhrise-build-tools/core'
-import type { BuildDefinition, DataCatalog } from './catalog'
+import type { BuildDefinition, BuildRequestProgress, DataCatalog } from './catalog'
 import type { SourceSnapshot } from './snapshot'
 import {
   ARMOR_SLOTS,
@@ -20,6 +21,7 @@ export interface SnapshotPlanOptions {
   readonly generateArmorVariants?: boolean
   readonly maxSolutions?: number
   readonly maxTalismanCandidates?: number
+  readonly onProgress?: (progress: BuildRequestProgress | SolveProgress) => void
   readonly talismanSkillIds?: readonly WikiId[]
 }
 
@@ -52,6 +54,7 @@ export function createSnapshotBuildRequest(
   const request = createBuildRequest(
     catalog,
     withGeneratedArmorComponents(snapshot, definition, skillIds, options),
+    { onProgress: options.onProgress },
   )
 
   return request
@@ -93,6 +96,7 @@ export function solveSnapshotBuild(
 ): BuildSolution[] {
   return solveBuild(createSnapshotBuildRequest(snapshot, definition, options), {
     maxSolutions: options.maxSolutions,
+    onProgress: options.onProgress,
   })
 }
 

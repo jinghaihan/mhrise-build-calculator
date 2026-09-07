@@ -22,6 +22,12 @@ import {
 
 export type LocaleCode = string
 
+export interface BuildRequestProgress {
+  readonly current: number
+  readonly stage: 'generating'
+  readonly total: number
+}
+
 export interface LocalizedNames {
   readonly [locale: LocaleCode]: string
 }
@@ -125,24 +131,40 @@ export function skillRequirement(
 export function createBuildRequest(
   catalog: DataCatalog,
   definition: BuildDefinition,
+  options: {
+    readonly onProgress?: (progress: BuildRequestProgress) => void
+  } = {},
 ): BuildRequest {
   const armorBySlot = {} as Record<ArmorSlot, readonly ReturnType<typeof createArmorVariant>[]>
   const generatedAugmentations = new Map<string, readonly (ArmorAugmentation | undefined)[]>()
-
-  for (const slot of ARMOR_SLOTS) {
+  const recordsBySlot = ARMOR_SLOTS.map(slot => catalog.armors.filter((record) => {
     const selectedIds = definition.armorIdsBySlot?.[slot]
-    const records = catalog.armors.filter(record => record.armor.slot === slot
-      && (!selectedIds || selectedIds.includes(record.ref.id)))
+    return record.armor.slot === slot && (!selectedIds || selectedIds.includes(record.ref.id))
+  }))
+  const totalRecords = recordsBySlot.reduce((total, records) => total + records.length, 0)
+  let completedRecords = 0
+
+  for (const [slotIndex, slot] of ARMOR_SLOTS.entries()) {
+    const records = recordsBySlot[slotIndex]
 
     if (records.length === 0) {
       throw new Error(`No armor data found for ${slot} in build ${definition.id}`)
     }
 
-    armorBySlot[slot] = records.flatMap(record => armorVariantsFor(
-      record.armor,
-      definition,
-      generatedAugmentations,
-    ))
+    armorBySlot[slot] = records.flatMap((record) => {
+      const variants = armorVariantsFor(
+        record.armor,
+        definition,
+        generatedAugmentations,
+      )
+      completedRecords += 1
+      options.onProgress?.({
+        current: completedRecords,
+        stage: 'generating',
+        total: totalRecords,
+      })
+      return variants
+    })
   }
 
   const weapon = findById(catalog.weapons, definition.weaponId, 'weapon').weapon

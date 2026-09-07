@@ -7,8 +7,15 @@ import { isTalismanLegal } from './talismans'
 
 export interface SolveOptions {
   readonly maxSolutions?: number
+  readonly onProgress?: (progress: SolveProgress) => void
   /** Keep equivalent talismans and partial armor identities for reuse planning. */
   readonly preserveEquipmentIdentity?: boolean
+}
+
+export interface SolveProgress {
+  readonly current: number
+  readonly stage: 'searching'
+  readonly total: number
 }
 
 const DEFAULT_MAX_SOLUTIONS = 200
@@ -53,6 +60,8 @@ export function solveBuild(
     preserveEquipmentIdentity,
     maxSolutions,
   )
+  options.onProgress?.({ current: 0, stage: 'searching', total: armorStates.length })
+  let processedStates = 0
   function searchTalismans(
     skills: readonly SkillValue[],
     armor: Readonly<Record<ArmorSlot, ArmorVariant>>,
@@ -154,6 +163,12 @@ export function solveBuild(
       getArmorSkills(state.armor as Record<ArmorSlot, ArmorVariant>),
       state.armor as Record<ArmorSlot, ArmorVariant>,
     )
+    processedStates += 1
+    options.onProgress?.({
+      current: processedStates,
+      stage: 'searching',
+      total: armorStates.length,
+    })
   }
   return solutions
 }
