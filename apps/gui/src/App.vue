@@ -210,21 +210,25 @@ onBeforeUnmount(() => {
             MHRise Build Planner
           </h1>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
           <label class="sr-only" for="locale-select">{{ t('ui.language') }}</label>
-          <select
-            id="locale-select"
-            v-model="locale"
-            class="h-9 rounded-md border border-base bg-raised px-2 text-sm color-base outline-none focus:ring-2 focus:ring-primary-500/40"
-            @change="persistLocale"
-          >
-            <option v-for="supportedLocale in SUPPORTED_LOCALES" :key="supportedLocale" :value="supportedLocale">
-              {{ LOCALE_LABEL[supportedLocale] }}
-            </option>
-          </select>
+          <div class="relative">
+            <select
+              id="locale-select"
+              v-model="locale"
+              class="h-9 min-w-32 appearance-none rounded-md border border-base bg-raised pl-3 pr-9 text-sm color-base outline-none focus:ring-2 focus:ring-primary-500/40"
+              @change="persistLocale"
+            >
+              <option v-for="supportedLocale in SUPPORTED_LOCALES" :key="supportedLocale" :value="supportedLocale">
+                {{ LOCALE_LABEL[supportedLocale] }}
+              </option>
+            </select>
+            <span class="pointer-events-none absolute right-2.5 top-1/2 i-ph:caret-down translate-y-[-50%] color-secondary" aria-hidden="true" />
+          </div>
           <ActionButton
             size="sm"
-            variant="text"
+            variant="action"
+            class="h-9 w-9 justify-center p-0"
             :icon="isDark ? 'i-ph:sun' : 'i-ph:moon'"
             :aria-label="isDark ? t('ui.switchToLight') : t('ui.switchToDark')"
             @click="toggleTheme"
@@ -256,14 +260,19 @@ onBeforeUnmount(() => {
               </ActionButton>
             </div>
             <div class="mt-3 space-y-3">
-              <div v-for="slot in armorSlots" :key="slot" class="grid items-center gap-3 sm:grid-cols-[5rem_minmax(0,1fr)]">
-                <span class="text-sm color-secondary">{{ t(`slot.${slot}`) }}</span>
+              <div v-for="slot in armorSlots" :key="slot" class="grid items-center gap-2 sm:grid-cols-[2rem_minmax(0,1fr)]">
+                <img
+                  :src="`/armor/${slot}.svg`"
+                  :alt="t(`slot.${slot}`)"
+                  class="h-7 w-7 object-contain opacity-70"
+                >
                 <SearchSelect
                   v-model="selectedArmorIds[slot]"
                   :options="armorOptionsBySlot[slot]"
                   :placeholder="t('ui.searchArmor')"
                   :empty-text="t('ui.noMatches')"
                   :disabled="running"
+                  :aria-label="t(`slot.${slot}`)"
                 />
               </div>
             </div>
@@ -296,7 +305,7 @@ onBeforeUnmount(() => {
                 <FormField :label="index === 0 ? t('ui.level') : undefined">
                   <FormNumberInput v-model="skill.level" :min="1" :max="maxSkillLevel(skill.skillId)" :disabled="running" controls />
                 </FormField>
-                <ActionButton size="sm" variant="text" icon="i-ph:trash" :disabled="running" :aria-label="t('ui.removeSkill')" @click="removeSkill(index)" />
+                <ActionButton size="sm" variant="action" class="h-9 w-9 justify-center p-0" icon="i-ph:trash" :disabled="running" :aria-label="t('ui.removeSkill')" @click="removeSkill(index)" />
               </div>
             </div>
           </div>
