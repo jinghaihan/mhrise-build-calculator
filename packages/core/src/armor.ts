@@ -228,6 +228,7 @@ export function generateArmorVariants(
       cost,
       defenseDelta,
       depth,
+      lastCommutativeIndex,
       skills: currentSkills,
       slots,
     }
@@ -395,31 +396,35 @@ function generateArmorVariantsDp(
         baseArmorResistances(base),
         state.resistanceDelta,
       )
-      const preferredNegativeResistance = !compactResistance && resistanceStrategy === 'balanced'
-        ? preferredNegativeResistanceComponents(ordinaryComponents, currentResistances)
+      const preferredNegativeResistance = resistanceStrategy === 'balanced'
+        ? preferredNegativeResistanceComponents(preparedComponents, currentResistances)
         : undefined
 
       for (const component of ordinaryComponents) {
-        const role = component.role ?? 'normal'
-        const nextCost = state.cost + component.costDelta
+        const selectedComponent = compactResistance && isNegativeResistanceComponent(component)
+          ? preparedComponents.find(candidate => candidate.id === preferredNegativeResistance
+            ?.get(resistanceComponentGroup(component))) ?? component
+          : component
+        const role = selectedComponent.role ?? 'normal'
+        const nextCost = state.cost + selectedComponent.costDelta
         if (nextCost > base.costBudget || (role === 'cost-fill' && nextCost !== base.costBudget)) {
           continue
         }
 
         if (resistanceStrategy === 'balanced'
-          && isNegativeResistanceComponent(component)
-          && preferredNegativeResistance?.get(resistanceComponentGroup(component)) !== component.id) {
+          && isNegativeResistanceComponent(selectedComponent)
+          && preferredNegativeResistance?.get(resistanceComponentGroup(selectedComponent)) !== selectedComponent.id) {
           continue
         }
 
-        const nextSkillChanges = [...state.skillChanges, ...component.skillChanges]
+        const nextSkillChanges = [...state.skillChanges, ...selectedComponent.skillChanges]
         const nextSkills = addSkillValues(base.baseSkills, nextSkillChanges)
         if (nextSkills.some(skill => skill.level < 0)
           || countActiveSkills(nextSkills) > MAX_ARMOR_SKILLS) {
           continue
         }
 
-        if (requiredSkills.length > 0 && component.skillChanges.some((change) => {
+        if (requiredSkills.length > 0 && selectedComponent.skillChanges.some((change) => {
           if (change.level <= 0) {
             return false
           }
@@ -430,7 +435,7 @@ function generateArmorVariantsDp(
           continue
         }
 
-        const nextSlotUpgrades = state.slotUpgrades + component.slotUpgrades
+        const nextSlotUpgrades = state.slotUpgrades + selectedComponent.slotUpgrades
         let nextSlots: SlotLevels
         try {
           nextSlots = applySlotUpgrades(base.slots, nextSlotUpgrades)
@@ -440,13 +445,13 @@ function generateArmorVariantsDp(
         }
 
         const nextState: GenerationState = {
-          componentIds: [...state.componentIds, component.id],
+          componentIds: [...state.componentIds, selectedComponent.id],
           cost: nextCost,
-          defenseDelta: state.defenseDelta + component.defenseDelta,
+          defenseDelta: state.defenseDelta + selectedComponent.defenseDelta,
           depth: depth + 1,
           resistanceDelta: addArmorResistances(
             state.resistanceDelta,
-            component.resistanceDelta,
+            selectedComponent.resistanceDelta,
           ),
           skillChanges: nextSkillChanges,
           skills: nextSkills,
