@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BuildSolution, SkillValue } from '@mhrise-build-tools/core'
+import type { ArmorSlot, BuildSolution, SkillValue } from '@mhrise-build-tools/core'
 import type { SearchSelectOption } from './components/SearchSelect.vue'
 import type { BuildSearchRequest, BuildWorkerApi, BuildWorkerProgress } from './workers/build.worker'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
@@ -27,6 +27,13 @@ const theme = ref<ColorScheme>(storedTheme === 'dark' || storedTheme === 'light'
   ? storedTheme
   : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
 const selectedWeaponId = ref('')
+const selectedArmorIds = ref<Record<ArmorSlot, string>>({
+  arms: '',
+  chest: '',
+  head: '',
+  legs: '',
+  waist: '',
+})
 const selectedSkills = ref<SkillSelection[]>([])
 const solutions = ref<BuildSolution[]>([])
 const running = ref(false)
@@ -67,6 +74,18 @@ const weaponOptions = computed<SearchSelectOption[]>(() => defaultSnapshot.catal
   }))
   .sort((left, right) => left.label.localeCompare(right.label, locale.value)))
 
+const armorOptionsBySlot = computed<Record<ArmorSlot, SearchSelectOption[]>>(() => Object.fromEntries(
+  armorSlots.map(slot => [slot, defaultSnapshot.catalog.armors
+    .filter(record => record.armor.slot === slot && record.armorFamilyId)
+    .map(record => ({
+      label: getLocalizedName(record, locale.value, 'zh') ?? String(record.ref.id),
+      value: String(record.ref.id),
+    }))
+    .sort((left, right) => left.label.localeCompare(right.label, locale.value))]),
+) as Record<ArmorSlot, SearchSelectOption[]>)
+
+const hasArmorFilters = computed(() => Object.values(selectedArmorIds.value).some(Boolean))
+
 const canSearch = computed(() => selectedWeaponId.value !== ''
   && selectedSkills.value.length > 0
   && selectedSkills.value.every(skill => skill.level >= 1))
@@ -106,6 +125,11 @@ function armorName(armorId: string) {
   return record ? (getLocalizedName(record, locale.value, 'zh') ?? armorId) : armorId
 }
 
+function clearArmorFilters() {
+  for (const slot of armorSlots)
+    selectedArmorIds.value[slot] = ''
+}
+
 function persistLocale() {
   localStorage.setItem('mhrise-build-tools-locale', locale.value)
 }
@@ -128,6 +152,9 @@ function startSearch() {
   worker = currentWorker
   workerApi = currentApi
   const request: BuildSearchRequest = {
+    armorIdsBySlot: Object.fromEntries(armorSlots
+      .filter(slot => selectedArmorIds.value[slot])
+      .map(slot => [slot, [selectedArmorIds.value[slot]]])),
     maxSolutions: 5,
     requiredSkills: selectedSkills.value.map(({ level, skillId }): SkillValue => ({
       level,
@@ -206,50 +233,76 @@ onBeforeUnmount(() => {
       </header>
 
       <section class="rounded-lg border border-base bg-elevated p-5 sm:p-6">
-        <div class="grid gap-5">
-          <FormField :label="t('ui.weapon')" required>
-            <SearchSelect
-              v-model="selectedWeaponId"
-              :options="weaponOptions"
-              :placeholder="t('ui.searchWeapons')"
-              :empty-text="t('ui.noMatches')"
-            />
-          </FormField>
-        </div>
-
-        <div class="mt-6 border-t border-base pt-5">
-          <div class="mb-3 flex items-center justify-between">
-            <h2 class="text-base font-600">
-              {{ t('ui.targetSkills') }}
+        <div class="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
+          <div>
+            <h2 class="mb-4 text-base font-600">
+              {{ t('ui.equipment') }}
             </h2>
-            <ActionButton size="sm" icon="i-ph:plus" :disabled="running" @click="addSkill">
-              {{ t('ui.addSkill') }}
-            </ActionButton>
-          </div>
+            <FormField :label="t('ui.weapon')" required>
+              <SearchSelect
+                v-model="selectedWeaponId"
+                :options="weaponOptions"
+                :placeholder="t('ui.searchWeapons')"
+                :empty-text="t('ui.noMatches')"
+              />
+            </FormField>
 
-          <div v-if="selectedSkills.length === 0" class="rounded-md border border-dashed border-base px-4 py-6 text-center text-sm color-tertiary">
-            {{ t('ui.addSkillRequirement') }}
-          </div>
-          <div v-else class="space-y-3">
-            <div v-for="(skill, index) in selectedSkills" :key="index" class="grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_8rem_2.25rem]">
-              <FormField :label="index === 0 ? t('ui.skill') : undefined">
+            <div class="mt-5 flex items-center justify-between">
+              <h3 class="text-sm font-600">
+                {{ t('ui.armor') }}
+              </h3>
+              <ActionButton size="sm" variant="text" :disabled="running || !hasArmorFilters" @click="clearArmorFilters">
+                {{ t('ui.clearArmor') }}
+              </ActionButton>
+            </div>
+            <div class="mt-3 space-y-3">
+              <div v-for="slot in armorSlots" :key="slot" class="grid items-center gap-3 sm:grid-cols-[5rem_minmax(0,1fr)]">
+                <span class="text-sm color-secondary">{{ t(`slot.${slot}`) }}</span>
                 <SearchSelect
-                  v-model="skill.skillId"
-                  :options="skillOptions"
-                  :placeholder="t('ui.searchSkills')"
+                  v-model="selectedArmorIds[slot]"
+                  :options="armorOptionsBySlot[slot]"
+                  :placeholder="t('ui.searchArmor')"
                   :empty-text="t('ui.noMatches')"
                   :disabled="running"
                 />
-              </FormField>
-              <FormField :label="index === 0 ? t('ui.level') : undefined">
-                <FormNumberInput v-model="skill.level" :min="1" :max="maxSkillLevel(skill.skillId)" :disabled="running" controls />
-              </FormField>
-              <ActionButton size="sm" variant="text" icon="i-ph:trash" :disabled="running" :aria-label="t('ui.removeSkill')" @click="removeSkill(index)" />
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:border-l lg:border-base lg:pl-8">
+            <div class="mb-4 flex items-center justify-between">
+              <h2 class="text-base font-600">
+                {{ t('ui.targetSkills') }}
+              </h2>
+              <ActionButton size="sm" icon="i-ph:plus" :disabled="running" @click="addSkill">
+                {{ t('ui.addSkill') }}
+              </ActionButton>
+            </div>
+
+            <div v-if="selectedSkills.length === 0" class="rounded-md border border-dashed border-base px-4 py-6 text-center text-sm color-tertiary">
+              {{ t('ui.addSkillRequirement') }}
+            </div>
+            <div v-else class="space-y-3">
+              <div v-for="(skill, index) in selectedSkills" :key="index" class="grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_8rem_2.25rem]">
+                <FormField :label="index === 0 ? t('ui.skill') : undefined">
+                  <SearchSelect
+                    v-model="skill.skillId"
+                    :options="skillOptions"
+                    :placeholder="t('ui.searchSkills')"
+                    :empty-text="t('ui.noMatches')"
+                    :disabled="running"
+                  />
+                </FormField>
+                <FormField :label="index === 0 ? t('ui.level') : undefined">
+                  <FormNumberInput v-model="skill.level" :min="1" :max="maxSkillLevel(skill.skillId)" :disabled="running" controls />
+                </FormField>
+                <ActionButton size="sm" variant="text" icon="i-ph:trash" :disabled="running" :aria-label="t('ui.removeSkill')" @click="removeSkill(index)" />
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-base pt-5">
+        <div class="mt-8 flex flex-wrap items-center gap-3 border-t border-base pt-5">
           <ActionButton variant="primary" :loading="running" :disabled="!canSearch" icon="i-ph:magnifying-glass" @click="startSearch">
             {{ running ? t('ui.calculating') : t('ui.findBuilds') }}
           </ActionButton>

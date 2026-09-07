@@ -1,8 +1,9 @@
-import type { BuildSolution, SkillValue } from '@mhrise-build-tools/core'
+import type { ArmorSlot, BuildSolution, SkillValue } from '@mhrise-build-tools/core'
 import { defaultSnapshot, searchSnapshotBuild } from '@mhrise-build-tools/data'
 import * as Comlink from 'comlink'
 
 export interface BuildSearchRequest {
+  readonly armorIdsBySlot?: Partial<Readonly<Record<ArmorSlot, readonly string[]>>>
   readonly maxSolutions?: number
   readonly requiredSkills: readonly SkillValue[]
   readonly weaponId: string
@@ -23,6 +24,7 @@ export interface BuildWorkerApi {
 const api: BuildWorkerApi = {
   search(request, onProgress) {
     return searchSnapshotBuild(defaultSnapshot, {
+      armorIdsBySlot: request.armorIdsBySlot,
       requiredSkills: request.requiredSkills,
       weaponId: request.weaponId,
     }, {

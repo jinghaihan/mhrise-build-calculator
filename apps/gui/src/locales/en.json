@@ -1,5 +1,9 @@
 {
   "ui.weapon": "Weapon",
+  "ui.equipment": "Equipment",
+  "ui.armor": "Armor",
+  "ui.searchArmor": "Search armor…",
+  "ui.clearArmor": "Clear armor",
   "ui.searchWeapons": "Search weapons…",
   "ui.targetSkills": "Target skills",
   "ui.skill": "Skill",

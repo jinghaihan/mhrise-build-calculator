@@ -1,5 +1,9 @@
 {
   "ui.weapon": "武器",
+  "ui.equipment": "装備",
+  "ui.armor": "防具",
+  "ui.searchArmor": "防具を検索…",
+  "ui.clearArmor": "防具の絞り込みを解除",
   "ui.searchWeapons": "武器を検索…",
   "ui.targetSkills": "目標スキル",
   "ui.skill": "スキル",
