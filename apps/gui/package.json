@@ -1,0 +1,27 @@
+{
+  "name": "@mhrise-build-tools/gui",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "lint": "eslint .",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@antfu/design": "catalog:frontend",
+    "colorjs.io": "catalog:frontend",
+    "reka-ui": "catalog:frontend",
+    "vue": "catalog:frontend",
+    "@mhrise-build-tools/data": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "catalog:build",
+    "@unocss/reset": "catalog:frontend",
+    "@unocss/transformer-directives": "catalog:frontend",
+    "@vitejs/plugin-vue": "catalog:frontend",
+    "unocss": "catalog:frontend",
+    "vue-tsc": "catalog:frontend"
+  }
+}
