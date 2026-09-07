@@ -1,6 +1,7 @@
 {
   "ignoreDependencies": [
-    "pncat"
+    "pncat",
+    "uno.css"
   ],
   "ignoreFiles": [
     "pncat.config.ts"

@@ -1,10 +1,13 @@
 import { presetAnthonyDesign } from '@antfu/design/unocss'
+import { icons } from '@iconify-json/ph'
+import presetIcons from '@unocss/preset-icons'
 import transformerDirectives from '@unocss/transformer-directives'
 import { defineConfig, presetWind4 } from 'unocss'
 
 export default defineConfig({
   presets: [
     presetAnthonyDesign({ primary: '#d68b4c', darkBackground: '#101416' }),
+    presetIcons({ collections: { ph: () => icons } }),
     presetWind4(),
   ],
   transformers: [transformerDirectives()],

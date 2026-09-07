@@ -13,6 +13,9 @@ catalogs:
     typescript: ^6.0.3
   frontend:
     '@antfu/design': ^0.4.0
+    '@antfu/utils': ^9.0.0
+    '@iconify-json/ph': ^1.2.2
+    '@unocss/preset-icons': ^66.10.0
     '@unocss/reset': ^66.10.0
     '@unocss/transformer-directives': ^66.10.0
     '@vitejs/plugin-vue': ^6.0.8

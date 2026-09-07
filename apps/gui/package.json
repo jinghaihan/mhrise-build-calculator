@@ -11,13 +11,17 @@
   },
   "dependencies": {
     "@antfu/design": "catalog:frontend",
+    "@antfu/utils": "catalog:frontend",
+    "@iconify-json/ph": "catalog:frontend",
     "colorjs.io": "catalog:frontend",
     "reka-ui": "catalog:frontend",
     "vue": "catalog:frontend",
+    "@mhrise-build-tools/core": "workspace:*",
     "@mhrise-build-tools/data": "workspace:*"
   },
   "devDependencies": {
     "vite": "catalog:build",
+    "@unocss/preset-icons": "catalog:frontend",
     "@unocss/reset": "catalog:frontend",
     "@unocss/transformer-directives": "catalog:frontend",
     "@vitejs/plugin-vue": "catalog:frontend",
