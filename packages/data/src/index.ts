@@ -1,6 +1,7 @@
 export * from './catalog'
 export * from './default-snapshot'
 export * from './kiranico'
+export * from './localization'
 export * from './markdown'
 export * from './markdown-planner'
 export * from './planner'

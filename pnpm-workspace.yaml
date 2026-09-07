@@ -24,6 +24,7 @@ catalogs:
     reka-ui: ^2.6.0
     unocss: ^66.10.0
     vue: ^3.5.42
+    vue-i18n: ^11.4.10
     vue-tsc: ^3.3.11
   lint:
     '@octohash/eslint-config': ^0.6.1

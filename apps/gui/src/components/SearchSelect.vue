@@ -11,10 +11,12 @@ export interface SearchSelectOption {
 const props = withDefaults(defineProps<{
   options: SearchSelectOption[]
   placeholder?: string
+  emptyText?: string
   disabled?: boolean
   maxVisible?: number
 }>(), {
   maxVisible: 80,
+  emptyText: 'No matches',
   placeholder: 'Search…',
 })
 
@@ -28,6 +30,10 @@ const visibleOptions = computed(() => {
     : props.options
   return filtered.slice(0, props.maxVisible)
 })
+
+function displayValue(value: unknown) {
+  return props.options.find(option => option.value === String(value))?.label ?? ''
+}
 </script>
 
 <template>
@@ -39,6 +45,7 @@ const visibleOptions = computed(() => {
       <span class="i-ph:magnifying-glass op-fade shrink-0" aria-hidden="true" />
       <ComboboxInput
         :placeholder="placeholder"
+        :display-value="displayValue"
         class="color-base outline-none bg-transparent flex-1 min-w-0 placeholder:op-mute"
         @update:model-value="query = $event"
       />
@@ -65,7 +72,7 @@ const visibleOptions = computed(() => {
             </ComboboxItemIndicator>
           </ComboboxItem>
           <ComboboxEmpty class="text-sm px-2 py-2 text-center op-fade">
-            No matches
+            {{ emptyText }}
           </ComboboxEmpty>
         </ComboboxViewport>
       </ComboboxContent>

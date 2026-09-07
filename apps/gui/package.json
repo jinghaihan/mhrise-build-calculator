@@ -17,6 +17,7 @@
     "comlink": "catalog:frontend",
     "reka-ui": "catalog:frontend",
     "vue": "catalog:frontend",
+    "vue-i18n": "catalog:frontend",
     "@mhrise-build-tools/core": "workspace:*",
     "@mhrise-build-tools/data": "workspace:*"
   },

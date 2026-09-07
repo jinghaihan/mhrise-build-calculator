@@ -7,6 +7,7 @@ import {
   getSkillLevel,
 } from '@mhrise-build-tools/core'
 import { describe, expect, it } from 'vitest'
+import localizedNames from '../locales/names.json'
 import {
   createSnapshotBuildRequest,
   createSnapshotCatalog,
@@ -21,7 +22,7 @@ import {
 describe('source snapshots', () => {
   it('loads the synchronized 16.0.0 source snapshot', () => {
     const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
-    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'), localizedNames)
 
     expect(snapshot.catalog.skills.length).toBeGreaterThan(100)
     expect(snapshot.catalog.decorations.length).toBeGreaterThan(200)
@@ -70,7 +71,7 @@ describe('source snapshots', () => {
 
   it('builds a planner catalog with on-demand talismans', () => {
     const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
-    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'), localizedNames)
     const attackId = snapshot.catalog.skills.find(skill => skill.names.zh === '攻击')?.ref.id
 
     expect(attackId).toBeDefined()
@@ -84,7 +85,7 @@ describe('source snapshots', () => {
 
   it('searches from a selected weapon and required skills', () => {
     const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
-    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'), localizedNames)
     const attackId = snapshot.catalog.skills.find(skill => skill.names.zh === '攻击')!.ref.id
     const weapon = snapshot.catalog.weapons.find(record => record.weapon.slots.some(Boolean))!
     const armorIdsBySlot = Object.fromEntries(
@@ -113,7 +114,7 @@ describe('source snapshots', () => {
 
   it('can generate Qurious Crafting variants for selected armor records', () => {
     const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
-    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'), localizedNames)
     const attackId = snapshot.catalog.skills.find(skill => skill.names.zh === '攻击')!.ref.id
     const weapon = snapshot.catalog.weapons.find(record => record.weapon.slots.some(Boolean))!
     const armorIdsBySlot = Object.fromEntries(
@@ -139,7 +140,7 @@ describe('source snapshots', () => {
 
   it('excludes non-master armor from generated Qurious Crafting searches', () => {
     const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
-    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'), localizedNames)
     const nonMaster = snapshot.catalog.armors.find(record => !record.armorFamilyId)!
     expect(() => createSnapshotBuildRequest(snapshot, {
       armorIdsBySlot: { [nonMaster.armor.slot]: [nonMaster.ref.id] },
@@ -190,7 +191,7 @@ describe('source snapshots', () => {
 
   it('imports resistance reduction rules from the synchronized workbook', () => {
     const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
-    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'), localizedNames)
     const components = armorComponentsForPool(snapshot, 1)
     const fireReduction = components.find(component => component.resistanceDelta?.fire === -1)
 
@@ -202,7 +203,7 @@ describe('source snapshots', () => {
 
   it('keeps special augmentation rows distinct from normal rows', () => {
     const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
-    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'))
+    const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'), localizedNames)
     const components = armorComponentsForPool(snapshot, 1)
 
     expect(components.find(component => component.id === '1:70:1')?.role).toBe('cost-fill')

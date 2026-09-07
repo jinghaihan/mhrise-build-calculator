@@ -12,6 +12,7 @@
     "deps": "taze major -I",
     "knip": "knip",
     "lint": "eslint .",
+    "locales:sync": "node scripts/sync-localizations.mjs",
     "prepare": "simple-git-hooks",
     "sources:sync": "node scripts/sync-sources.mjs",
     "test": "pnpm --recursive --if-present test",

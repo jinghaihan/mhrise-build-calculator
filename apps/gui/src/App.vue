@@ -7,9 +7,10 @@ import FormField from '@antfu/design/components/Form/FormField.vue'
 import FormNumberInput from '@antfu/design/components/Form/FormNumberInput.vue'
 import { provideColorScheme } from '@antfu/design/composables/colorScheme'
 import { createWikiId } from '@mhrise-build-tools/core'
-import { defaultSnapshot, getLocalizedName } from '@mhrise-build-tools/data'
+import { defaultSnapshot, getLocalizedName, LOCALE_LABEL, SUPPORTED_LOCALES } from '@mhrise-build-tools/data'
 import * as Comlink from 'comlink'
 import { computed, onBeforeUnmount, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SearchSelect from './components/SearchSelect.vue'
 
 type ColorScheme = 'light' | 'dark'
@@ -20,7 +21,7 @@ interface SkillSelection {
 }
 
 const armorSlots = ['head', 'chest', 'arms', 'waist', 'legs'] as const
-const locale = 'en'
+const { locale, t } = useI18n({ useScope: 'global' })
 const storedTheme = localStorage.getItem('mhrise-build-tools-theme')
 const theme = ref<ColorScheme>(storedTheme === 'dark' || storedTheme === 'light'
   ? storedTheme
@@ -53,18 +54,18 @@ applyTheme()
 
 const skillOptions = computed<SearchSelectOption[]>(() => defaultSnapshot.catalog.skills
   .map(record => ({
-    label: getLocalizedName(record, locale) ?? String(record.ref.id),
+    label: getLocalizedName(record, locale.value, 'zh') ?? String(record.ref.id),
     value: String(record.ref.id),
   }))
-  .sort((left, right) => left.label.localeCompare(right.label, locale)))
+  .sort((left, right) => left.label.localeCompare(right.label, locale.value)))
 
 const weaponOptions = computed<SearchSelectOption[]>(() => defaultSnapshot.catalog.weapons
   .filter(record => record.weapon.slots.some(level => level > 0))
   .map(record => ({
-    label: getLocalizedName(record, locale) ?? String(record.ref.id),
+    label: getLocalizedName(record, locale.value, 'zh') ?? String(record.ref.id),
     value: String(record.ref.id),
   }))
-  .sort((left, right) => left.label.localeCompare(right.label, locale)))
+  .sort((left, right) => left.label.localeCompare(right.label, locale.value)))
 
 const canSearch = computed(() => selectedWeaponId.value !== ''
   && selectedSkills.value.length > 0
@@ -92,17 +93,21 @@ function skillRecord(skillId: string) {
 
 function skillName(skillId: string) {
   const record = skillRecord(skillId)
-  return record ? (getLocalizedName(record, locale) ?? skillId) : skillId
+  return record ? (getLocalizedName(record, locale.value, 'zh') ?? skillId) : skillId
 }
 
 function weaponName(weaponId: string) {
   const record = defaultSnapshot.catalog.weapons.find(item => String(item.ref.id) === weaponId)
-  return record ? (getLocalizedName(record, locale) ?? weaponId) : weaponId
+  return record ? (getLocalizedName(record, locale.value, 'zh') ?? weaponId) : weaponId
 }
 
 function armorName(armorId: string) {
   const record = defaultSnapshot.catalog.armors.find(item => String(item.ref.id) === armorId)
-  return record ? (getLocalizedName(record, locale) ?? armorId) : armorId
+  return record ? (getLocalizedName(record, locale.value, 'zh') ?? armorId) : armorId
+}
+
+function persistLocale() {
+  localStorage.setItem('mhrise-build-tools-locale', locale.value)
 }
 
 function maxSkillLevel(skillId: string) {
@@ -178,65 +183,89 @@ onBeforeUnmount(() => {
             MHRise Build Planner
           </h1>
         </div>
-        <ActionButton
-          size="sm"
-          variant="text"
-          :icon="isDark ? 'i-ph:sun' : 'i-ph:moon'"
-          :aria-label="isDark ? 'Switch to light theme' : 'Switch to dark theme'"
-          @click="toggleTheme"
-        />
+        <div class="flex items-center gap-2">
+          <label class="sr-only" for="locale-select">{{ t('ui.language') }}</label>
+          <select
+            id="locale-select"
+            v-model="locale"
+            class="h-9 rounded-md border border-base bg-raised px-2 text-sm color-base outline-none focus:ring-2 focus:ring-primary-500/40"
+            @change="persistLocale"
+          >
+            <option v-for="supportedLocale in SUPPORTED_LOCALES" :key="supportedLocale" :value="supportedLocale">
+              {{ LOCALE_LABEL[supportedLocale] }}
+            </option>
+          </select>
+          <ActionButton
+            size="sm"
+            variant="text"
+            :icon="isDark ? 'i-ph:sun' : 'i-ph:moon'"
+            :aria-label="isDark ? t('ui.switchToLight') : t('ui.switchToDark')"
+            @click="toggleTheme"
+          />
+        </div>
       </header>
 
       <section class="rounded-lg border border-base bg-elevated p-5 sm:p-6">
         <div class="grid gap-5">
-          <FormField label="Weapon" required>
-            <SearchSelect v-model="selectedWeaponId" :options="weaponOptions" placeholder="Search weapons…" />
+          <FormField :label="t('ui.weapon')" required>
+            <SearchSelect
+              v-model="selectedWeaponId"
+              :options="weaponOptions"
+              :placeholder="t('ui.searchWeapons')"
+              :empty-text="t('ui.noMatches')"
+            />
           </FormField>
         </div>
 
         <div class="mt-6 border-t border-base pt-5">
           <div class="mb-3 flex items-center justify-between">
             <h2 class="text-base font-600">
-              Target skills
+              {{ t('ui.targetSkills') }}
             </h2>
             <ActionButton size="sm" icon="i-ph:plus" :disabled="running" @click="addSkill">
-              Add skill
+              {{ t('ui.addSkill') }}
             </ActionButton>
           </div>
 
           <div v-if="selectedSkills.length === 0" class="rounded-md border border-dashed border-base px-4 py-6 text-center text-sm color-tertiary">
-            Add a skill requirement.
+            {{ t('ui.addSkillRequirement') }}
           </div>
           <div v-else class="space-y-3">
             <div v-for="(skill, index) in selectedSkills" :key="index" class="grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_8rem_2.25rem]">
-              <FormField :label="index === 0 ? 'Skill' : undefined">
-                <SearchSelect v-model="skill.skillId" :options="skillOptions" placeholder="Search skills…" :disabled="running" />
+              <FormField :label="index === 0 ? t('ui.skill') : undefined">
+                <SearchSelect
+                  v-model="skill.skillId"
+                  :options="skillOptions"
+                  :placeholder="t('ui.searchSkills')"
+                  :empty-text="t('ui.noMatches')"
+                  :disabled="running"
+                />
               </FormField>
-              <FormField :label="index === 0 ? 'Level' : undefined">
+              <FormField :label="index === 0 ? t('ui.level') : undefined">
                 <FormNumberInput v-model="skill.level" :min="1" :max="maxSkillLevel(skill.skillId)" :disabled="running" controls />
               </FormField>
-              <ActionButton size="sm" variant="text" icon="i-ph:trash" :disabled="running" aria-label="Remove skill" @click="removeSkill(index)" />
+              <ActionButton size="sm" variant="text" icon="i-ph:trash" :disabled="running" :aria-label="t('ui.removeSkill')" @click="removeSkill(index)" />
             </div>
           </div>
         </div>
 
         <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-base pt-5">
           <ActionButton variant="primary" :loading="running" :disabled="!canSearch" icon="i-ph:magnifying-glass" @click="startSearch">
-            {{ running ? 'Calculating…' : 'Find builds' }}
+            {{ running ? t('ui.calculating') : t('ui.findBuilds') }}
           </ActionButton>
           <ActionButton v-if="running" variant="text" icon="i-ph:stop" @click="cancelSearch">
-            Cancel
+            {{ t('ui.cancel') }}
           </ActionButton>
-          <span v-if="!canSearch && !running" class="text-sm color-tertiary">Choose a weapon and at least one skill.</span>
+          <span v-if="!canSearch && !running" class="text-sm color-tertiary">{{ t('ui.chooseRequirements') }}</span>
         </div>
 
         <div v-if="running || progress" class="mt-5 border-t border-base pt-4">
           <div v-if="progress" class="flex items-center justify-between gap-4 text-sm">
-            <span>{{ progress.stage === 'generating' ? 'Generating augmentation variants' : 'Searching legal combinations' }}</span>
+            <span>{{ progress.stage === 'generating' ? t('ui.generatingVariants') : t('ui.searchingCombinations') }}</span>
             <span class="font-mono color-secondary">{{ progress.current }} / {{ progress.total }}</span>
           </div>
           <p v-else class="text-sm color-secondary">
-            Starting the calculation worker…
+            {{ t('ui.startingWorker') }}
           </p>
           <div v-if="progress" class="mt-3 h-1.5 overflow-hidden rounded-full bg-base">
             <div class="h-full rounded-full bg-primary transition-all" :style="{ width: `${progressPercent}%` }" />
@@ -247,9 +276,9 @@ onBeforeUnmount(() => {
       <section class="mt-8">
         <div class="mb-3 flex items-center justify-between">
           <h2 class="text-lg font-600">
-            Results
+            {{ t('ui.results') }}
           </h2>
-          <span v-if="solutions.length" class="text-sm color-secondary">{{ solutions.length }} builds</span>
+          <span v-if="solutions.length" class="text-sm color-secondary">{{ solutions.length }} {{ t('ui.builds') }}</span>
         </div>
 
         <div v-if="errorMessage" class="mb-3 rounded-md border border-red/30 bg-red/10 px-4 py-3 text-sm text-red-600 dark:text-red-300" role="alert">
@@ -265,13 +294,13 @@ onBeforeUnmount(() => {
                 </p>
                 <div class="mt-2 grid gap-x-5 gap-y-1 text-sm sm:grid-cols-2">
                   <span v-for="slot in armorSlots" :key="slot" class="truncate">
-                    <span class="mr-2 color-tertiary">{{ slot }}</span>{{ armorName(String(solution.armor[slot].base.ref.id)) }}
+                    <span class="mr-2 color-tertiary">{{ t(`slot.${slot}`) }}</span>{{ armorName(String(solution.armor[slot].base.ref.id)) }}
                   </span>
                 </div>
               </div>
               <div class="shrink-0 text-right">
                 <p class="text-xs color-tertiary">
-                  Defense
+                  {{ t('ui.defense') }}
                 </p>
                 <p class="font-mono text-xl font-600 text-primary">
                   {{ solution.defense }}
@@ -284,7 +313,7 @@ onBeforeUnmount(() => {
           </article>
         </div>
         <div v-else class="rounded-lg border border-dashed border-base px-4 py-12 text-center text-sm color-tertiary">
-          No results yet.
+          {{ t('ui.noResults') }}
         </div>
       </section>
     </div>

@@ -7,8 +7,10 @@ import type {
   WikiId,
 } from '@mhrise-build-tools/core'
 import type { DataCatalog, KiranicoArmorRecord, KiranicoTalismanRecord } from './catalog'
+import type { LocalizedNameData } from './localization'
 import { createLocalRef } from '@mhrise-build-tools/core'
 import { createDataCatalog } from './catalog'
+import { applyLocalizedNames } from './localization'
 
 export type AugmentationKind = 'defense' | 'resistance' | 'skill' | 'slot'
 
@@ -80,14 +82,20 @@ export interface SourceSnapshot {
   }
 }
 
-export function parseSourceSnapshot(input: string | unknown): SourceSnapshot {
+export function parseSourceSnapshot(
+  input: string | unknown,
+  localizedNames?: LocalizedNameData,
+): SourceSnapshot {
   const value = typeof input === 'string' ? JSON.parse(input) as unknown : input
 
   if (!isRecord(value) || !isRecord(value.catalog) || !isRecord(value.rules)) {
     throw new TypeError('Invalid source snapshot: catalog and rules are required')
   }
 
-  const catalog = createDataCatalog(value.catalog as unknown as DataCatalog)
+  const catalog = createDataCatalog(applyLocalizedNames(
+    value.catalog as unknown as Parameters<typeof applyLocalizedNames>[0],
+    localizedNames,
+  ))
   const rules = value.rules as unknown as SourceRules
 
   if (!Array.isArray(rules.armorFamilies)

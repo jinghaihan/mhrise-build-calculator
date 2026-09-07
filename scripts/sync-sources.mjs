@@ -49,11 +49,11 @@ const weapons = weaponPages.flatMap(page => parseWeapons(page))
 const snapshot = {
   generatedAt: new Date().toISOString(),
   catalog: {
-    armors: deduplicate(armors),
-    decorations: deduplicate(decorations),
-    skills: deduplicate(skills),
+    armors: stripNames(deduplicate(armors)),
+    decorations: stripNames(deduplicate(decorations)),
+    skills: stripNames(deduplicate(skills)),
     talismans: [],
-    weapons: deduplicate(weapons),
+    weapons: stripNames(deduplicate(weapons)),
   },
   rules: {
     armorFamilies: workbookData.armorFamilies,
@@ -440,6 +440,10 @@ function decodeHtml(value) {
 
 function deduplicate(records) {
   return [...new Map(records.map(record => [record.ref.id, record])).values()]
+}
+
+function stripNames(records) {
+  return records.map(({ names: _names, ...record }) => record)
 }
 
 function parseArgs(values) {

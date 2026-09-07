@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createWikiRef } from '@mhrise-build-tools/core'
 import { describe, expect, it } from 'vitest'
+import localizedNames from '../locales/names.json'
 import { parseMarkdownBuildRequirements } from '../src/markdown'
 import { expandMarkdownBuildRequirements } from '../src/markdown-planner'
 import { parseSourceSnapshot } from '../src/snapshot'
@@ -193,7 +194,7 @@ describe('markdown build input', () => {
   it('parses a real build-note fixture with all alternative groups', () => {
     const snapshot = parseSourceSnapshot(readFileSync(fileURLToPath(
       new URL('../snapshots/source-snapshot.json', import.meta.url),
-    ), 'utf8'))
+    ), 'utf8'), localizedNames)
     const fixturePath = fileURLToPath(new URL('./fixtures/monster-hunter-rise.md', import.meta.url))
     const [requirements] = parseMarkdownBuildRequirements(
       readFileSync(fixturePath, 'utf8'),
