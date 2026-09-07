@@ -228,7 +228,8 @@ export function solveBuild(
         return
       }
 
-      const optimisticFeasibility = optimisticDecorationFeasibility.get(stateKey)
+      const optimisticKey = `${slotIndex}|${stateKey}`
+      const optimisticFeasibility = optimisticDecorationFeasibility.get(optimisticKey)
       if (optimisticFeasibility === false) {
         return
       }
@@ -242,7 +243,7 @@ export function solveBuild(
           armor,
           skills,
         )
-        optimisticDecorationFeasibility.set(stateKey, feasible)
+        optimisticDecorationFeasibility.set(optimisticKey, feasible)
         if (!feasible) {
           return
         }
