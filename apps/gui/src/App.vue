@@ -7,9 +7,12 @@ import DisplayBadge from '@antfu/design/components/Display/DisplayBadge.vue'
 import FormCombobox from '@antfu/design/components/Form/FormCombobox.vue'
 import FormField from '@antfu/design/components/Form/FormField.vue'
 import FormNumberInput from '@antfu/design/components/Form/FormNumberInput.vue'
+import { provideColorScheme } from '@antfu/design/composables/colorScheme'
 import { createWikiId } from '@mhrise-build-tools/core'
 import { defaultSnapshot, getLocalizedName } from '@mhrise-build-tools/data'
 import { computed, onBeforeUnmount, ref } from 'vue'
+
+type ColorScheme = 'light' | 'dark'
 
 interface SkillSelection {
   level: number
@@ -17,7 +20,11 @@ interface SkillSelection {
 }
 
 const armorSlots = ['head', 'chest', 'arms', 'waist', 'legs'] as const
-const locale = 'zh'
+const locale = 'en'
+const storedTheme = localStorage.getItem('mhrise-build-tools-theme')
+const theme = ref<ColorScheme>(storedTheme === 'dark' || storedTheme === 'light'
+  ? storedTheme
+  : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
 const selectedWeaponId = ref('')
 const selectedSkills = ref<SkillSelection[]>([])
 const solutions = ref<BuildSolution[]>([])
@@ -25,6 +32,23 @@ const running = ref(false)
 const errorMessage = ref('')
 const progress = ref<BuildWorkerProgress>()
 let worker: Worker | undefined
+
+const isDark = computed(() => theme.value === 'dark')
+
+function applyTheme() {
+  document.documentElement.classList.toggle('dark', isDark.value)
+  document.documentElement.classList.toggle('light', !isDark.value)
+  document.documentElement.style.colorScheme = theme.value
+}
+
+function toggleTheme() {
+  theme.value = isDark.value ? 'light' : 'dark'
+  localStorage.setItem('mhrise-build-tools-theme', theme.value)
+  applyTheme()
+}
+
+provideColorScheme(() => theme.value)
+applyTheme()
 
 const skillOptions = computed<ComboboxOption[]>(() => defaultSnapshot.catalog.skills
   .map(record => ({
@@ -109,7 +133,7 @@ function startSearch() {
     }
   }
   worker.onerror = (event) => {
-    errorMessage.value = event.message || '计算线程异常退出'
+    errorMessage.value = event.message || 'The calculation worker stopped unexpectedly.'
     running.value = false
     worker?.terminate()
     worker = undefined
@@ -146,202 +170,241 @@ onBeforeUnmount(() => worker?.terminate())
 
 <template>
   <main class="min-h-screen bg-base color-base">
-    <div class="mx-auto max-w-7xl px-6 py-10 lg:px-10">
-      <header class="mb-10 flex flex-col gap-4 border-b border-base pb-8 md:flex-row md:items-end md:justify-between">
-        <div>
-          <div class="mb-3 flex items-center gap-3">
-            <span class="i-ph:hammer-fill text-2xl text-primary" aria-hidden="true" />
-            <DisplayBadge color="orange" variant="subtle">
-              Monster Hunter Rise
-            </DisplayBadge>
-          </div>
-          <h1 class="text-4xl font-700 tracking-tight">
-            Build Tools
-          </h1>
-          <p class="mt-3 max-w-2xl text-base color-secondary">
-            按照武器与目标技能检索合法配装，结果优先展示防御力更高的方案。
-          </p>
-        </div>
-        <span class="font-mono text-sm color-tertiary">{{ defaultSnapshot.catalog.armors.length }} armors · {{ defaultSnapshot.catalog.skills.length }} skills</span>
-      </header>
+    <div class="flex min-h-screen">
+      <aside class="hidden w-18 shrink-0 flex-col items-center border-r border-base py-5 md:flex">
+        <span class="app-logo h-11 w-11 text-primary" role="img" aria-label="Monster Hunter Rise logo" />
+        <div class="flex-1" />
+        <ActionButton
+          size="sm"
+          variant="text"
+          :icon="isDark ? 'i-ph:sun' : 'i-ph:moon'"
+          :aria-label="isDark ? 'Switch to light theme' : 'Switch to dark theme'"
+          @click="toggleTheme"
+        />
+      </aside>
 
-      <section class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div class="rounded-xl border border-base bg-elevated p-6 shadow-sm">
-          <div class="mb-6 flex items-start justify-between gap-4">
-            <div>
-              <h2 class="text-xl font-600">
-                Find a build
-              </h2>
-              <p class="mt-1 text-sm color-secondary">
-                选择一把武器，再添加需要达到的技能等级。
-              </p>
-            </div>
-            <span class="i-ph:sliders-horizontal text-xl color-tertiary" aria-hidden="true" />
-          </div>
-
-          <div class="grid gap-5 md:grid-cols-2">
-            <FormField label="武器" required description="只显示带有武器孔位的武器">
-              <FormCombobox v-model="selectedWeaponId" :options="weaponOptions" placeholder="搜索武器名称…" class="w-full" />
-            </FormField>
-            <div class="flex items-end">
-              <div class="rounded-lg bg-base px-4 py-3 text-sm color-secondary md:w-full">
-                <span class="i-ph:info mr-2 align-middle color-primary" aria-hidden="true" />
-                计算会在后台 Worker 中运行，页面不会被卡住。
+      <div class="min-w-0 flex-1 overflow-y-auto">
+        <div class="mx-auto max-w-7xl px-5 py-7 sm:px-8 sm:py-9 lg:px-10">
+          <header class="mb-9 flex flex-col gap-5 border-b border-base pb-7 sm:flex-row sm:items-end sm:justify-between">
+            <div class="flex items-start gap-4">
+              <span class="app-logo mt-1 h-10 w-10 shrink-0 text-primary md:hidden" role="img" aria-label="Monster Hunter Rise logo" />
+              <div>
+                <div class="mb-3 flex items-center gap-3">
+                  <DisplayBadge color="orange" variant="subtle">
+                    Monster Hunter Rise
+                  </DisplayBadge>
+                  <span class="text-xs uppercase tracking-widest color-tertiary">Sunbreak</span>
+                </div>
+                <h1 class="text-4xl font-700 tracking-tight">
+                  Build Planner
+                </h1>
+                <p class="mt-3 max-w-2xl text-base color-secondary">
+                  Find legal builds from your weapon and target skills, ranked by total defense.
+                </p>
               </div>
             </div>
-          </div>
+            <div class="flex items-center justify-between gap-4 sm:justify-end">
+              <span class="font-mono text-xs color-tertiary">{{ defaultSnapshot.catalog.armors.length }} armors · {{ defaultSnapshot.catalog.skills.length }} skills</span>
+              <ActionButton
+                class="md:hidden"
+                size="sm"
+                variant="text"
+                :icon="isDark ? 'i-ph:sun' : 'i-ph:moon'"
+                :aria-label="isDark ? 'Switch to light theme' : 'Switch to dark theme'"
+                @click="toggleTheme"
+              />
+            </div>
+          </header>
 
-          <div class="mt-7 border-t border-base pt-6">
-            <div class="mb-4 flex items-center justify-between">
+          <section class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <div class="rounded-xl border border-base bg-elevated p-6 shadow-sm">
+              <div class="mb-6 flex items-start justify-between gap-4">
+                <div>
+                  <h2 class="text-xl font-600">
+                    Search a build
+                  </h2>
+                  <p class="mt-1 text-sm color-secondary">
+                    Choose a weapon and add the skill levels you need.
+                  </p>
+                </div>
+                <span class="i-ph:sliders-horizontal text-xl color-tertiary" aria-hidden="true" />
+              </div>
+
+              <div class="grid gap-5 md:grid-cols-2">
+                <FormField label="Weapon" required description="Only weapons with at least one slot are listed.">
+                  <FormCombobox v-model="selectedWeaponId" :options="weaponOptions" placeholder="Search weapons…" class="w-full" />
+                </FormField>
+                <div class="flex items-end">
+                  <div class="rounded-lg bg-base px-4 py-3 text-sm color-secondary md:w-full">
+                    <span class="i-ph:info mr-2 align-middle color-primary" aria-hidden="true" />
+                    Search runs in a background Worker, so the page stays responsive.
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-7 border-t border-base pt-6">
+                <div class="mb-4 flex items-center justify-between">
+                  <div>
+                    <h3 class="font-600">
+                      Target skills
+                    </h3>
+                    <p class="mt-1 text-sm color-secondary">
+                      Set a minimum level for each skill. Add as many as you need.
+                    </p>
+                  </div>
+                  <ActionButton size="sm" icon="i-ph:plus" :disabled="running" @click="addSkill">
+                    Add skill
+                  </ActionButton>
+                </div>
+
+                <div v-if="selectedSkills.length === 0" class="rounded-lg border border-dashed border-base px-4 py-8 text-center text-sm color-tertiary">
+                  No target skills yet. Add one to start configuring your build.
+                </div>
+                <div v-else class="space-y-3">
+                  <div v-for="(skill, index) in selectedSkills" :key="index" class="grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_8rem_auto]">
+                    <FormField :label="index === 0 ? 'Skill' : undefined">
+                      <FormCombobox v-model="skill.skillId" :options="skillOptions" placeholder="Search skills…" :disabled="running" class="w-full" />
+                    </FormField>
+                    <FormField :label="index === 0 ? 'Level' : undefined">
+                      <FormNumberInput v-model="skill.level" :min="1" :max="maxSkillLevel(skill.skillId)" :disabled="running" controls />
+                    </FormField>
+                    <ActionButton size="sm" variant="text" icon="i-ph:trash" :disabled="running" aria-label="Remove skill" @click="removeSkill(index)" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-7 flex flex-wrap items-center gap-3 border-t border-base pt-6">
+                <ActionButton variant="primary" :loading="running" :disabled="!canSearch" icon="i-ph:magnifying-glass" @click="startSearch">
+                  {{ running ? 'Calculating…' : 'Find builds' }}
+                </ActionButton>
+                <ActionButton v-if="running" variant="text" icon="i-ph:stop" @click="cancelSearch">
+                  Cancel
+                </ActionButton>
+                <span v-if="!canSearch && !running" class="text-sm color-tertiary">Choose a weapon and at least one skill.</span>
+              </div>
+            </div>
+
+            <aside class="space-y-4">
+              <div class="rounded-xl border border-base bg-elevated p-5">
+                <div class="mb-3 flex items-center gap-2">
+                  <span class="i-ph:timer text-lg text-primary" aria-hidden="true" />
+                  <h2 class="font-600">
+                    Search status
+                  </h2>
+                </div>
+                <template v-if="running && progress">
+                  <div class="flex items-center justify-between text-sm">
+                    <span>{{ progress.stage === 'generating' ? 'Generating augmentation variants' : 'Searching legal combinations' }}</span>
+                    <span class="font-mono color-secondary">{{ progress.current }} / {{ progress.total }}</span>
+                  </div>
+                  <div class="mt-3 h-2 overflow-hidden rounded-full bg-base">
+                    <div class="h-full rounded-full bg-primary transition-all" :style="{ width: `${progressPercent}%` }" />
+                  </div>
+                  <p class="mt-3 text-xs color-tertiary">
+                    {{ progressPercent }}% · You can cancel at any time.
+                  </p>
+                </template>
+                <p v-else-if="running" class="text-sm color-secondary">
+                  Starting the calculation worker…
+                </p>
+                <p v-else-if="progress" class="text-sm color-secondary">
+                  The last search is complete.
+                </p>
+                <p v-else class="text-sm color-tertiary">
+                  Progress will appear here once a search starts.
+                </p>
+              </div>
+
+              <div class="rounded-xl border border-base bg-elevated p-5 text-sm color-secondary">
+                <div class="mb-2 flex items-center gap-2 color-base">
+                  <span class="i-ph:shield-check text-lg text-primary" aria-hidden="true" />
+                  <h2 class="font-600">
+                    Ranking
+                  </h2>
+                </div>
+                <p>Results prioritize total defense while preserving skill, slot, and augmentation constraints.</p>
+              </div>
+            </aside>
+          </section>
+
+          <section class="mt-8">
+            <div class="mb-4 flex items-end justify-between gap-4">
               <div>
-                <h3 class="font-600">
-                  目标技能
-                </h3>
+                <h2 class="text-2xl font-600">
+                  Results
+                </h2>
                 <p class="mt-1 text-sm color-secondary">
-                  每个技能至少填写 1 级，可添加多个技能。
+                  {{ solutions.length ? `${solutions.length} candidate builds found` : 'Run a search to see candidate builds here.' }}
                 </p>
               </div>
-              <ActionButton size="sm" icon="i-ph:plus" :disabled="running" @click="addSkill">
-                添加技能
-              </ActionButton>
-            </div>
-
-            <div v-if="selectedSkills.length === 0" class="rounded-lg border border-dashed border-base px-4 py-8 text-center text-sm color-tertiary">
-              还没有目标技能，点击“添加技能”开始配置。
-            </div>
-            <div v-else class="space-y-3">
-              <div v-for="(skill, index) in selectedSkills" :key="index" class="grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_8rem_auto]">
-                <FormField :label="index === 0 ? '技能' : undefined">
-                  <FormCombobox v-model="skill.skillId" :options="skillOptions" placeholder="搜索技能名称…" :disabled="running" class="w-full" />
-                </FormField>
-                <FormField :label="index === 0 ? '等级' : undefined">
-                  <FormNumberInput v-model="skill.level" :min="1" :max="maxSkillLevel(skill.skillId)" :disabled="running" controls />
-                </FormField>
-                <ActionButton size="sm" variant="text" icon="i-ph:trash" :disabled="running" aria-label="移除技能" @click="removeSkill(index)" />
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-7 flex flex-wrap items-center gap-3 border-t border-base pt-6">
-            <ActionButton variant="primary" :loading="running" :disabled="!canSearch" icon="i-ph:magnifying-glass" @click="startSearch">
-              {{ running ? '正在计算…' : '开始检索' }}
-            </ActionButton>
-            <ActionButton v-if="running" variant="text" icon="i-ph:stop" @click="cancelSearch">
-              取消
-            </ActionButton>
-            <span v-if="!canSearch && !running" class="text-sm color-tertiary">请选择武器并至少添加一个技能。</span>
-          </div>
-        </div>
-
-        <aside class="space-y-4">
-          <div class="rounded-xl border border-base bg-elevated p-5">
-            <div class="mb-3 flex items-center gap-2">
-              <span class="i-ph:timer text-lg text-primary" aria-hidden="true" />
-              <h2 class="font-600">
-                计算状态
-              </h2>
-            </div>
-            <template v-if="running && progress">
-              <div class="flex items-center justify-between text-sm">
-                <span>{{ progress.stage === 'generating' ? '生成炼成候选' : '搜索合法组合' }}</span>
-                <span class="font-mono color-secondary">{{ progress.current }} / {{ progress.total }}</span>
-              </div>
-              <div class="mt-3 h-2 overflow-hidden rounded-full bg-base">
-                <div class="h-full rounded-full bg-primary transition-all" :style="{ width: `${progressPercent}%` }" />
-              </div>
-              <p class="mt-3 text-xs color-tertiary">
-                {{ progressPercent }}% · 可以随时取消本次计算
-              </p>
-            </template>
-            <p v-else-if="running" class="text-sm color-secondary">
-              正在启动计算线程…
-            </p>
-            <p v-else-if="progress" class="text-sm color-secondary">
-              上次计算已完成。
-            </p>
-            <p v-else class="text-sm color-tertiary">
-              配置完成后，计算进度会显示在这里。
-            </p>
-          </div>
-
-          <div class="rounded-xl border border-base bg-elevated p-5 text-sm color-secondary">
-            <div class="mb-2 flex items-center gap-2 color-base">
-              <span class="i-ph:shield-check text-lg text-primary" aria-hidden="true" />
-              <h2 class="font-600">
-                排序规则
-              </h2>
-            </div>
-            <p>结果会按防御力总数优先排序，并保留合法的技能、孔位与炼成约束。</p>
-          </div>
-        </aside>
-      </section>
-
-      <section class="mt-8">
-        <div class="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <h2 class="text-2xl font-600">
-              结果
-            </h2>
-            <p class="mt-1 text-sm color-secondary">
-              {{ solutions.length ? `找到 ${solutions.length} 个候选方案` : '完成一次检索后，候选方案会显示在这里。' }}
-            </p>
-          </div>
-          <DisplayBadge v-if="solutions.length" color="green" variant="subtle" icon="i-ph:check-circle">
-            可用
-          </DisplayBadge>
-        </div>
-
-        <div v-if="errorMessage" class="mb-4 rounded-lg border border-red/30 bg-red/10 px-4 py-3 text-sm text-red-600 dark:text-red-300" role="alert">
-          <span class="i-ph:warning mr-2 align-middle" aria-hidden="true" />{{ errorMessage }}
-        </div>
-
-        <div v-if="solutions.length" class="grid gap-4 xl:grid-cols-2">
-          <article v-for="solution in solutions" :key="solution.id" class="rounded-xl border border-base bg-elevated p-5 shadow-sm">
-            <div class="flex items-start justify-between gap-4 border-b border-base pb-4">
-              <div>
-                <p class="text-xs uppercase tracking-widest color-tertiary">
-                  {{ solution.id }}
-                </p>
-                <h3 class="mt-1 text-lg font-600">
-                  {{ weaponName(String(solution.weapon.ref.id)) }}
-                </h3>
-              </div>
-              <div class="text-right">
-                <p class="text-xs color-tertiary">
-                  防御力总数
-                </p>
-                <p class="font-mono text-2xl font-700 text-primary">
-                  {{ solution.defense }}
-                </p>
-              </div>
-            </div>
-            <div class="mt-4 grid gap-3 sm:grid-cols-2">
-              <div v-for="slot in armorSlots" :key="slot" class="rounded-lg bg-base px-3 py-2">
-                <p class="text-xs color-tertiary">
-                  {{ slot }}
-                </p>
-                <p class="mt-1 truncate text-sm" :title="armorName(String(solution.armor[slot].base.ref.id))">
-                  {{ armorName(String(solution.armor[slot].base.ref.id)) }}
-                </p>
-              </div>
-            </div>
-            <div class="mt-4 flex flex-wrap gap-2">
-              <DisplayBadge v-for="skill in solution.skills" :key="skill.skillId" color="blue" variant="subtle">
-                {{ skillName(String(skill.skillId)) }} Lv.{{ skill.level }}
+              <DisplayBadge v-if="solutions.length" color="green" variant="subtle" icon="i-ph:check-circle">
+                Ready
               </DisplayBadge>
             </div>
-            <p v-if="placedDecorationName(solution)" class="mt-4 text-xs color-tertiary">
-              装饰品 ID：{{ placedDecorationName(solution) }}
-            </p>
-          </article>
+
+            <div v-if="errorMessage" class="mb-4 rounded-lg border border-red/30 bg-red/10 px-4 py-3 text-sm text-red-600 dark:text-red-300" role="alert">
+              <span class="i-ph:warning mr-2 align-middle" aria-hidden="true" />{{ errorMessage }}
+            </div>
+
+            <div v-if="solutions.length" class="grid gap-4 xl:grid-cols-2">
+              <article v-for="solution in solutions" :key="solution.id" class="rounded-xl border border-base bg-elevated p-5 shadow-sm">
+                <div class="flex items-start justify-between gap-4 border-b border-base pb-4">
+                  <div>
+                    <p class="text-xs uppercase tracking-widest color-tertiary">
+                      {{ solution.id }}
+                    </p>
+                    <h3 class="mt-1 text-lg font-600">
+                      {{ weaponName(String(solution.weapon.ref.id)) }}
+                    </h3>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-xs color-tertiary">
+                      Total defense
+                    </p>
+                    <p class="font-mono text-2xl font-700 text-primary">
+                      {{ solution.defense }}
+                    </p>
+                  </div>
+                </div>
+                <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div v-for="slot in armorSlots" :key="slot" class="rounded-lg bg-base px-3 py-2">
+                    <p class="text-xs color-tertiary">
+                      {{ slot }}
+                    </p>
+                    <p class="mt-1 truncate text-sm" :title="armorName(String(solution.armor[slot].base.ref.id))">
+                      {{ armorName(String(solution.armor[slot].base.ref.id)) }}
+                    </p>
+                  </div>
+                </div>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <DisplayBadge v-for="skill in solution.skills" :key="skill.skillId" color="blue" variant="subtle">
+                    {{ skillName(String(skill.skillId)) }} Lv.{{ skill.level }}
+                  </DisplayBadge>
+                </div>
+                <p v-if="placedDecorationName(solution)" class="mt-4 text-xs color-tertiary">
+                  Decoration IDs: {{ placedDecorationName(solution) }}
+                </p>
+              </article>
+            </div>
+            <div v-else class="rounded-xl border border-dashed border-base bg-elevated px-6 py-16 text-center">
+              <span class="i-ph:compass text-4xl color-tertiary" aria-hidden="true" />
+              <p class="mt-3 text-sm color-secondary">
+                No results yet
+              </p>
+            </div>
+          </section>
         </div>
-        <div v-else class="rounded-xl border border-dashed border-base bg-elevated px-6 py-16 text-center">
-          <span class="i-ph:compass text-4xl color-tertiary" aria-hidden="true" />
-          <p class="mt-3 text-sm color-secondary">
-            暂无结果
-          </p>
-        </div>
-      </section>
+      </div>
     </div>
   </main>
 </template>
+
+<style scoped>
+.app-logo {
+  display: inline-block;
+  flex: none;
+  background-color: currentColor;
+  mask: url('/logo.svg') center / contain no-repeat;
+  -webkit-mask: url('/logo.svg') center / contain no-repeat;
+}
+</style>
