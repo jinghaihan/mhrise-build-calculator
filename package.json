@@ -8,6 +8,7 @@
   "author": "jinghaihan",
   "license": "MIT",
   "scripts": {
+    "dev": "pnpm -F @mhrise-build-tools/gui dev",
     "deps": "taze major -I",
     "knip": "knip",
     "lint": "eslint .",
