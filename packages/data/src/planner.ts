@@ -22,6 +22,7 @@ export interface SnapshotPlanOptions {
   readonly maxSolutions?: number
   readonly maxTalismanCandidates?: number
   readonly onProgress?: (progress: BuildRequestProgress | SolveProgress) => void
+  readonly onSolutions?: (solutions: readonly BuildSolution[]) => void
   readonly talismanSkillIds?: readonly WikiId[]
 }
 
@@ -97,6 +98,7 @@ export function solveSnapshotBuild(
   return solveBuild(createSnapshotBuildRequest(snapshot, definition, options), {
     maxSolutions: options.maxSolutions,
     onProgress: options.onProgress,
+    onSolutions: options.onSolutions,
   })
 }
 

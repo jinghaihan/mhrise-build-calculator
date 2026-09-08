@@ -42,8 +42,11 @@ const solutions = ref<BuildSolution[]>([])
 const running = ref(false)
 const errorMessage = ref('')
 const progress = ref<BuildWorkerProgress>()
+const elapsedMilliseconds = ref(0)
 let worker: Worker | undefined
 let workerApi: Comlink.Remote<BuildWorkerApi> | undefined
+let elapsedTimer: ReturnType<typeof setInterval> | undefined
+let searchStartedAt = 0
 
 watch([selectedWeaponId, selectedTalismanId, selectedArmorIds, selectedSkills], () => {
   if (!running.value) {
@@ -147,6 +150,32 @@ function maxSkillLevel(skillId: string) {
   return skillRecord(skillId)?.maxLevel ?? 10
 }
 
+function updateElapsedTime() {
+  if (searchStartedAt > 0)
+    elapsedMilliseconds.value = performance.now() - searchStartedAt
+}
+
+function startElapsedTimer() {
+  searchStartedAt = performance.now()
+  elapsedMilliseconds.value = 0
+  elapsedTimer = setInterval(updateElapsedTime, 250)
+}
+
+function stopElapsedTimer() {
+  updateElapsedTime()
+  if (elapsedTimer)
+    clearInterval(elapsedTimer)
+  elapsedTimer = undefined
+  searchStartedAt = 0
+}
+
+function formatElapsedTime(milliseconds: number): string {
+  const totalSeconds = Math.floor(milliseconds / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`
+}
+
 function startSearch() {
   if (!canSearch.value || running.value)
     return
@@ -156,6 +185,7 @@ function startSearch() {
   errorMessage.value = ''
   progress.value = undefined
   running.value = true
+  startElapsedTimer()
   const currentWorker = new Worker(new URL('./workers/build.worker.ts', import.meta.url), { type: 'module' })
   const currentApi = Comlink.wrap<BuildWorkerApi>(currentWorker)
   worker = currentWorker
@@ -177,6 +207,9 @@ function startSearch() {
   void currentApi.search(request, Comlink.proxy((update: BuildWorkerProgress) => {
     if (worker === currentWorker)
       progress.value = update
+  }), Comlink.proxy((partialResults: readonly BuildSolution[]) => {
+    if (worker === currentWorker)
+      solutions.value = [...partialResults]
   })).then((result) => {
     if (worker !== currentWorker)
       return
@@ -188,6 +221,7 @@ function startSearch() {
     errorMessage.value = error instanceof Error ? error.message : String(error)
     running.value = false
   }).finally(() => {
+    stopElapsedTimer()
     currentApi[Comlink.releaseProxy]()
     currentWorker.terminate()
     if (worker === currentWorker) {
@@ -203,10 +237,12 @@ function cancelSearch() {
   worker = undefined
   workerApi = undefined
   running.value = false
+  stopElapsedTimer()
   progress.value = undefined
 }
 
 onBeforeUnmount(() => {
+  stopElapsedTimer()
   workerApi?.[Comlink.releaseProxy]()
   worker?.terminate()
 })
@@ -250,14 +286,15 @@ onBeforeUnmount(() => {
           <span v-if="!canSearch && !running" class="text-sm color-tertiary">{{ t('ui.chooseRequirements') }}</span>
         </div>
 
-        <div v-if="running" class="mt-5 border-t border-base pt-4">
-          <div v-if="progress" class="flex items-center justify-between gap-4 text-sm">
-            <span>{{ progress.stage === 'generating' ? t('ui.generatingVariants') : t('ui.searchingCombinations') }}</span>
-            <span class="font-mono color-secondary">{{ progress.current }} / {{ progress.total }}</span>
+        <div v-if="running || elapsedMilliseconds > 0" class="mt-5 border-t border-base pt-4">
+          <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm">
+            <span>{{ running ? t('ui.calculatingBuilds') : t('ui.calculationComplete') }}</span>
+            <span class="font-mono color-secondary">{{ t('ui.elapsed', { time: formatElapsedTime(elapsedMilliseconds) }) }}</span>
           </div>
-          <p v-else class="text-sm color-secondary">
-            {{ t('ui.startingWorker') }}
-          </p>
+          <div v-if="running && progress" class="mt-2 flex items-center justify-between gap-4 text-xs color-secondary">
+            <span>{{ progress.stage === 'searching' ? t('ui.searchingBuilds') : t('ui.preparingBuilds') }}</span>
+            <span class="font-mono">{{ progress.current }} / {{ progress.total }}</span>
+          </div>
           <div v-if="progress" class="mt-3 h-1.5 overflow-hidden rounded-full bg-base">
             <div class="h-full rounded-full bg-primary transition-all" :style="{ width: `${progressPercent}%` }" />
           </div>

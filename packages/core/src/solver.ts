@@ -8,6 +8,7 @@ import { isTalismanLegal } from './talismans'
 export interface SolveOptions {
   readonly maxSolutions?: number
   readonly onProgress?: (progress: SolveProgress) => void
+  readonly onSolutions?: (solutions: readonly BuildSolution[]) => void
   /** Keep equivalent talismans and partial armor identities for reuse planning. */
   readonly preserveEquipmentIdentity?: boolean
 }
@@ -134,6 +135,7 @@ export function solveBuild(
     if (solutions.length > maxSolutions) {
       solutions.pop()
     }
+    options.onSolutions?.([...solutions])
   }
 
   for (const state of armorStates) {

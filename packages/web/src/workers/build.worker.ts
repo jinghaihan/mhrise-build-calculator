@@ -19,11 +19,11 @@ export interface BuildWorkerProgress {
 export type BuildProgressCallback = (progress: BuildWorkerProgress) => void
 
 export interface BuildWorkerApi {
-  search: (request: BuildSearchRequest, onProgress?: BuildProgressCallback) => BuildSolution[]
+  search: (request: BuildSearchRequest, onProgress?: BuildProgressCallback, onSolutions?: (solutions: readonly BuildSolution[]) => void) => BuildSolution[]
 }
 
 const api: BuildWorkerApi = {
-  search(request, onProgress) {
+  search(request, onProgress, onSolutions) {
     return searchSnapshotBuild(defaultSnapshot, {
       armorIdsBySlot: request.armorIdsBySlot,
       requiredSkills: request.requiredSkills,
@@ -37,6 +37,7 @@ const api: BuildWorkerApi = {
         stage: progress.stage,
         total: progress.total,
       }),
+      onSolutions,
     })
   },
 }
