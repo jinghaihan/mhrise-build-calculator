@@ -192,6 +192,10 @@ function solveBuildByArmorSearch(
   })).sort((left, right) => right.variant.defense - left.variant.defense
     || requiredSkillScore(right.levels) - requiredSkillScore(left.levels)
     || slotCountScore(right.counts) - slotCountScore(left.counts)))
+  const feasibleCandidates = candidates.map(pool => [...pool].sort((left, right) => requiredSkillScore(right.levels)
+    - requiredSkillScore(left.levels)
+    || slotCountScore(right.counts) - slotCountScore(left.counts)
+    || right.variant.defense - left.variant.defense))
   const jewelLevels = Array.from({ length: 5 }, (_, level) => request.requiredSkills.map(requirement =>
     request.decorations.reduce((best, jewel) => jewel.slotLevel <= level
       ? Math.max(best, getSkillLevel(jewel.skills, requirement.skillId))
@@ -385,7 +389,10 @@ function solveBuildByArmorSearch(
     requiredLevels: readonly number[],
     slotCounts: readonly number[],
     defense: number,
+    stopAtFirst = false,
   ): void {
+    if (stopAtFirst && solutions.length > 0)
+      return
     if (solutions.length >= maxSolutions
       && defense + maximumDefense[slotIndex] < (solutions[solutions.length - 1]?.defense ?? 0)) {
       return
@@ -427,24 +434,27 @@ function solveBuildByArmorSearch(
       searchTalismans(
         getArmorSkills(armor),
         armor,
+        orderedTalismans,
+        stopAtFirst,
       )
       options.onProgress?.({ current: 1, stage: 'searching', total: 1 })
       return
     }
 
     const slot = slots[slotIndex]
-    for (const candidate of candidates[slotIndex]) {
+    for (const candidate of (stopAtFirst ? feasibleCandidates[slotIndex] : candidates[slotIndex])) {
       const nextLevels = request.requiredSkills.map((requirement, index) => Math.min(
         requirement.level,
         requiredLevels[index] + candidate.levels[index],
       ))
       const nextCounts = slotCounts.map((count, index) => count + candidate.counts[index])
       armor[slot] = candidate.variant
-      visit(slotIndex + 1, nextLevels, nextCounts, defense + candidate.variant.defense)
+      visit(slotIndex + 1, nextLevels, nextCounts, defense + candidate.variant.defense, stopAtFirst)
     }
   }
 
   options.onProgress?.({ current: 0, stage: 'searching', total: 0 })
+  visit(0, initialLevels, initialCounts, 0, true)
   visit(0, initialLevels, initialCounts, 0)
   options.onProgress?.({ current: 1, stage: 'searching', total: 1 })
   return solutions.sort(compareSolutions)
