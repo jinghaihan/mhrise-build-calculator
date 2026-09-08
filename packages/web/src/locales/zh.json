@@ -10,6 +10,7 @@
   "result.rolls": "{count} 次炼成",
   "result.noAugmentation": "无需炼化",
   "result.socket": "第 {index} 孔，{level} 级",
+  "result.decorationSlot": "装饰品 {level} 级孔",
   "result.emptySocket": "空闲",
   "result.noSockets": "无孔位",
   "result.requiredDecorations": "所需装饰品",

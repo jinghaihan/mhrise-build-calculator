@@ -10,6 +10,7 @@
   "result.rolls": "{count} rolls",
   "result.noAugmentation": "No augmentation needed",
   "result.socket": "Slot {index}, level {level}",
+  "result.decorationSlot": "Decoration slot level {level}",
   "result.emptySocket": "Empty",
   "result.noSockets": "No slots",
   "result.requiredDecorations": "Required decorations",
