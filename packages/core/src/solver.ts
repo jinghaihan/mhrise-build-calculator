@@ -1,4 +1,4 @@
-import type { ArmorSlot, ArmorVariant, BuildRequest, BuildSolution, Decoration, SkillValue } from './model'
+import type { ArmorSlot, ArmorVariant, BuildRequest, BuildSolution, Decoration, DecorationPlacement, SkillValue } from './model'
 import { collectAvailableSlots, findBestDecorationPlacement } from './decorations'
 import { getTotalArmorDefense } from './defense'
 import { ARMOR_SLOTS } from './model'
@@ -53,6 +53,16 @@ export function solveBuild(
     request.requiredSkills,
     preserveEquipmentIdentity,
   )
+
+  if (!preserveEquipmentIdentity) {
+    return solveBuildByArmorSearch(
+      workingRequest,
+      armorBySlot,
+      orderedTalismans,
+      maxSolutions,
+      options,
+    )
+  }
 
   const armorStates = createArmorStates(
     armorBySlot,
@@ -164,6 +174,333 @@ function compareSolutions(left: BuildSolution, right: BuildSolution): number {
     || left.talisman.ref.id.localeCompare(right.talisman.ref.id)
 }
 
+function solveBuildByArmorSearch(
+  request: BuildRequest,
+  armorBySlot: Readonly<Record<ArmorSlot, readonly ArmorVariant[]>>,
+  orderedTalismans: readonly BuildRequest['talismans'][number][],
+  maxSolutions: number,
+  options: SolveOptions,
+): BuildSolution[] {
+  // Leave the smallest candidate pool for the final branch. This keeps the
+  // expensive talisman/decorations check narrow while preserving exhaustive
+  // traversal and therefore result correctness.
+  const slots = [...ARMOR_SLOTS].sort((left, right) => armorBySlot[right].length - armorBySlot[left].length)
+  const candidates = slots.map(slot => armorBySlot[slot].map(variant => ({
+    variant,
+    levels: request.requiredSkills.map(requirement => getSkillLevel(variant.skills, requirement.skillId)),
+    counts: slotCapacities(variant.slots),
+  })))
+  const jewelLevels = Array.from({ length: 5 }, (_, level) => request.requiredSkills.map(requirement =>
+    request.decorations.reduce((best, jewel) => jewel.slotLevel <= level
+      ? Math.max(best, getSkillLevel(jewel.skills, requirement.skillId))
+      : best, 0)))
+  const jewelPotential = (counts: readonly number[], skillIndex: number): number => counts.reduce((total, count, index) => total
+    + count * (jewelLevels[index + 1][skillIndex] - jewelLevels[index][skillIndex]), 0)
+  const external = request.requiredSkills.map((requirement, index) => getSkillLevel(request.weapon.skills, requirement.skillId)
+    + jewelPotential(slotCapacities(request.weapon.slots), index)
+    + request.talismans.reduce((best, talisman) => Math.max(best, getSkillLevel(talisman.skills, requirement.skillId)
+    + jewelPotential(slotCapacities(talisman.slots), index)), 0))
+  const remaining = Array.from({ length: slots.length + 1 }, () => request.requiredSkills.map(() => 0))
+  const remainingArmorSkills = Array.from({ length: slots.length + 1 }, () => request.requiredSkills.map(() => 0))
+  const remainingSlotCounts = Array.from({ length: slots.length + 1 }).fill(null).map(() => [0, 0, 0, 0])
+  const talismanMaximumSkills = request.requiredSkills.map(requirement => request.talismans.reduce(
+    (maximum, talisman) => Math.max(maximum, getSkillLevel(talisman.skills, requirement.skillId)),
+    0,
+  ))
+  const talismanMaximumSlotCounts = [0, 0, 0, 0]
+  const weaponSlotCounts = slotCapacities(request.weapon.slots)
+  for (const talisman of request.talismans) {
+    const capacities = slotCapacities(talisman.slots)
+    for (const [index, capacity] of capacities.entries()) {
+      talismanMaximumSlotCounts[index] = Math.max(talismanMaximumSlotCounts[index], capacity)
+    }
+  }
+  const maximumDefense = Array.from<number>({ length: slots.length + 1 }).fill(0)
+  for (let index = slots.length - 1; index >= 0; index -= 1) {
+    remaining[index] = request.requiredSkills.map((_, skillIndex) => remaining[index + 1][skillIndex]
+      + candidates[index].reduce((best, candidate) => Math.max(best, candidate.levels[skillIndex] + jewelPotential(candidate.counts, skillIndex)), 0))
+    remainingArmorSkills[index] = request.requiredSkills.map((_, skillIndex) => remainingArmorSkills[index + 1][skillIndex]
+      + Math.max(0, ...candidates[index].map(candidate => candidate.levels[skillIndex])))
+    remainingSlotCounts[index] = remainingSlotCounts[index + 1].map((count, slotLevel) => count
+      + Math.max(0, ...candidates[index].map(candidate => candidate.counts[slotLevel])))
+    maximumDefense[index] = maximumDefense[index + 1]
+      + Math.max(0, ...candidates[index].map(candidate => candidate.variant.defense))
+  }
+
+  const decorationPlans = new Map<string, readonly { decoration: Decoration, level: number }[] | null>()
+  const relaxedDecorationCache = new Map<string, boolean>()
+  const talismanPlans = new Map<string, readonly {
+    decorations: readonly { decoration: Decoration, host: DecorationPlacement['host'], slotIndex: number }[]
+    talisman: BuildRequest['talismans'][number]
+  }[]>()
+  const solutions: BuildSolution[] = []
+  const solutionKeys = new Set<string>()
+  const armor = {} as Record<ArmorSlot, ArmorVariant>
+  const initialLevels = request.requiredSkills.map(() => 0)
+  const initialCounts = [0, 0, 0, 0]
+
+  function addSolution(solution: BuildSolution): void {
+    const key = JSON.stringify([
+      Object.values(solution.armor).map(variant => variant.variantId),
+      solution.talisman.ref.id,
+      solution.decorations.map(placement => [placement.decoration.ref.id, placement.host, placement.slotIndex]),
+    ])
+    if (solutionKeys.has(key))
+      return
+    solutionKeys.add(key)
+    solutions.push(solution)
+    if (maxSolutions === Number.POSITIVE_INFINITY)
+      return
+    solutions.sort(compareSolutions)
+    if (solutions.length > maxSolutions)
+      solutions.pop()
+    options.onSolutions?.([...solutions])
+  }
+
+  function searchTalismans(
+    skills: readonly SkillValue[],
+    currentArmor: Record<ArmorSlot, ArmorVariant>,
+    talismans = orderedTalismans,
+  ): void {
+    const armorKey = [
+      request.requiredSkills.map(requirement => `${requirement.skillId}:${getSkillLevel(skills, requirement.skillId)}`).join(','),
+      ARMOR_SLOTS.map(slot => currentArmor[slot].slots.join(',')).join('|'),
+    ].join('|')
+    const cachedPlans = talismans === orderedTalismans ? talismanPlans.get(armorKey) : undefined
+    if (cachedPlans) {
+      for (const plan of cachedPlans) {
+        addSolution({
+          armor: { ...currentArmor },
+          decorations: plan.decorations,
+          defense: getTotalArmorDefense(currentArmor),
+          id: request.id,
+          skills: plan.decorations.reduce(
+            (current, placement) => addSkillValues(current, placement.decoration.skills),
+            addSkillValues(skills, request.weapon.skills, plan.talisman.skills),
+          ),
+          talisman: plan.talisman,
+          weapon: request.weapon,
+        })
+      }
+      return
+    }
+
+    const matches: {
+      decorations: readonly { decoration: Decoration, host: DecorationPlacement['host'], slotIndex: number }[]
+      talisman: BuildRequest['talismans'][number]
+    }[] = []
+    for (const talisman of talismans) {
+      const totalSkills = addSkillValues(skills, request.weapon.skills, talisman.skills)
+      const availableSlots = collectAvailableSlots(request.weapon, currentArmor, talisman)
+      const decorationKey = [
+        request.requiredSkills.map(requirement => `${requirement.skillId}:${Math.min(
+          getSkillLevel(totalSkills, requirement.skillId),
+          requirement.level,
+        )}`).join(','),
+        availableSlots.map(slot => slot.level).sort((left, right) => right - left).join(','),
+      ].join('|')
+      if (!decorationPlans.has(decorationKey)) {
+        const plan = findBestDecorationPlacement(
+          availableSlots,
+          request.decorations,
+          totalSkills,
+          request.requiredSkills,
+        )
+        decorationPlans.set(decorationKey, plan?.map(placement => ({
+          decoration: placement.decoration,
+          level: availableSlots.find(slot => slot.host === placement.host && slot.index === placement.slotIndex)!.level,
+        })) ?? null)
+      }
+      const plan = decorationPlans.get(decorationKey)
+      if (!plan)
+        continue
+
+      const remainingSlots = [...availableSlots]
+      const decorations = plan.map(({ decoration, level }) => {
+        const index = remainingSlots.findIndex(slot => slot.level === level)
+        const [slot] = remainingSlots.splice(index, 1)
+        return { decoration, host: slot.host, slotIndex: slot.index }
+      })
+      const finalSkills = decorations.reduce(
+        (current, placement) => addSkillValues(current, placement.decoration.skills),
+        totalSkills,
+      )
+      if (!meetsSkillRequirements(finalSkills, request.requiredSkills))
+        continue
+
+      matches.push({ decorations, talisman })
+    }
+
+    matches.sort((left, right) => left.decorations.length - right.decorations.length
+      || left.talisman.ref.id.localeCompare(right.talisman.ref.id))
+    const selectedMatches = maxSolutions === Number.POSITIVE_INFINITY
+      ? matches
+      : matches.slice(0, maxSolutions)
+    if (talismans === orderedTalismans)
+      talismanPlans.set(armorKey, selectedMatches)
+    for (const plan of selectedMatches) {
+      addSolution({
+        armor: { ...currentArmor },
+        decorations: plan.decorations,
+        defense: getTotalArmorDefense(currentArmor),
+        id: request.id,
+        skills: plan.decorations.reduce(
+          (current: readonly SkillValue[], placement) => addSkillValues(current, placement.decoration.skills),
+          addSkillValues(skills, request.weapon.skills, plan.talisman.skills),
+        ),
+        talisman: plan.talisman,
+        weapon: request.weapon,
+      })
+    }
+  }
+
+  function findFeasibleSeed(): void {
+    interface SeedState {
+      readonly armor: Partial<Record<ArmorSlot, ArmorVariant>>
+      readonly defense: number
+      readonly requiredLevels: readonly number[]
+      readonly slotCounts: readonly number[]
+    }
+
+    let beam: SeedState[] = [{
+      armor: {},
+      defense: 0,
+      requiredLevels: initialLevels,
+      slotCounts: initialCounts,
+    }]
+    const candidateLimit = 2048
+    const beamWidth = 32
+
+    for (const [slotIndex, slot] of slots.entries()) {
+      const next = new Map<string, SeedState>()
+      for (const state of beam) {
+        for (const candidate of candidates[slotIndex].slice(0, candidateLimit)) {
+          const requiredLevels = request.requiredSkills.map((requirement, index) => Math.min(
+            requirement.level,
+            state.requiredLevels[index] + candidate.levels[index],
+          ))
+          const slotCounts = state.slotCounts.map((count, index) => count + candidate.counts[index])
+          const nextState = {
+            armor: { ...state.armor, [slot]: candidate.variant },
+            defense: state.defense + candidate.variant.defense,
+            requiredLevels,
+            slotCounts,
+          }
+          const key = `${requiredLevels.join(',')}|${slotCounts.join(',')}`
+          const previous = next.get(key)
+          if (!previous || previous.defense < nextState.defense)
+            next.set(key, nextState)
+        }
+      }
+      beam = [...next.values()].sort((left, right) => (
+        requiredSkillScore(right.requiredLevels) * 1000
+        + slotCountScore(right.slotCounts) * 10
+        + right.defense
+        - requiredSkillScore(left.requiredLevels) * 1000
+        - slotCountScore(left.slotCounts) * 10
+        - left.defense
+      )).slice(0, beamWidth)
+      if (beam.length === 0)
+        return
+    }
+
+    for (const state of beam) {
+      searchTalismans(
+        getArmorSkills(state.armor as Record<ArmorSlot, ArmorVariant>),
+        state.armor as Record<ArmorSlot, ArmorVariant>,
+        orderedTalismans.slice(0, 512),
+      )
+      if (solutions.length > 0)
+        return
+    }
+  }
+
+  function visit(
+    slotIndex: number,
+    requiredLevels: readonly number[],
+    slotCounts: readonly number[],
+    defense: number,
+  ): void {
+    if (solutions.length >= maxSolutions
+      && defense + maximumDefense[slotIndex] < (solutions[solutions.length - 1]?.defense ?? 0)) {
+      return
+    }
+    if (request.requiredSkills.some((requirement, index) => requiredLevels[index]
+      + jewelPotential(slotCounts, index)
+      + remaining[slotIndex][index]
+      + external[index] < requirement.level)) {
+      return
+    }
+    const missing = request.requiredSkills.map((requirement, index) => Math.max(0, requirement.level
+      - requiredLevels[index]
+      - getSkillLevel(request.weapon.skills, requirement.skillId)
+      - talismanMaximumSkills[index]
+      - remainingArmorSkills[slotIndex][index]))
+    const optimisticSlotCounts = slotCounts.map((count, index) => count
+      + remainingSlotCounts[slotIndex][index]
+      + weaponSlotCounts[index]
+      + talismanMaximumSlotCounts[index])
+    const relaxedKey = `${missing.join(',')}|${optimisticSlotCounts.join(',')}`
+    if (!relaxedDecorationCache.has(relaxedKey)) {
+      relaxedDecorationCache.set(relaxedKey, canCoverMissingSkillTotal(
+        missing,
+        optimisticSlotCounts,
+        request.decorations,
+        request.requiredSkills,
+      ))
+    }
+    if (!relaxedDecorationCache.get(relaxedKey))
+      return
+    if (slotIndex >= slots.length) {
+      searchTalismans(
+        getArmorSkills(armor),
+        armor,
+      )
+      options.onProgress?.({ current: 1, stage: 'searching', total: 1 })
+      return
+    }
+
+    const slot = slots[slotIndex]
+    for (const candidate of candidates[slotIndex]) {
+      const nextLevels = request.requiredSkills.map((requirement, index) => Math.min(
+        requirement.level,
+        requiredLevels[index] + candidate.levels[index],
+      ))
+      const nextCounts = slotCounts.map((count, index) => count + candidate.counts[index])
+      armor[slot] = candidate.variant
+      visit(slotIndex + 1, nextLevels, nextCounts, defense + candidate.variant.defense)
+    }
+  }
+
+  options.onProgress?.({ current: 0, stage: 'searching', total: 0 })
+  findFeasibleSeed()
+  visit(0, initialLevels, initialCounts, 0)
+  options.onProgress?.({ current: 1, stage: 'searching', total: 1 })
+  return solutions.sort(compareSolutions)
+}
+
+function canCoverMissingSkillTotal(
+  missing: readonly number[],
+  slotCounts: readonly number[],
+  decorations: readonly Decoration[],
+  requirements: readonly SkillValue[],
+): boolean {
+  const missingTotal = missing.reduce((total, level) => total + level, 0)
+  if (missingTotal === 0)
+    return true
+
+  const bestForSlotLevel = [0, 1, 2, 3, 4].map(level => decorations.reduce((best, decoration) => {
+    if (decoration.slotLevel > level)
+      return best
+
+    return Math.max(best, requirements.reduce((total, requirement, index) => total
+      + Math.min(missing[index], getSkillLevel(decoration.skills, requirement.skillId)), 0))
+  }, 0))
+  const maximumCovered = slotCounts.reduce((total, count, index) => total
+    + count * (bestForSlotLevel[index + 1] - bestForSlotLevel[index]), 0)
+  return maximumCovered >= missingTotal
+}
+
 interface ArmorSearchState {
   readonly armor: Readonly<Partial<Record<ArmorSlot, ArmorVariant>>>
   readonly defense: number
@@ -212,6 +549,9 @@ function createArmorStates(
 
   for (const [slotIndex, slot] of slots.entries()) {
     const next = new Map<string, ArmorSearchState | ArmorSearchState[]>()
+    const dominance = !preserveEquipmentIdentity && Number.isFinite(maxSolutions)
+      ? createArmorStateDominanceIndex(requirements, maxSolutions)
+      : undefined
     const total = states.length * candidates[slotIndex].length
     let current = 0
     onProgress?.({ current, stage: 'combining', total })
@@ -236,6 +576,11 @@ function createArmorStates(
           requiredLevels,
           slotCounts,
         }
+
+        if (dominance?.isCovered(nextState)) {
+          continue
+        }
+        dominance?.add(nextState)
 
         if (preserveEquipmentIdentity) {
           next.set(`${next.size}`, [nextState])
@@ -266,7 +611,6 @@ function createArmorStates(
       left,
       right,
     ))
-
     if (!preserveEquipmentIdentity && maxSolutions === 1) {
       states = pruneWorseArmorStates(states)
     }
@@ -471,8 +815,8 @@ function pruneDominatedArmorCandidates(
     left,
     requirements,
   ))
-  const skillCoverage: bigint[][] = requirements.map(requirement => Array<bigint>(requirement.level + 1).fill(0n))
-  const slotCoverage: bigint[][] = Array.from({ length: 4 }, () => Array<bigint>(5).fill(0n))
+  const skillCoverage: bigint[][] = requirements.map(requirement => Array.from<bigint>({ length: requirement.level + 1 }).fill(0n))
+  const slotCoverage: bigint[][] = Array.from({ length: 4 }).fill(null).map(() => Array.from<bigint>({ length: 5 }).fill(0n))
   const kept: ArmorVariant[] = []
   let allKept = 0n
 
@@ -515,6 +859,63 @@ function pruneDominatedArmorCandidates(
   }
 
   return kept
+}
+
+interface ArmorStateDominanceIndex {
+  add: (state: ArmorSearchState) => void
+  isCovered: (state: ArmorSearchState) => boolean
+}
+
+function createArmorStateDominanceIndex(
+  requirements: readonly SkillValue[],
+  maxAlternatives: number,
+): ArmorStateDominanceIndex {
+  const skillCoverage: bigint[][] = requirements.map(requirement => Array.from<bigint>({ length: requirement.level + 1 }).fill(0n))
+  const slotCoverage: bigint[][] = Array.from({ length: 4 }).fill(null).map(() => Array.from<bigint>({ length: 16 }).fill(0n))
+  const keptStates: ArmorSearchState[] = []
+  let allKept = 0n
+
+  return {
+    add(state) {
+      const bit = 1n << BigInt(keptStates.length)
+      keptStates.push(state)
+      allKept |= bit
+      for (const [index, level] of state.requiredLevels.entries()) {
+        for (let minimum = 1; minimum <= level; minimum += 1) {
+          skillCoverage[index][minimum] |= bit
+        }
+      }
+      for (const [index, capacity] of state.slotCounts.entries()) {
+        for (let minimum = 1; minimum <= capacity; minimum += 1) {
+          slotCoverage[index][minimum] |= bit
+        }
+      }
+    },
+    isCovered(state) {
+      let covering = allKept
+      for (const [index, level] of state.requiredLevels.entries()) {
+        if (level > 0) {
+          covering &= skillCoverage[index][level]
+        }
+      }
+      for (const [index, capacity] of state.slotCounts.entries()) {
+        if (capacity > 0) {
+          covering &= slotCoverage[index][capacity]
+        }
+      }
+      let count = 0
+      let remaining = covering
+      while (remaining !== 0n && count < maxAlternatives) {
+        const bit = remaining & -remaining
+        const index = bit.toString(2).length - 1
+        if (keptStates[index].defense >= state.defense) {
+          count += 1
+        }
+        remaining -= bit
+      }
+      return count >= maxAlternatives
+    },
+  }
 }
 
 function countBitsUpTo(value: bigint, limit: number): number {
