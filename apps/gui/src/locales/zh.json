@@ -1,4 +1,5 @@
 {
+  "ui.clearSelection": "清空选择",
   "ui.removeArmor": "移除防具",
   "ui.equipmentStats": "已选防具属性",
   "stat.defense": "防御力",

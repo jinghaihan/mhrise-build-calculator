@@ -9,6 +9,7 @@ const props = defineProps<{
   placeholder: string
   emptyText: string
   removeLabel: string
+  clearLabel: string
   disabled?: boolean
 }>()
 const model = defineModel<string[]>({ required: true })
@@ -26,10 +27,13 @@ function remove(value: string) {
 
 <template>
   <div class="min-w-0">
-    <ComboboxRoot v-model="model" multiple :disabled="disabled" @update:open="(open) => !open && (query = '')" @update:model-value="query = ''">
+    <ComboboxRoot v-model="model" multiple open-on-click :disabled="disabled" @update:open="(open) => !open && (query = '')" @update:model-value="query = ''">
       <ComboboxAnchor class="h-10 flex items-center gap-2 rounded-md border border-base bg-raised px-3 text-sm focus-within:ring-2 focus-within:ring-primary-500/40 data-[disabled]:pointer-events-none data-[disabled]:op50">
         <span class="i-ph:magnifying-glass shrink-0 op-fade" aria-hidden="true" />
         <ComboboxInput :aria-label="label" :placeholder="placeholder" class="min-w-0 flex-1 bg-transparent color-base outline-none placeholder:op-mute" @update:model-value="query = $event" />
+        <button v-if="model.length" type="button" class="h-7 w-7 flex shrink-0 items-center justify-center rounded hover:bg-hover focus-visible:ring-2 focus-visible:ring-primary-500/40" :disabled="disabled" :aria-label="`${clearLabel}: ${label}`" @pointerdown.stop @click.stop="model = []; query = ''">
+          <span class="i-ph:x" aria-hidden="true" />
+        </button>
       </ComboboxAnchor>
       <ComboboxPortal>
         <ComboboxContent position="popper" :side-offset="6" class="z-dropdown max-h-80 min-w-[--reka-combobox-trigger-width] rounded-lg border border-base bg-glass:75 p-1 shadow-lg">

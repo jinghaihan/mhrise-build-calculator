@@ -1,4 +1,5 @@
 {
+  "ui.clearSelection": "選択を解除",
   "ui.removeArmor": "防具を解除",
   "ui.equipmentStats": "選択中の防具のステータス",
   "stat.defense": "防御力",

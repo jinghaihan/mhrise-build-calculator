@@ -13,11 +13,14 @@ const props = withDefaults(defineProps<{
   placeholder?: string
   emptyText?: string
   disabled?: boolean
+  clearable?: boolean
+  clearLabel?: string
   maxVisible?: number
 }>(), {
   maxVisible: 80,
   emptyText: 'No matches',
   placeholder: 'Search…',
+  clearLabel: 'Clear selection',
 })
 
 const model = defineModel<string>()
@@ -37,7 +40,7 @@ function displayValue(value: unknown) {
 </script>
 
 <template>
-  <ComboboxRoot v-model="model" :disabled="disabled" @update:open="(open) => !open && (query = '')">
+  <ComboboxRoot v-model="model" open-on-click :disabled="disabled" @update:open="(open) => !open && (query = '')">
     <ComboboxAnchor
       v-bind="$attrs"
       class="text-sm px-3 border border-base rounded-md bg-raised inline-flex gap-2 h-10 w-full transition items-center data-[disabled]:op50 data-[disabled]:pointer-events-none focus-within:ring-2 focus-within:ring-primary-500/40"
@@ -49,6 +52,9 @@ function displayValue(value: unknown) {
         class="color-base outline-none bg-transparent flex-1 min-w-0 placeholder:op-mute"
         @update:model-value="query = $event"
       />
+      <button v-if="clearable && model" type="button" class="h-7 w-7 flex shrink-0 items-center justify-center rounded hover:bg-hover focus-visible:ring-2 focus-visible:ring-primary-500/40" :aria-label="clearLabel" :disabled="disabled" @pointerdown.stop @click.stop="model = ''; query = ''">
+        <span class="i-ph:x" aria-hidden="true" />
+      </button>
     </ComboboxAnchor>
     <ComboboxPortal>
       <ComboboxContent

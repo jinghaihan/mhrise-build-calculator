@@ -283,6 +283,8 @@ onBeforeUnmount(() => {
                 <img src="/armor/weapon.png" :alt="t('ui.weapon')" class="h-7 w-7 object-contain">
                 <SearchSelect
                   v-model="selectedWeaponId"
+                  clearable
+                  :clear-label="`${t('ui.clearSelection')}: ${t('ui.weapon')}`"
                   :options="weaponOptions"
                   :placeholder="t('ui.searchWeapons')"
                   :empty-text="t('ui.noMatches')"
@@ -304,12 +306,15 @@ onBeforeUnmount(() => {
                   :disabled="running"
                   :label="t(`slot.${slot}`)"
                   :remove-label="t('ui.removeArmor')"
+                  :clear-label="t('ui.clearSelection')"
                 />
               </div>
               <div class="gear-row">
                 <img src="/armor/talisman.png" :alt="t('ui.talisman')" class="h-7 w-7 object-contain">
                 <SearchSelect
                   v-model="selectedTalismanId"
+                  clearable
+                  :clear-label="`${t('ui.clearSelection')}: ${t('ui.talisman')}`"
                   :options="talismanOptions"
                   :placeholder="t('ui.searchTalisman')"
                   :empty-text="t('ui.noMatches')"
