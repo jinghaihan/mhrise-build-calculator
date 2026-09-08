@@ -11,6 +11,7 @@ import { defaultSnapshot, generateTalismanRecords, getLocalizedName, LOCALE_LABE
 import * as Comlink from 'comlink'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import SearchMultiSelect from './components/SearchMultiSelect.vue'
 import SearchSelect from './components/SearchSelect.vue'
 
 type ColorScheme = 'light' | 'dark'
@@ -29,12 +30,12 @@ const theme = ref<ColorScheme>(storedTheme === 'dark' || storedTheme === 'light'
   : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
 const selectedWeaponId = ref('')
 const selectedTalismanId = ref('')
-const selectedArmorIds = ref<Record<ArmorSlot, string>>({
-  arms: '',
-  chest: '',
-  head: '',
-  legs: '',
-  waist: '',
+const selectedArmorIds = ref<Record<ArmorSlot, string[]>>({
+  arms: [],
+  chest: [],
+  head: [],
+  legs: [],
+  waist: [],
 })
 const selectedSkills = ref<SkillSelection[]>([])
 const solutions = ref<BuildSolution[]>([])
@@ -94,12 +95,14 @@ const talismanOptions = computed<SearchSelectOption[]>(() => generateTalismanRec
   value: String(record.ref.id),
 })))
 
-const hasArmorFilters = computed(() => Object.values(selectedArmorIds.value).some(Boolean))
+const hasArmorFilters = computed(() => Object.values(selectedArmorIds.value).some(ids => ids.length > 0))
 
 const equipmentStats = computed(() => {
+  if (Object.values(selectedArmorIds.value).some(ids => ids.length > 1))
+    return undefined
   const totals = { defense: 0, fire: 0, water: 0, thunder: 0, ice: 0, dragon: 0 }
   for (const slot of armorSlots) {
-    const armor = defaultSnapshot.catalog.armors.find(record => record.ref.id === selectedArmorIds.value[slot])?.armor
+    const armor = defaultSnapshot.catalog.armors.find(record => record.ref.id === selectedArmorIds.value[slot][0])?.armor
     if (!armor)
       continue
     totals.defense += armor.baseDefense
@@ -152,7 +155,7 @@ function armorName(armorId: string) {
 
 function clearArmorFilters() {
   for (const slot of armorSlots)
-    selectedArmorIds.value[slot] = ''
+    selectedArmorIds.value[slot] = []
 }
 
 function persistLocale() {
@@ -178,8 +181,8 @@ function startSearch() {
   workerApi = currentApi
   const request: BuildSearchRequest = {
     armorIdsBySlot: Object.fromEntries(armorSlots
-      .filter(slot => selectedArmorIds.value[slot])
-      .map(slot => [slot, [selectedArmorIds.value[slot]]])),
+      .filter(slot => selectedArmorIds.value[slot].length > 0)
+      .map(slot => [slot, [...selectedArmorIds.value[slot]]])),
     maxSolutions: 5,
     requiredSkills: selectedSkills.value.map(({ level, skillId }): SkillValue => ({
       level,
@@ -293,13 +296,14 @@ onBeforeUnmount(() => {
                   :alt="t(`slot.${slot}`)"
                   class="h-7 w-7 object-contain"
                 >
-                <SearchSelect
+                <SearchMultiSelect
                   v-model="selectedArmorIds[slot]"
                   :options="armorOptionsBySlot[slot]"
                   :placeholder="t('ui.searchArmor')"
                   :empty-text="t('ui.noMatches')"
                   :disabled="running"
-                  :aria-label="t(`slot.${slot}`)"
+                  :label="t(`slot.${slot}`)"
+                  :remove-label="t('ui.removeArmor')"
                 />
               </div>
               <div class="gear-row">
@@ -322,8 +326,8 @@ onBeforeUnmount(() => {
                 <dt class="flex items-center">
                   <img :src="`/stats/${stat}.png`" :alt="t(`stat.${stat}`)" class="h-5 w-5 object-contain">
                 </dt>
-                <dd class="m-0 text-sm font-600 tabular-nums" :class="equipmentStats[stat] < 0 ? 'text-red-600 dark:text-red-300' : 'color-base'">
-                  {{ equipmentStats[stat] }}
+                <dd class="m-0 text-sm font-600 tabular-nums" :class="(equipmentStats?.[stat] ?? 0) < 0 ? 'text-red-600 dark:text-red-300' : 'color-base'">
+                  {{ equipmentStats?.[stat] ?? '—' }}
                 </dd>
               </div>
             </dl>
