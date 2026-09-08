@@ -14,7 +14,7 @@ export interface SolveOptions {
 
 export interface SolveProgress {
   readonly current: number
-  readonly stage: 'searching'
+  readonly stage: 'combining' | 'searching'
   readonly total: number
 }
 
@@ -38,7 +38,6 @@ export function solveBuild(
   }
   const decorationPlans = new Map<string, readonly { decoration: Decoration, level: number }[] | null>()
   const legalTalismans = workingRequest.talismans
-  const bounds = createSearchBounds(workingRequest, legalTalismans)
   const armorBySlot = Object.fromEntries(ARMOR_SLOTS.map(slot => [
     slot,
     orderArmorCandidates(createSearchCandidates(
@@ -59,6 +58,8 @@ export function solveBuild(
     workingRequest.requiredSkills,
     preserveEquipmentIdentity,
     maxSolutions,
+    workingRequest,
+    options.onProgress,
   )
   options.onProgress?.({ current: 0, stage: 'searching', total: armorStates.length })
   let processedStates = 0
@@ -66,10 +67,6 @@ export function solveBuild(
     skills: readonly SkillValue[],
     armor: Readonly<Record<ArmorSlot, ArmorVariant>>,
   ): void {
-    if (!canReachRequirements(workingRequest, bounds, ARMOR_SLOTS.length, skills)) {
-      return
-    }
-
     for (const talisman of orderedTalismans) {
       if (solutions.length >= maxSolutions
         && getTotalArmorDefense(armor) < (solutions[solutions.length - 1]?.defense ?? 0)) {
@@ -139,7 +136,7 @@ export function solveBuild(
 
   for (const state of armorStates) {
     if (solutions.length >= maxSolutions
-      && getArmorStateDefense(state.armor) < (solutions[solutions.length - 1]?.defense ?? 0)) {
+      && state.defense < (solutions[solutions.length - 1]?.defense ?? 0)) {
       break
     }
     searchTalismans(
@@ -153,6 +150,7 @@ export function solveBuild(
       total: armorStates.length,
     })
   }
+  options.onProgress?.({ current: armorStates.length, stage: 'searching', total: armorStates.length })
   return solutions
 }
 
@@ -164,6 +162,7 @@ function compareSolutions(left: BuildSolution, right: BuildSolution): number {
 
 interface ArmorSearchState {
   readonly armor: Readonly<Partial<Record<ArmorSlot, ArmorVariant>>>
+  readonly defense: number
   readonly requiredLevels: readonly number[]
   readonly slotCounts: readonly number[]
 }
@@ -173,30 +172,66 @@ function createArmorStates(
   requirements: readonly SkillValue[],
   preserveEquipmentIdentity: boolean,
   maxSolutions: number,
+  request: BuildRequest,
+  onProgress?: SolveOptions['onProgress'],
 ): ArmorSearchState[] {
+  const slots = [...ARMOR_SLOTS].sort((left, right) => armorBySlot[left].length - armorBySlot[right].length)
+  const candidates = slots.map(slot => armorBySlot[slot].map(variant => ({
+    variant,
+    levels: requirements.map(requirement => getSkillLevel(variant.skills, requirement.skillId)),
+    counts: slotCapacities(variant.slots),
+  })))
+  const jewelLevels = Array.from({ length: 5 }, (_, level) => requirements.map(requirement =>
+    request.decorations.reduce((best, jewel) => jewel.slotLevel <= level
+      ? Math.max(best, getSkillLevel(jewel.skills, requirement.skillId))
+      : best, 0)))
+  function jewelPotential(counts: readonly number[], skillIndex: number): number {
+    return counts.reduce((total, count, index) => total
+      + count * (jewelLevels[index + 1][skillIndex] - jewelLevels[index][skillIndex]), 0)
+  }
+  // Each skill may optimistically use every socket. This can overestimate what
+  // fits together, but never rejects a branch that can actually satisfy it.
+  const external = requirements.map((requirement, index) => getSkillLevel(request.weapon.skills, requirement.skillId)
+    + jewelPotential(slotCapacities(request.weapon.slots), index)
+    + request.talismans.reduce((best, talisman) => Math.max(best, getSkillLevel(talisman.skills, requirement.skillId) + jewelPotential(slotCapacities(talisman.slots), index)), 0))
+  const remaining = Array.from({ length: slots.length + 1 }, () => requirements.map(() => 0))
+  for (let index = slots.length - 1; index >= 0; index -= 1) {
+    remaining[index] = requirements.map((_, skillIndex) => remaining[index + 1][skillIndex]
+      + candidates[index].reduce((best, candidate) => Math.max(best, candidate.levels[skillIndex] + jewelPotential(candidate.counts, skillIndex)), 0))
+  }
   let states: ArmorSearchState[] = [{
     armor: {},
+    defense: 0,
     requiredLevels: requirements.map(() => 0),
     slotCounts: [0, 0, 0, 0],
   }]
 
-  for (const slot of ARMOR_SLOTS) {
+  for (const [slotIndex, slot] of slots.entries()) {
     const next = new Map<string, ArmorSearchState | ArmorSearchState[]>()
+    const total = states.length * candidates[slotIndex].length
+    let current = 0
+    onProgress?.({ current, stage: 'combining', total })
 
     for (const state of states) {
-      for (const variant of armorBySlot[slot]) {
-        const armor = { ...state.armor, [slot]: variant } as Record<ArmorSlot, ArmorVariant>
+      for (const candidate of candidates[slotIndex]) {
+        current += 1
+        if (current % 4096 === 0)
+          onProgress?.({ current, stage: 'combining', total })
         const requiredLevels = requirements.map((requirement, index) => Math.min(
           requirement.level,
-          state.requiredLevels[index] + getSkillLevel(variant.skills, requirement.skillId),
+          state.requiredLevels[index] + candidate.levels[index],
         ))
-        const slotCounts = [...state.slotCounts]
-        for (const level of variant.slots) {
-          for (let minimumLevel = 1; minimumLevel <= level; minimumLevel += 1) {
-            slotCounts[minimumLevel - 1] += 1
-          }
+        const slotCounts = state.slotCounts.map((count, index) => count + candidate.counts[index])
+        if (requirements.some((requirement, index) => requiredLevels[index]
+          + jewelPotential(slotCounts, index) + remaining[slotIndex + 1][index] + external[index] < requirement.level)) {
+          continue
         }
-        const nextState = { armor, requiredLevels, slotCounts }
+        const nextState = {
+          armor: { ...state.armor, [slot]: candidate.variant },
+          defense: state.defense + candidate.variant.defense,
+          requiredLevels,
+          slotCounts,
+        }
 
         if (preserveEquipmentIdentity) {
           next.set(`${next.size}`, [nextState])
@@ -206,7 +241,7 @@ function createArmorStates(
         const key = `${requiredLevels.join(',')}|${slotCounts.join(',')}`
         if (maxSolutions === 1) {
           const previous = next.get(key) as ArmorSearchState | undefined
-          if (!previous || getArmorStateDefense(nextState.armor) > getArmorStateDefense(previous.armor)) {
+          if (!previous || nextState.defense > previous.defense) {
             next.set(key, nextState)
           }
           continue
@@ -214,14 +249,14 @@ function createArmorStates(
 
         const alternatives = next.get(key) ?? []
         ;(alternatives as ArmorSearchState[]).push(nextState)
-        ;(alternatives as ArmorSearchState[]).sort((left, right) => getArmorStateDefense(right.armor)
-          - getArmorStateDefense(left.armor))
+        ;(alternatives as ArmorSearchState[]).sort((left, right) => right.defense - left.defense)
         if ((alternatives as ArmorSearchState[]).length > maxSolutions) {
           ;(alternatives as ArmorSearchState[]).pop()
         }
         next.set(key, alternatives)
       }
     }
+    onProgress?.({ current: total, stage: 'combining', total })
 
     states = [...next.values()].flatMap(value => Array.isArray(value) ? value : [value]).sort((left, right) => compareArmorStates(
       left,
@@ -231,6 +266,8 @@ function createArmorStates(
     if (!preserveEquipmentIdentity && maxSolutions === 1) {
       states = pruneWorseArmorStates(states)
     }
+    if (states.length === 0)
+      break
   }
 
   return states
@@ -240,7 +277,7 @@ function compareArmorStates(
   left: ArmorSearchState,
   right: ArmorSearchState,
 ): number {
-  return getArmorStateDefense(right.armor) - getArmorStateDefense(left.armor)
+  return right.defense - left.defense
     || requiredSkillScore(right.requiredLevels) - requiredSkillScore(left.requiredLevels)
     || slotCountScore(right.slotCounts) - slotCountScore(left.slotCounts)
 }
@@ -280,8 +317,7 @@ function pruneGenericArmorStates(states: readonly ArmorSearchState[]): ArmorSear
 function pruneBinarySkillArmorStates(
   states: readonly ArmorSearchState[],
 ): ArmorSearchState[] {
-  const ordered = [...states].sort((left, right) => getArmorStateDefense(right.armor)
-    - getArmorStateDefense(left.armor))
+  const ordered = [...states].sort((left, right) => right.defense - left.defense)
   const slotPatternIds = new Map<string, number>()
   const slotCoverMasks: bigint[] = []
   const slotPatterns: number[][] = []
@@ -333,11 +369,11 @@ function pruneBinarySkillArmorStates(
 function isNoWorseArmorState(left: ArmorSearchState, right: ArmorSearchState): boolean {
   return left.requiredLevels.every((level, index) => level >= right.requiredLevels[index])
     && slotsCoverCounts(left.slotCounts, right.slotCounts)
-    && getArmorStateDefense(left.armor) >= getArmorStateDefense(right.armor)
+    && left.defense >= right.defense
     && (
       left.requiredLevels.some((level, index) => level > right.requiredLevels[index])
       || left.slotCounts.some((count, index) => count > right.slotCounts[index])
-      || getArmorStateDefense(left.armor) > getArmorStateDefense(right.armor)
+      || left.defense > right.defense
     )
 }
 
@@ -359,12 +395,6 @@ function requiredSkillScore(
 
 function slotCountScore(counts: readonly number[]): number {
   return counts.reduce((total, count, index) => total + count * (index + 1), 0)
-}
-
-function getArmorStateDefense(
-  armor: Partial<Readonly<Record<ArmorSlot, ArmorVariant>>>,
-): number {
-  return Object.values(armor).reduce((total, variant) => total + (variant?.defense ?? 0), 0)
 }
 
 function getArmorSkills(
@@ -629,79 +659,4 @@ function compareTalismanCandidates(
   return leftSkillScore - rightSkillScore
     || left.slots.reduce((total, level) => total + level, 0)
     - right.slots.reduce((total, level) => total + level, 0)
-}
-
-interface SearchBounds {
-  readonly armorSkills: readonly (readonly number[])[]
-  readonly armorSlots: readonly (readonly number[])[]
-  readonly decorationSkillsBySlotLevel: readonly (readonly number[])[]
-  readonly talismanSkills: readonly number[]
-  readonly talismanSlots: readonly number[]
-}
-
-function createSearchBounds(
-  request: BuildRequest,
-  legalTalismans: readonly BuildRequest['talismans'][number][],
-): SearchBounds {
-  const armorSkills = ARMOR_SLOTS.map(slot => request.requiredSkills.map(requirement => Math.max(
-    0,
-    ...request.armorBySlot[slot].map(armor => getSkillLevel(armor.skills, requirement.skillId)),
-  )))
-  const armorSlots = ARMOR_SLOTS.map(slot => [0, 1, 2].map(index => Math.max(
-    0,
-    ...request.armorBySlot[slot].map(armor => armor.slots[index]),
-  )))
-  const decorationSkillsBySlotLevel = Array.from(
-    { length: 5 },
-    (_, slotLevel) => request.requiredSkills.map(requirement => Math.max(
-      0,
-      ...request.decorations
-        .filter(decoration => decoration.slotLevel <= slotLevel)
-        .map(decoration => getSkillLevel(decoration.skills, requirement.skillId)),
-    )),
-  )
-
-  return {
-    armorSkills,
-    armorSlots,
-    decorationSkillsBySlotLevel,
-    talismanSkills: request.requiredSkills.map(requirement => Math.max(
-      0,
-      ...legalTalismans.map(talisman => getSkillLevel(talisman.skills, requirement.skillId)),
-    )),
-    talismanSlots: [0, 1, 2].map(index => Math.max(
-      0,
-      ...legalTalismans.map(talisman => talisman.slots[index]),
-    )),
-  }
-}
-
-function canReachRequirements(
-  request: BuildRequest,
-  bounds: SearchBounds,
-  slotIndex: number,
-  currentSkills: readonly SkillValue[],
-): boolean {
-  const potentialSlotLevels = [
-    ...request.weapon.slots,
-    ...bounds.armorSlots.flat(),
-    ...bounds.talismanSlots,
-  ]
-
-  return request.requiredSkills.every((requirement, requirementIndex) => {
-    const armorMaximum = bounds.armorSkills
-      .slice(slotIndex)
-      .reduce((total, skills) => total + (skills[requirementIndex] ?? 0), 0)
-    const decorationMaximum = potentialSlotLevels.reduce(
-      (total, slotLevel) => total + (bounds.decorationSkillsBySlotLevel[slotLevel]?.[requirementIndex] ?? 0),
-      0,
-    )
-    const potential = getSkillLevel(currentSkills, requirement.skillId)
-      + getSkillLevel(request.weapon.skills, requirement.skillId)
-      + (bounds.talismanSkills[requirementIndex] ?? 0)
-      + armorMaximum
-      + decorationMaximum
-
-    return potential >= requirement.level
-  })
 }

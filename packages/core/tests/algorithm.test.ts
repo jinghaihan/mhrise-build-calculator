@@ -75,7 +75,7 @@ describe('build solving', () => {
     const emptyArmor = Object.fromEntries(Object.entries(build.armorBySlot).map(([slot, variants]) => [
       slot,
       variants.map(variant => ({ ...variant, slots: [0, 0, 0] as const })),
-    ])) as BuildRequest['armorBySlot']
+    ])) as unknown as BuildRequest['armorBySlot']
     const result = solveBuild({
       ...build,
       armorBySlot: { ...emptyArmor, head: [armor('head', '1010', [0, 1, 0]), armor('head', '1011', [1, 0, 0])] },

@@ -12,7 +12,7 @@ export interface BuildSearchRequest {
 
 export interface BuildWorkerProgress {
   readonly current: number
-  readonly stage: 'generating' | 'searching'
+  readonly stage: 'generating' | 'combining' | 'searching'
   readonly total: number
 }
 
