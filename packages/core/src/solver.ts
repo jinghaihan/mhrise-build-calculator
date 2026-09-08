@@ -20,6 +20,7 @@ export interface SolveProgress {
 }
 
 const DEFAULT_MAX_SOLUTIONS = 200
+const MAX_SOLVER_CACHE_ENTRIES = 50_000
 
 export function solveBuild(
   request: BuildRequest,
@@ -94,19 +95,20 @@ export function solveBuild(
         )}`).join(','),
         slots.map(slot => slot.level).sort((left, right) => right - left).join(','),
       ].join('|')
+      let plan = decorationPlans.get(decorationKey)
       if (!decorationPlans.has(decorationKey)) {
-        const plan = findBestDecorationPlacement(
+        plan = findBestDecorationPlacement(
           slots,
           workingRequest.decorations,
           totalSkills,
           workingRequest.requiredSkills,
-        )
-        decorationPlans.set(decorationKey, plan?.map(placement => ({
+        )?.map(placement => ({
           decoration: placement.decoration,
           level: slots.find(slot => slot.host === placement.host && slot.index === placement.slotIndex)!.level,
-        })) ?? null)
+        })) ?? null
+        if (decorationPlans.size < MAX_SOLVER_CACHE_ENTRIES)
+          decorationPlans.set(decorationKey, plan)
       }
-      const plan = decorationPlans.get(decorationKey)
       if (plan) {
         const remainingSlots = [...slots]
         const decorations = plan.map(({ decoration, level }) => {
@@ -327,19 +329,20 @@ function solveBuildByArmorSearch(
         )}`).join(','),
         availableSlots.map(slot => slot.level).sort((left, right) => right - left).join(','),
       ].join('|')
+      let plan = decorationPlans.get(decorationKey)
       if (!decorationPlans.has(decorationKey)) {
-        const plan = findBestDecorationPlacement(
+        plan = findBestDecorationPlacement(
           availableSlots,
           request.decorations,
           totalSkills,
           request.requiredSkills,
-        )
-        decorationPlans.set(decorationKey, plan?.map(placement => ({
+        )?.map(placement => ({
           decoration: placement.decoration,
           level: availableSlots.find(slot => slot.host === placement.host && slot.index === placement.slotIndex)!.level,
-        })) ?? null)
+        })) ?? null
+        if (decorationPlans.size < MAX_SOLVER_CACHE_ENTRIES)
+          decorationPlans.set(decorationKey, plan)
       }
-      const plan = decorationPlans.get(decorationKey)
       if (!plan)
         continue
 
@@ -366,7 +369,7 @@ function solveBuildByArmorSearch(
     const selectedMatches = maxSolutions === Number.POSITIVE_INFINITY
       ? matches
       : matches.slice(0, maxSolutions)
-    if (talismans === orderedTalismans)
+    if (talismans === orderedTalismans && talismanPlans.size < MAX_SOLVER_CACHE_ENTRIES)
       talismanPlans.set(armorKey, selectedMatches)
     for (const plan of selectedMatches) {
       addSolution({
@@ -420,15 +423,18 @@ function solveBuildByArmorSearch(
       + weaponSlotCounts[index]
       + talismanMaximumSlotCounts[index])
     const relaxedKey = `${missing.join(',')}|${optimisticSlotCounts.join(',')}`
-    if (!relaxedDecorationCache.has(relaxedKey)) {
-      relaxedDecorationCache.set(relaxedKey, canCoverMissingSkillTotal(
+    let canCover = relaxedDecorationCache.get(relaxedKey)
+    if (canCover === undefined) {
+      canCover = canCoverMissingSkillTotal(
         missing,
         optimisticSlotCounts,
         request.decorations,
         request.requiredSkills,
-      ))
+      )
+      if (relaxedDecorationCache.size < MAX_SOLVER_CACHE_ENTRIES)
+        relaxedDecorationCache.set(relaxedKey, canCover)
     }
-    if (!relaxedDecorationCache.get(relaxedKey))
+    if (!canCover)
       return
     if (slotIndex >= slots.length) {
       searchTalismans(
