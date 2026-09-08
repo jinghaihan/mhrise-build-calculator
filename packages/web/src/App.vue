@@ -6,7 +6,6 @@ import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import { provideColorScheme } from '@antfu/design/composables/colorScheme'
 import { createWikiId } from '@mhrise-build/core'
 import { defaultSnapshot, generateTalismanRecords, getLocalizedName } from '@mhrise-build/data'
-import { useStorage } from '@vueuse/core'
 import * as Comlink from 'comlink'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -17,27 +16,28 @@ import TargetSkillsPanel from './components/target-skills-panel.vue'
 import { preferredLocale } from './i18n'
 import type { EquipmentStats, SkillSelection } from './planner-types'
 import { armorSlots, equipmentStatKeys } from './planner-types'
-
-type ColorScheme = 'light' | 'dark'
+import { plannerStorage, theme } from './storage'
 
 const { locale, t } = useI18n({ useScope: 'global' })
-const defaultTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-const theme = useStorage<ColorScheme>('mhrise-build-calculator-theme', defaultTheme)
-if (theme.value !== 'dark' && theme.value !== 'light')
-  theme.value = defaultTheme
-const selectedWeaponId = useStorage('mhrise-build-calculator-weapon', '')
-const selectedTalismanId = useStorage('mhrise-build-calculator-talisman', '')
-const selectedArmorIds = useStorage<Record<ArmorSlot, string[]>>('mhrise-build-calculator-armors', {
-  arms: [],
-  chest: [],
-  head: [],
-  legs: [],
-  waist: [],
-}, undefined, { mergeDefaults: true })
+const selectedWeaponId = computed({
+  get: () => plannerStorage.value.equipment.weaponId,
+  set: value => plannerStorage.value.equipment.weaponId = value,
+})
+const selectedTalismanId = computed({
+  get: () => plannerStorage.value.equipment.talismanId,
+  set: value => plannerStorage.value.equipment.talismanId = value,
+})
+const selectedArmorIds = computed<Record<ArmorSlot, string[]>>({
+  get: () => plannerStorage.value.equipment.armorIds,
+  set: value => plannerStorage.value.equipment.armorIds = value,
+})
 // Retain the first selection from the previous multi-select UI cache.
 for (const slot of armorSlots)
   selectedArmorIds.value[slot] = selectedArmorIds.value[slot].slice(0, 1)
-const selectedSkills = useStorage<SkillSelection[]>('mhrise-build-calculator-skills', [])
+const selectedSkills = computed<SkillSelection[]>({
+  get: () => plannerStorage.value.skills,
+  set: value => plannerStorage.value.skills = value,
+})
 const solutions = ref<BuildSolution[]>([])
 const running = ref(false)
 const errorMessage = ref('')

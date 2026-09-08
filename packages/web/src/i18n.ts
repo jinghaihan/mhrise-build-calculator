@@ -1,16 +1,14 @@
-import type { AppLocale } from '@mhrise-build/data'
 import { normalizeLocale, SUPPORTED_LOCALES } from '@mhrise-build/data'
-import { useStorage } from '@vueuse/core'
 import { watch } from 'vue'
 import { createI18n } from 'vue-i18n'
-import { detectBrowserLocale } from './locale'
 import en from './locales/en.json'
 import ja from './locales/ja.json'
 import ko from './locales/ko.json'
 import zhHant from './locales/zh-Hant.json'
 import zh from './locales/zh.json'
+import { preferredLocale } from './storage'
 
-export const preferredLocale = useStorage<AppLocale>('mhrise-build-calculator-locale', detectBrowserLocale())
+export { preferredLocale }
 
 export const i18n = createI18n({
   legacy: false,
