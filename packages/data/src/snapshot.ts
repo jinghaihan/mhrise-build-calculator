@@ -117,6 +117,7 @@ export function armorComponentsForPool(
   snapshot: SourceSnapshot,
   poolId: number,
   skillIds: readonly WikiId[] = [],
+  removableSkillIds: readonly WikiId[] = [],
 ): ArmorAugmentComponent[] {
   const components: ArmorAugmentComponent[] = []
 
@@ -127,8 +128,9 @@ export function armorComponentsForPool(
       .filter(({ value }) => value !== 0)
 
     if (entry.kind === 'skill') {
-      for (const skillId of skillIds) {
-        for (const { level, value } of values) {
+      for (const { level, value } of values) {
+        const eligibleSkillIds = value < 0 ? new Set([...skillIds, ...removableSkillIds]) : new Set(skillIds)
+        for (const skillId of eligibleSkillIds) {
           components.push({
             costDelta: entry.cost,
             defenseDelta: 0,

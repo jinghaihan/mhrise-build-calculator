@@ -134,6 +134,7 @@ function withGeneratedArmorComponents(
         snapshot,
         family.poolId,
         skillIds,
+        record.armor.baseSkills.map(skill => skill.skillId),
       )
     }
   }

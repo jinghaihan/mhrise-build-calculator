@@ -3,7 +3,9 @@ import { fileURLToPath } from 'node:url'
 import {
   collectAvailableSlots,
   createArmorVariant,
+  createWikiId,
   createWikiRef,
+  generateArmorVariants,
   getSkillLevel,
 } from '@mhrise-build-tools/core'
 import { describe, expect, it } from 'vitest'
@@ -20,6 +22,38 @@ import {
 } from '../src/snapshot'
 
 describe('source snapshots', () => {
+  it('can fund a requested skill by removing an unrelated original skill', () => {
+    const skillId = createWikiId('1')
+    const originalSkillIds = ['2', '3', '4', '5', '6'].map(createWikiId)
+    const base = {
+      ref: createWikiRef('armor', '100'),
+      slot: 'head' as const,
+      slots: [0, 0, 0] as const,
+      baseSkills: originalSkillIds.map(skillId => ({ skillId, level: 1 })),
+      baseDefense: 100,
+      costBudget: 5,
+    }
+    const snapshot = parseSourceSnapshot({
+      catalog: { armors: [], decorations: [], skills: [], talismans: [], weapons: [] },
+      rules: {
+        armorFamilies: [],
+        skillCosts: [],
+        talismanRules: [],
+        augmentationEntries: [
+          { cost: 15, gameId: 1, kind: 'skill', levels: [1], poolId: 1 },
+          { cost: -10, gameId: 2, kind: 'skill', levels: [-1], poolId: 1 },
+        ],
+      },
+    })
+    const components = armorComponentsForPool(snapshot, 1, [skillId], originalSkillIds)
+    expect(components.filter(component => component.skillChanges.some(change => change.level > 0))
+      .every(component => component.skillChanges.every(change => change.skillId === skillId))).toBe(true)
+    const variants = generateArmorVariants(base, components, { maxOperations: 2, requiredSkills: [{ skillId, level: 1 }] })
+    expect(variants.some(variant => getSkillLevel(variant.skills, skillId) === 1
+      && variant.skills.filter(skill => skill.level > 0).length === 5
+      && variant.augmentation?.cost === 5)).toBe(true)
+  })
+
   it.each([1, 2])('limits %i head candidates while leaving other slots unrestricted', (count) => {
     const snapshot = parseSourceSnapshot(readFileSync(new URL('../snapshots/source-snapshot.json', import.meta.url), 'utf8'), localizedNames)
     const heads = snapshot.catalog.armors.filter(record => record.armorFamilyId && record.armor.slot === 'head').slice(0, count)
