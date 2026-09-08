@@ -456,104 +456,73 @@ function createSearchCandidates(
   }
 
   const reduced = [...equivalent.values()].flatMap(value => Array.isArray(value) ? value : [value])
-  const pruned = maxSolutions === 1 ? pruneWorseArmorCandidates(reduced, requirements) : reduced
-  return pruned
+  return maxSolutions === 1
+    ? pruneDominatedArmorCandidates(reduced, requirements)
+    : reduced
 }
 
-function pruneWorseArmorCandidates(
+function pruneDominatedArmorCandidates(
   candidates: readonly ArmorVariant[],
   requirements: readonly SkillValue[],
 ): ArmorVariant[] {
-  if (requirements.length < 31 && requirements.every(requirement => requirement.level <= 1)) {
-    return pruneBinaryArmorCandidates(candidates, requirements)
-  }
-
-  return pruneSameSlotArmorCandidates(candidates, requirements)
-}
-
-function pruneBinaryArmorCandidates(
-  candidates: readonly ArmorVariant[],
-  requirements: readonly SkillValue[],
-): ArmorVariant[] {
-  const ordered = [...candidates].sort((left, right) => right.defense - left.defense)
-  const slotPatternIds = new Map<string, number>()
-  const slotPatterns: number[][] = []
+  const ordered = [...candidates].sort((left, right) => compareDominanceCandidates(
+    right,
+    left,
+    requirements,
+  ))
+  const skillCoverage = requirements.map(requirement => Array.from({ length: requirement.level + 1 }).fill(0n))
+  const slotCoverage = Array.from({ length: 4 }, () => Array.from({ length: 5 }).fill(0n))
+  const kept: ArmorVariant[] = []
+  let allKept = 0n
 
   for (const candidate of ordered) {
+    const skillLevels = requirements.map(requirement => Math.min(
+      requirement.level,
+      getSkillLevel(candidate.skills, requirement.skillId),
+    ))
     const capacities = slotCapacities(candidate.slots)
-    const key = capacities.join(',')
-    if (!slotPatternIds.has(key)) {
-      slotPatternIds.set(key, slotPatterns.length)
-      slotPatterns.push(capacities)
-    }
-  }
+    let covering = allKept
 
-  const slotCoverMasks = slotPatterns.map((counts) => {
-    let mask = 0n
-    for (const [key, patternId] of slotPatternIds) {
-      if (slotsCoverCounts(key.split(',').map(Number), counts)) {
-        mask |= 1n << BigInt(patternId)
+    for (const [index, level] of skillLevels.entries()) {
+      if (level > 0) {
+        covering &= skillCoverage[index][level]
       }
     }
-    return mask
-  })
-  const coveringSlotsByMask = new Map<number, bigint>()
-  const kept: ArmorVariant[] = []
+    for (const [index, capacity] of capacities.entries()) {
+      if (capacity > 0) {
+        covering &= slotCoverage[index][capacity]
+      }
+    }
 
-  for (const candidate of ordered) {
-    const mask = requirements.reduce((value, requirement, index) => value
-      | (getSkillLevel(candidate.skills, requirement.skillId) > 0 ? 1 << index : 0), 0)
-    const slotId = slotPatternIds.get(slotCapacities(candidate.slots).join(','))!
-    const isWorse = hasCoveringSkillSlots(coveringSlotsByMask, mask, slotCoverMasks[slotId])
+    if (covering !== 0n) {
+      continue
+    }
 
-    if (!isWorse) {
-      kept.push(candidate)
-      const slotBit = 1n << BigInt(slotId)
-      coveringSlotsByMask.set(mask, (coveringSlotsByMask.get(mask) ?? 0n) | slotBit)
+    const bit = 1n << BigInt(kept.length)
+    allKept |= bit
+    kept.push(candidate)
+    for (const [index, level] of skillLevels.entries()) {
+      for (let minimum = 1; minimum <= level; minimum += 1) {
+        skillCoverage[index][minimum] |= bit
+      }
+    }
+    for (const [index, capacity] of capacities.entries()) {
+      for (let minimum = 1; minimum <= capacity; minimum += 1) {
+        slotCoverage[index][minimum] |= bit
+      }
     }
   }
 
   return kept
 }
 
-function pruneSameSlotArmorCandidates(
-  candidates: readonly ArmorVariant[],
+function compareDominanceCandidates(
+  left: ArmorVariant,
+  right: ArmorVariant,
   requirements: readonly SkillValue[],
-): ArmorVariant[] {
-  const bySlots = new Map<string, ArmorVariant[]>()
-
-  for (const candidate of candidates) {
-    const key = slotCapacities(candidate.slots).join(',')
-    const group = bySlots.get(key) ?? []
-    group.push(candidate)
-    bySlots.set(key, group)
-  }
-
-  return [...bySlots.values()].flatMap((group) => {
-    const ordered = group.sort((left, right) => right.defense - left.defense)
-    const kept: ArmorVariant[] = []
-
-    for (const candidate of ordered) {
-      const candidateSkills = requirements.map(requirement => Math.min(
-        requirement.level,
-        getSkillLevel(candidate.skills, requirement.skillId),
-      ))
-      const isWorse = kept.some((better) => {
-        const betterSkills = requirements.map(requirement => Math.min(
-          requirement.level,
-          getSkillLevel(better.skills, requirement.skillId),
-        ))
-        return better.defense >= candidate.defense
-          && betterSkills.every((level, index) => level >= candidateSkills[index])
-      })
-
-      if (!isWorse) {
-        kept.push(candidate)
-      }
-    }
-
-    return kept
-  })
+): number {
+  return left.defense - right.defense
+    || compareArmorCandidates(left, right, requirements)
 }
 
 function slotCapacities(slots: readonly number[]): number[] {
