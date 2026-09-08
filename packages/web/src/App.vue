@@ -131,7 +131,7 @@ const progressPercent = computed(() => {
 function addSkill() {
   const unused = skillOptions.value.find(option => !selectedSkills.value.some(skill => skill.skillId === option.value))
   if (unused)
-    selectedSkills.value.push({ level: 1, skillId: unused.value })
+    selectedSkills.value.push({ level: maxSkillLevel(unused.value), skillId: unused.value })
 }
 
 function skillRecord(skillId: string) {

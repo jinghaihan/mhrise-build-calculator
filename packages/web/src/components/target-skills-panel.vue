@@ -8,7 +8,7 @@ import SearchSelect from './search-select.vue'
 import type { EquipmentStats, SkillSelection } from '../planner-types'
 import { equipmentStatKeys } from '../planner-types'
 
-defineProps<{
+const { maxSkillLevel } = defineProps<{
   disabled: boolean
   equipmentStats: EquipmentStats
   maxSkillLevel: (skillId: string) => number
@@ -23,6 +23,14 @@ const { t } = useI18n({ useScope: 'global' })
 
 function removeSkill(index: number) {
   selectedSkills.value.splice(index, 1)
+}
+
+function selectSkill(skill: SkillSelection, skillId: string | undefined) {
+  if (!skillId)
+    return
+
+  skill.skillId = skillId
+  skill.level = maxSkillLevel(skillId)
 }
 </script>
 
@@ -54,11 +62,12 @@ function removeSkill(index: number) {
       <div v-for="(skill, index) in selectedSkills" :key="index" class="skill-row grid items-end gap-3">
         <FormField :label="index === 0 ? t('ui.skill') : undefined">
           <SearchSelect
-            v-model="skill.skillId"
+            :model-value="skill.skillId"
             :options="skillOptions"
             :placeholder="t('ui.searchSkills')"
             :empty-text="t('ui.noMatches')"
             :disabled="disabled"
+            @update:model-value="selectSkill(skill, $event)"
           />
         </FormField>
         <FormField :label="index === 0 ? t('ui.level') : undefined">
