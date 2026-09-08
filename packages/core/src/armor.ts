@@ -446,7 +446,8 @@ function generationStateKey(state: GenerationState, includeResistance: boolean):
 }
 
 function dominatesGeneration(left: GenerationState, right: GenerationState): boolean {
-  return left.cost <= right.cost
+  return left.lastComponentIndex <= right.lastComponentIndex
+    && left.cost <= right.cost
     && left.depth <= right.depth
     && left.defenseDelta >= right.defenseDelta
     && left.slots.every((level, index) => level >= right.slots[index])
@@ -461,7 +462,7 @@ function dominatesGeneration(left: GenerationState, right: GenerationState): boo
 }
 
 function activeSkillSetKey(levels: readonly number[]): string {
-  return levels.map((level, index) => level > 0 ? index : '').filter(index => index !== '').join(',')
+  return levels.reduce((key, level, index) => level > 0 ? `${key}${index},` : key, '')
 }
 
 function skillLevelsFor(
