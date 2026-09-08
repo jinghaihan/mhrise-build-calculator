@@ -56,7 +56,9 @@ const snapshot = {
     weapons: stripNames(deduplicate(weapons)),
   },
   rules: {
-    armorFamilies: workbookData.armorFamilies,
+    // `name` is only the Chinese workbook label used while matching Kiranico
+    // armor rows. It is not runtime rule data and must not leak into snapshots.
+    armorFamilies: workbookData.armorFamilies.map(({ name, ...family }) => family),
     augmentationEntries: workbookData.augmentationEntries.map(entry => ({
       ...entry,
       skillId: entry.skillName ? skillByName.get(entry.skillName) : undefined,

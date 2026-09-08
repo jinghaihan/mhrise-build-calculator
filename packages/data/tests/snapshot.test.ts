@@ -124,6 +124,8 @@ describe('source snapshots', () => {
     expect(snapshot.catalog.armors.length).toBeGreaterThan(1000)
     expect(snapshot.catalog.weapons.length).toBeGreaterThan(3000)
     expect(snapshot.rules.armorFamilies.length).toBe(143)
+    expect(snapshot.rules.armorFamilies.every(family => Object.keys(family).sort().join(',') === 'costBudget,id,poolId'))
+      .toBe(true)
     expect(snapshot.rules.talismanRules.length).toBe(136)
     expect(snapshot.catalog.skills.find(skill => skill.names.zh === '坚如磐石')?.maxLevel).toBe(5)
 

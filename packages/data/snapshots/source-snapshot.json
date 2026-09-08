@@ -132000,859 +132000,716 @@
       {
         "costBudget": 20,
         "id": "300",
-        "name": "炎火装束・继",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "301",
-        "name": "皮制X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "302",
-        "name": "锁甲X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "303",
-        "name": "猎人X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "305",
-        "name": "合金X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "382",
-        "name": "骨制X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "342",
-        "name": "丸鸟X伪装",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "344",
-        "name": "硬甲龙X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "347",
-        "name": "野猪X伪装",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "349",
-        "name": "水生兽X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "346",
-        "name": "飞甲虫X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "409",
-        "name": "巨甲虫",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "408",
-        "name": "巨蜂",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "345",
-        "name": "狗龙皮X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "377",
-        "name": "狗龙X伪装",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "407",
-        "name": "蓝速龙",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "338",
-        "name": "镰鼬龙X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "352",
-        "name": "眠狗龙X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "368",
-        "name": "搔鸟X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "351",
-        "name": "毒狗龙X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "353",
-        "name": "青熊兽X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "381",
-        "name": "白兔兽X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "354",
-        "name": "赤甲兽X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "327",
-        "name": "伞鸟X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "355",
-        "name": "水兽X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "356",
-        "name": "土砂龙X",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "386",
-        "name": "大名盾蟹",
         "poolId": 1
       },
       {
         "costBudget": 20,
         "id": "328",
-        "name": "河童蛙X",
         "poolId": 1
       },
       {
         "costBudget": 18,
         "id": "306",
-        "name": "铸铁X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "318",
-        "name": "毒蝎X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "319",
-        "name": "毒蛛X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "316",
-        "name": "混沌・真",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "317",
-        "name": "雪绒花X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "324",
-        "name": "贝壳X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "308",
-        "name": "花瓣X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "424",
-        "name": "五行",
         "poolId": 2
       },
       {
         "costBudget": 16,
         "id": "442",
-        "name": "王国轻装骑士",
         "poolId": 3
       },
       {
         "costBudget": 18,
         "id": "427",
-        "name": "结云",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "343",
-        "name": "垂皮龙X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "357",
-        "name": "奇怪龙X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "326",
-        "name": "天狗兽X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "396",
-        "name": "天狗兽Z",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "369",
-        "name": "毒妖鸟X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "370",
-        "name": "泥鱼龙X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "364",
-        "name": "岩龙X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "329",
-        "name": "人鱼龙X",
         "poolId": 2
       },
       {
         "costBudget": 16,
         "id": "397",
-        "name": "人鱼龙Z",
         "poolId": 3
       },
       {
         "costBudget": 18,
         "id": "360",
-        "name": "雌火龙X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "371",
-        "name": "飞雷龙X",
         "poolId": 2
       },
       {
         "costBudget": 18,
         "id": "372",
-        "name": "蛮颚龙X",
         "poolId": 2
       },
       {
         "costBudget": 16,
         "id": "375",
-        "name": "骷髅X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "304",
-        "name": "杜宾X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "315",
-        "name": "海境X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "311",
-        "name": "南瓜X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "312",
-        "name": "南瓜X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "310",
-        "name": "死神X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "309",
-        "name": "鱼鳞X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "313",
-        "name": "锹形X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "314",
-        "name": "凤蝶X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "443",
-        "name": "王国炮术队",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "412",
-        "name": "公会诗人",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "413",
-        "name": "学士",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "425",
-        "name": "守护者",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "384",
-        "name": "旅团X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "359",
-        "name": "冰牙龙X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "380",
-        "name": "祸铠・真",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "358",
-        "name": "迅龙X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "332",
-        "name": "雪鬼兽X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "404",
-        "name": "刚缠兽",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "387",
-        "name": "将军镰蟹",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "333",
-        "name": "泥翁龙X",
         "poolId": 3
       },
       {
         "costBudget": 14,
         "id": "400",
-        "name": "泥翁龙Ｚ",
         "poolId": 4
       },
       {
         "costBudget": 16,
         "id": "330",
-        "name": "妃蜘蛛X",
         "poolId": 3
       },
       {
         "costBudget": 16,
         "id": "331",
-        "name": "妃蜘蛛X",
         "poolId": 3
       },
       {
         "costBudget": 14,
         "id": "398",
-        "name": "妃蜘蛛Z",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "399",
-        "name": "妃蜘蛛Z",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "320",
-        "name": "倪泰表・真",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "321",
-        "name": "神凪・洸",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "322",
-        "name": "倪泰里・真",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "323",
-        "name": "依巫・燿",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "374",
-        "name": "铬合金X",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "350",
-        "name": "熔岩兽X",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "348",
-        "name": "翼蛇龙X",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "383",
-        "name": "泡狐龙X",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "361",
-        "name": "火龙X",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "365",
-        "name": "雷狼龙X",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "362",
-        "name": "轰龙X",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "363",
-        "name": "角龙X",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "389",
-        "name": "黑蚀龙",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "392",
-        "name": "千刃龙",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "393",
-        "name": "电龙",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "403",
-        "name": "冰狼龙",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "406",
-        "name": "棘龙",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "441",
-        "name": "王国重装骑士",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "415",
-        "name": "猎鹰",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "416",
-        "name": "求知",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "456",
-        "name": "尊严",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "422",
-        "name": "巴尔巴尼亚",
         "poolId": 4
       },
       {
         "costBudget": 14,
         "id": "423",
-        "name": "恩宠",
         "poolId": 4
       },
       {
         "costBudget": 12,
         "id": "366",
-        "name": "齐天・真",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "373",
-        "name": "爆鳞龙X",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "307",
-        "name": "花纹钢X",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "339",
-        "name": "钢龙X",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "340",
-        "name": "水行・真",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "341",
-        "name": "帝王X",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "390",
-        "name": "方舟",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "391",
-        "name": "友爱",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "402",
-        "name": "爵银龙",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "410",
-        "name": "教授",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "411",
-        "name": "博爱",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "417",
-        "name": "贤者",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "418",
-        "name": "追踪者",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "325",
-        "name": "哥特X",
         "poolId": 5
       },
       {
         "costBudget": 12,
         "id": "414",
-        "name": "水手",
         "poolId": 5
       },
       {
         "costBudget": 10,
         "id": "405",
-        "name": "冥渊缠铠",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "334",
-        "name": "风卷・真",
         "poolId": 13
       },
       {
         "costBudget": 10,
         "id": "336",
-        "name": "鸣神・真",
         "poolId": 13
       },
       {
         "costBudget": 10,
         "id": "367",
-        "name": "赫耀・真",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "388",
-        "name": "怒天",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "395",
-        "name": "祸铠・怨",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "419",
-        "name": "王国据点司令",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "420",
-        "name": "王国据点司令",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "459",
-        "name": "翔驱羽饰",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "460",
-        "name": "祝福羽饰",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "426",
-        "name": "公会宫殿",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "401",
-        "name": "矜持",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "428",
-        "name": "金黄澄月",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "429",
-        "name": "银白耀日",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "431",
-        "name": "月光",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "394",
-        "name": "阴阳师",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "430",
-        "name": "棘龙Z",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "491",
-        "name": "水行・醒",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "494",
-        "name": "混茫",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "495",
-        "name": "堕天",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "492",
-        "name": "脉动钢龙",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "493",
-        "name": "脉动帝王",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "498",
-        "name": "雪崩",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "499",
-        "name": "赫耀・历",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "500",
-        "name": "风雨",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "501",
-        "name": "美德",
         "poolId": 6
       },
       {
         "costBudget": 10,
         "id": "506",
-        "name": "久爱",
         "poolId": 6
       },
       {
         "costBudget": 12,
         "id": "504",
-        "name": "健美",
         "poolId": 5
       },
       {
         "costBudget": 10,
         "id": "502",
-        "name": "原初",
         "poolId": 6
       }
     ],

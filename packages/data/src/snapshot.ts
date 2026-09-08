@@ -19,7 +19,6 @@ export type AugmentationRole = ArmorAugmentRole
 export interface ArmorFamilyRule {
   readonly costBudget: number
   readonly id: string
-  readonly name: string
   readonly poolId: number
 }
 
