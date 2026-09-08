@@ -198,11 +198,20 @@ function solveBuildByArmorSearch(
       : best, 0)))
   const jewelPotential = (counts: readonly number[], skillIndex: number): number => counts.reduce((total, count, index) => total
     + count * (jewelLevels[index + 1][skillIndex] - jewelLevels[index][skillIndex]), 0)
+  const weightVectors = [request.requiredSkills.map(() => 1)]
+  const weightedJewelLevels = weightVectors.map(weights => Array.from({ length: 5 }, (_, level) => request.decorations.reduce((best, jewel) => {
+    if (jewel.slotLevel > level)
+      return best
+    return Math.max(best, weightedSkillScore(jewel.skills, request.requiredSkills, weights))
+  }, 0)))
+  const weightedJewelPotential = (counts: readonly number[], weightIndex: number): number => counts.reduce((total, count, index) => total
+    + count * (weightedJewelLevels[weightIndex][index + 1] - weightedJewelLevels[weightIndex][index]), 0)
   const external = request.requiredSkills.map((requirement, index) => getSkillLevel(request.weapon.skills, requirement.skillId)
     + jewelPotential(slotCapacities(request.weapon.slots), index)
     + request.talismans.reduce((best, talisman) => Math.max(best, getSkillLevel(talisman.skills, requirement.skillId)
     + jewelPotential(slotCapacities(talisman.slots), index)), 0))
   const remaining = Array.from({ length: slots.length + 1 }, () => request.requiredSkills.map(() => 0))
+  const weightedRemaining = Array.from({ length: slots.length + 1 }, () => weightVectors.map(() => 0))
   const remainingArmorSkills = Array.from({ length: slots.length + 1 }, () => request.requiredSkills.map(() => 0))
   const remainingSlotCounts = Array.from({ length: slots.length + 1 }).fill(null).map(() => [0, 0, 0, 0])
   const talismanMaximumSkills = request.requiredSkills.map(requirement => request.talismans.reduce(
@@ -211,6 +220,15 @@ function solveBuildByArmorSearch(
   ))
   const talismanMaximumSlotCounts = [0, 0, 0, 0]
   const weaponSlotCounts = slotCapacities(request.weapon.slots)
+  const weightedExternal = weightVectors.map((weights, weightIndex) => weightedSkillScore(
+    request.weapon.skills,
+    request.requiredSkills,
+    weights,
+  ) + weightedJewelPotential(weaponSlotCounts, weightIndex) + request.talismans.reduce((best, talisman) => Math.max(
+    best,
+    weightedSkillScore(talisman.skills, request.requiredSkills, weights)
+    + weightedJewelPotential(slotCapacities(talisman.slots), weightIndex),
+  ), 0))
   for (const talisman of request.talismans) {
     const capacities = slotCapacities(talisman.slots)
     for (const [index, capacity] of capacities.entries()) {
@@ -221,6 +239,9 @@ function solveBuildByArmorSearch(
   for (let index = slots.length - 1; index >= 0; index -= 1) {
     remaining[index] = request.requiredSkills.map((_, skillIndex) => remaining[index + 1][skillIndex]
       + candidates[index].reduce((best, candidate) => Math.max(best, candidate.levels[skillIndex] + jewelPotential(candidate.counts, skillIndex)), 0))
+    weightedRemaining[index] = weightVectors.map((weights, weightIndex) => weightedRemaining[index + 1][weightIndex]
+      + Math.max(0, ...candidates[index].map(candidate => weightedSkillLevelsScore(candidate.levels, weights)
+        + weightedJewelPotential(candidate.counts, weightIndex))))
     remainingArmorSkills[index] = request.requiredSkills.map((_, skillIndex) => remainingArmorSkills[index + 1][skillIndex]
       + Math.max(0, ...candidates[index].map(candidate => candidate.levels[skillIndex])))
     remainingSlotCounts[index] = remainingSlotCounts[index + 1].map((count, slotLevel) => count
@@ -373,6 +394,13 @@ function solveBuildByArmorSearch(
       + jewelPotential(slotCounts, index)
       + remaining[slotIndex][index]
       + external[index] < requirement.level)) {
+      return
+    }
+    if (weightVectors.some((weights, weightIndex) => weightedRemaining[slotIndex][weightIndex]
+      + weightedJewelPotential(slotCounts, weightIndex)
+      + weightedExternal[weightIndex]
+      < request.requiredSkills.reduce((total, requirement, skillIndex) => total
+        + weights[skillIndex] * Math.max(0, requirement.level - requiredLevels[skillIndex]), 0))) {
       return
     }
     const missing = request.requiredSkills.map((requirement, index) => Math.max(0, requirement.level
@@ -688,6 +716,22 @@ function requiredSkillScore(
   levels: readonly number[],
 ): number {
   return levels.reduce((total, level) => total + level, 0)
+}
+
+function weightedSkillScore(
+  skills: readonly SkillValue[],
+  requirements: readonly SkillValue[],
+  weights: readonly number[],
+): number {
+  return requirements.reduce((total, requirement, index) => total
+    + (weights[index] ?? 0) * Math.min(getSkillLevel(skills, requirement.skillId), requirement.level), 0)
+}
+
+function weightedSkillLevelsScore(
+  levels: readonly number[],
+  weights: readonly number[],
+): number {
+  return levels.reduce((total, level, index) => total + (weights[index] ?? 0) * level, 0)
 }
 
 function slotCountScore(counts: readonly number[]): number {
