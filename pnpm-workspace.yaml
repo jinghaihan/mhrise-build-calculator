@@ -4,6 +4,9 @@ packages:
 allowBuilds:
   vue-demi: true
 
+catalog:
+  highs: ^1.15.2
+
 catalogs:
   build:
     vite: ^8.2.2

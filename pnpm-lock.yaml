@@ -9,6 +9,10 @@ catalogs:
     vite:
       specifier: ^8.2.2
       version: 8.2.2
+  default:
+    highs:
+      specifier: ^1.15.2
+      version: 1.15.2
   dev:
     knip:
       specifier: ^6.34.0
@@ -151,6 +155,10 @@ importers:
         version: 0.18.5
 
   packages/core:
+    dependencies:
+      highs:
+        specifier: 'catalog:'
+        version: 1.15.2
     devDependencies:
       typescript:
         specifier: catalog:dev
@@ -2060,6 +2068,9 @@ packages:
 
   hast-util-whitespace@3.0.0:
     resolution: {integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==}
+
+  highs@1.15.2:
+    resolution: {integrity: sha512-IugrQ7Z8nSMHgVneTFwzV8fIfaR85l/kGhN+jvEDbm5k5MlGXtq1Zp2hy1fkmHA71nCmIg9F7ayWfEPxLpfUyA==}
 
   hookified@1.15.1:
     resolution: {integrity: sha512-MvG/clsADq1GPM2KGo2nyfaWVyn9naPiXrqIe4jYjXNZQt238kWyOGrsyc/DmRAQ+Re6yeo6yX/yoNCG5KAEVg==}
@@ -5030,6 +5041,8 @@ snapshots:
   hast-util-whitespace@3.0.0:
     dependencies:
       '@types/hast': 3.0.5
+
+  highs@1.15.2: {}
 
   hookified@1.15.1: {}
 

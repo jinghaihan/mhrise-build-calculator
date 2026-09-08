@@ -15,6 +15,7 @@ import {
   getSkillLevel,
   optimizeEquipmentReuse,
   solveBuild,
+  solveBuildAsync,
 } from '@mhrise-build/core'
 import { createBuildRequest } from './catalog'
 import { armorComponentsForPool, findArmorFamily, generateTalismanRecords } from './snapshot'
@@ -28,6 +29,7 @@ export interface SnapshotPlanOptions {
   readonly onSolutions?: (solutions: readonly BuildSolution[]) => void
   readonly talismanSkillIds?: readonly WikiId[]
   readonly talismanFilter?: TalismanFilter
+  readonly timeLimitSeconds?: number
 }
 
 export type SnapshotBuildQuery = Omit<BuildDefinition, 'id'> & {
@@ -63,7 +65,7 @@ export function createSnapshotCatalog(
 export function createSnapshotBuildRequest(
   snapshot: SourceSnapshot,
   definition: BuildDefinition,
-  options: Omit<SnapshotPlanOptions, 'maxSolutions'> = {},
+  options: SnapshotPlanOptions = {},
 ): BuildRequest {
   const skillIds = options.talismanSkillIds
     ?? definition.requiredSkills.map(requirement => requirement.skillId)
@@ -71,7 +73,7 @@ export function createSnapshotBuildRequest(
   const request = createBuildRequest(
     catalog,
     withGeneratedArmorComponents(snapshot, definition, skillIds, options),
-    { onProgress: options.onProgress },
+    { maxArmorAlternatives: options.maxSolutions, onProgress: options.onProgress },
   )
 
   return request
@@ -118,6 +120,25 @@ export function solveSnapshotBuild(
   })
 }
 
+export async function solveSnapshotBuildAsync(
+  snapshot: SourceSnapshot,
+  definition: BuildDefinition,
+  options: SnapshotPlanOptions = {},
+): Promise<BuildSolution[]> {
+  return solveBuildAsync(createSnapshotBuildRequest(snapshot, definition, {
+    ...options,
+    maxSolutions: undefined,
+  }), {
+    maxSolutions: options.maxSolutions,
+    onProgress: progress => options.onProgress?.({
+      current: progress.current,
+      stage: 'searching',
+      total: progress.total,
+    }),
+    timeLimitSeconds: options.timeLimitSeconds,
+  })
+}
+
 function toBuildDefinition(query: SnapshotBuildQuery): BuildDefinition {
   return {
     ...query,
@@ -145,7 +166,7 @@ function withGeneratedArmorComponents(
   snapshot: SourceSnapshot,
   definition: BuildDefinition,
   skillIds: readonly WikiId[],
-  options: Omit<SnapshotPlanOptions, 'maxSolutions'>,
+  options: SnapshotPlanOptions,
 ): BuildDefinition {
   if (!options.generateArmorVariants) {
     return definition

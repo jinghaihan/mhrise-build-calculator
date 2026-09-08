@@ -2,11 +2,11 @@ import { readFileSync } from 'node:fs'
 import { createWikiId, getSkillLevel } from '@mhrise-build/core'
 import { describe, expect, it } from 'vitest'
 import localizedNames from '../locales/names.json'
-import { searchSnapshotBuild } from '../src/planner'
+import { solveSnapshotBuildAsync } from '../src/planner'
 import { parseSourceSnapshot } from '../src/snapshot'
 
 describe('user target build', () => {
-  it('finds a feasible build for the supplied weapon, skills, and armor', () => {
+  it('finds a feasible build for the supplied weapon, skills, and armor', async () => {
     const snapshot = parseSourceSnapshot(
       readFileSync(new URL('../snapshots/source-snapshot.json', import.meta.url), 'utf8'),
       localizedNames,
@@ -38,7 +38,7 @@ describe('user target build', () => {
       [1, '261970829'],
       [1, '888838913'],
     ].map(([level, skillId]) => ({ level: Number(level), skillId: createWikiId(String(skillId)) }))
-    const results = searchSnapshotBuild(snapshot, {
+    const results = await solveSnapshotBuildAsync(snapshot, {
       armorIdsBySlot: {
         arms: ['1559693084'],
         chest: ['1560741660'],
