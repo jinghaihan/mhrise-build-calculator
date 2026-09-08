@@ -22,6 +22,38 @@ import {
 } from '../src/snapshot'
 
 describe('source snapshots', () => {
+  it('finds a legal attack-7 build from real scoped armor data with seven-roll augmentation enabled', () => {
+    const snapshot = parseSourceSnapshot(readFileSync(new URL('../snapshots/source-snapshot.json', import.meta.url), 'utf8'), localizedNames)
+    const slots = ['head', 'chest', 'arms', 'waist', 'legs'] as const
+    const armorIdsBySlot = Object.fromEntries(slots.map(slot => [slot, snapshot.catalog.armors
+      .filter(record => record.armor.slot === slot && record.armorFamilyId)
+      .slice(0, 2)
+      .map(record => record.ref.id)]))
+    const skillId = snapshot.catalog.skills.find(record => record.names.zh === '攻击')!.ref.id
+    const weaponId = snapshot.catalog.weapons.find(record => record.weapon.slots[0] >= 2)!.ref.id
+    const results = searchSnapshotBuild(snapshot, {
+      weaponId,
+      armorIdsBySlot,
+      requiredSkills: [{ skillId, level: 7 }],
+    }, { generateArmorVariants: true, maxTalismanCandidates: 10, maxSolutions: 5 })
+    expect(results).toHaveLength(5)
+    for (const result of results) {
+      expect(getSkillLevel(result.skills, skillId)).toBeGreaterThanOrEqual(7)
+      expect(result.defense).toBe(Object.values(result.armor).reduce((sum, variant) => sum + variant.defense, 0))
+      for (const slot of slots) {
+        const variant = result.armor[slot]
+        expect(armorIdsBySlot[slot]).toContain(variant.base.ref.id)
+        expect(variant.augmentation?.componentIds?.length ?? 0).toBeLessThanOrEqual(7)
+        expect(variant.augmentation?.cost ?? 0).toBeLessThanOrEqual(variant.base.costBudget)
+        expect(variant.skills.filter(skill => skill.level > 0).length).toBeLessThanOrEqual(5)
+      }
+      const available = collectAvailableSlots(result.weapon, result.armor, result.talisman)
+      expect(new Set(result.decorations.map(jewel => `${jewel.host}:${jewel.slotIndex}`)).size).toBe(result.decorations.length)
+      for (const jewel of result.decorations)
+        expect(available.find(slot => slot.host === jewel.host && slot.index === jewel.slotIndex)!.level).toBeGreaterThanOrEqual(jewel.decoration.slotLevel)
+    }
+  }, 15000)
+
   it('can fund a requested skill by removing an unrelated original skill', () => {
     const skillId = createWikiId('1')
     const originalSkillIds = ['2', '3', '4', '5', '6'].map(createWikiId)
