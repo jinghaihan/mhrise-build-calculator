@@ -64,7 +64,7 @@ function removeSkill(index: number) {
         <FormField :label="index === 0 ? t('ui.level') : undefined">
           <FormNumberInput v-model="skill.level" class="planner-control" :min="1" :max="maxSkillLevel(skill.skillId)" :disabled="disabled" controls />
         </FormField>
-        <ActionButton size="sm" variant="text" class="h-9 w-9 justify-center p-0" icon="i-ph:trash" :disabled="disabled" :aria-label="t('ui.removeSkill')" @click="removeSkill(index)" />
+        <ActionButton size="sm" variant="text" class="h-10 w-10 justify-center p-0" icon="i-ph:trash" :disabled="disabled" :aria-label="t('ui.removeSkill')" @click="removeSkill(index)" />
       </div>
     </div>
   </div>
