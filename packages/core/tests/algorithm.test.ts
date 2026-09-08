@@ -70,6 +70,28 @@ function request(id: string, requiredSkills: readonly SkillValue[]): BuildReques
 }
 
 describe('build solving', () => {
+  it('returns distinct armor sets and remaps cached jewels to each set sockets', () => {
+    const build = request('socket-cache', [skill(String(attack), 2)])
+    const emptyArmor = Object.fromEntries(Object.entries(build.armorBySlot).map(([slot, variants]) => [
+      slot,
+      variants.map(variant => ({ ...variant, slots: [0, 0, 0] as const })),
+    ])) as BuildRequest['armorBySlot']
+    const result = solveBuild({
+      ...build,
+      armorBySlot: { ...emptyArmor, head: [armor('head', '1010', [0, 1, 0]), armor('head', '1011', [1, 0, 0])] },
+      talismans: [{ ...build.talismans[0], slots: [0, 0, 0] }],
+      weapon: { ...build.weapon, slots: [0, 0, 0] },
+    }, { maxSolutions: 2 })
+    expect(result).toHaveLength(2)
+    expect(new Set(result.map(solution => solution.armor.head.base.ref.id)).size).toBe(2)
+    for (const solution of result) {
+      expect(solution.decorations).toHaveLength(1)
+      const placement = solution.decorations[0]
+      expect(placement.host).toBe('head')
+      expect(solution.armor.head.slots[placement.slotIndex]).toBe(1)
+    }
+  })
+
   it('keeps a usable talisman when candidates differ only in unrelated skills', () => {
     const build = request('equivalent-talismans', [skill(String(attack), 1)])
     const extra = {

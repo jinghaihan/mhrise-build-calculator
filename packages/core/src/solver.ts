@@ -1,5 +1,5 @@
-import type { ArmorSlot, ArmorVariant, BuildRequest, BuildSolution, SkillValue } from './model'
-import { collectAvailableSlots, findDecorationPlacements } from './decorations'
+import type { ArmorSlot, ArmorVariant, BuildRequest, BuildSolution, Decoration, SkillValue } from './model'
+import { collectAvailableSlots, findBestDecorationPlacement } from './decorations'
 import { getTotalArmorDefense } from './defense'
 import { ARMOR_SLOTS } from './model'
 import { addSkillValues, getSkillLevel, meetsSkillRequirements } from './skills'
@@ -36,7 +36,7 @@ export function solveBuild(
       ? request.talismans.filter(isTalismanLegal)
       : dedupeTalismans(request.talismans.filter(isTalismanLegal)),
   }
-  const decorationFeasibility = new Map<string, boolean>()
+  const decorationPlans = new Map<string, readonly { decoration: Decoration, level: number }[] | null>()
   const legalTalismans = workingRequest.talismans
   const bounds = createSearchBounds(workingRequest, legalTalismans)
   const armorBySlot = Object.fromEntries(ARMOR_SLOTS.map(slot => [
@@ -72,21 +72,12 @@ export function solveBuild(
 
     for (const talisman of orderedTalismans) {
       if (solutions.length >= maxSolutions
-        && getTotalArmorDefense(armor) <= (solutions[solutions.length - 1]?.defense ?? 0)) {
+        && getTotalArmorDefense(armor) < (solutions[solutions.length - 1]?.defense ?? 0)) {
         return
       }
 
       const totalSkills = addSkillValues(skills, workingRequest.weapon.skills, talisman.skills)
       const slots = collectAvailableSlots(request.weapon, armor, talisman)
-
-      if (!canReachWithDecorations(
-        totalSkills,
-        slots,
-        workingRequest.decorations,
-        workingRequest.requiredSkills,
-      )) {
-        continue
-      }
 
       const decorationKey = [
         workingRequest.requiredSkills.map(requirement => `${requirement.skillId}:${Math.min(
@@ -95,34 +86,26 @@ export function solveBuild(
         )}`).join(','),
         slots.map(slot => slot.level).sort((left, right) => right - left).join(','),
       ].join('|')
-      const knownFeasibility = decorationFeasibility.get(decorationKey)
-      if (knownFeasibility === false) {
-        continue
-      }
-
-      if (knownFeasibility === undefined) {
-        const feasible = findDecorationPlacements(
+      if (!decorationPlans.has(decorationKey)) {
+        const plan = findBestDecorationPlacement(
           slots,
           workingRequest.decorations,
           totalSkills,
           workingRequest.requiredSkills,
-          1,
-        ).length > 0
-        decorationFeasibility.set(decorationKey, feasible)
-        if (!feasible) {
-          continue
-        }
+        )
+        decorationPlans.set(decorationKey, plan?.map(placement => ({
+          decoration: placement.decoration,
+          level: slots.find(slot => slot.host === placement.host && slot.index === placement.slotIndex)!.level,
+        })) ?? null)
       }
-
-      const placements = findDecorationPlacements(
-        slots,
-        workingRequest.decorations,
-        totalSkills,
-        workingRequest.requiredSkills,
-        maxSolutions - solutions.length,
-      )
-
-      for (const decorations of placements) {
+      const plan = decorationPlans.get(decorationKey)
+      if (plan) {
+        const remainingSlots = [...slots]
+        const decorations = plan.map(({ decoration, level }) => {
+          const index = remainingSlots.findIndex(slot => slot.level === level)
+          const [slot] = remainingSlots.splice(index, 1)
+          return { decoration, host: slot.host, slotIndex: slot.index }
+        })
         const finalSkills = decorations.reduce(
           (current, placement) => addSkillValues(current, placement.decoration.skills),
           totalSkills,
@@ -156,7 +139,7 @@ export function solveBuild(
 
   for (const state of armorStates) {
     if (solutions.length >= maxSolutions
-      && getArmorStateDefense(state.armor) <= (solutions[solutions.length - 1]?.defense ?? 0)) {
+      && getArmorStateDefense(state.armor) < (solutions[solutions.length - 1]?.defense ?? 0)) {
       break
     }
     searchTalismans(
@@ -604,24 +587,6 @@ function skillKey(skills: readonly SkillValue[]): string {
     .sort((left, right) => String(left.skillId).localeCompare(String(right.skillId)))
     .map(skill => `${skill.skillId}:${skill.level}`)
     .join(',')
-}
-
-function canReachWithDecorations(
-  currentSkills: readonly SkillValue[],
-  slots: readonly { level: number }[],
-  decorations: readonly BuildRequest['decorations'][number][],
-  requirements: readonly SkillValue[],
-): boolean {
-  return requirements.every((requirement) => {
-    const maximum = slots.reduce((total, slot) => total + Math.max(
-      0,
-      ...decorations
-        .filter(decoration => decoration.slotLevel <= slot.level)
-        .map(decoration => getSkillLevel(decoration.skills, requirement.skillId)),
-    ), 0)
-
-    return getSkillLevel(currentSkills, requirement.skillId) + maximum >= requirement.level
-  })
 }
 
 function compareArmorCandidates(
