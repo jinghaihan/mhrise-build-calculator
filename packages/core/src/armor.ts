@@ -8,7 +8,7 @@ import type {
   SkillValue,
 } from './model'
 import type { SlotLevels } from './slots'
-import { addSkillValues, applySkillChanges, countActiveSkills, getSkillLevel } from './skills'
+import { applySkillChanges, countActiveSkills, getSkillLevel } from './skills'
 import { applySlotUpgrades } from './slots'
 
 export const MAX_ARMOR_SKILLS = 5
@@ -138,9 +138,10 @@ interface GenerationState {
   readonly cost: number
   readonly defenseDelta: number
   readonly depth: number
+  readonly lastComponentIndex: number
   readonly resistanceDelta: ArmorResistances
   readonly skillChanges: readonly SkillValue[]
-  readonly skills: readonly SkillValue[]
+  readonly skillLevels: readonly number[]
   readonly slotUpgrades: number
   readonly slots: SlotLevels
 }
@@ -154,6 +155,13 @@ function generateArmorVariantsDp(
   const maxVariants = options.maxVariants ?? Number.POSITIVE_INFINITY
   const requiredSkills = options.requiredSkills ?? []
   const resistanceStrategy = options.resistanceStrategy ?? 'balanced'
+  const skillIds = [...new Set([
+    ...base.baseSkills.map(skill => skill.skillId),
+    ...requiredSkills.map(skill => skill.skillId),
+    ...components.flatMap(component => component.skillChanges.map(skill => skill.skillId)),
+  ])].sort()
+  const skillIndexes = new Map(skillIds.map((skillId, index) => [skillId, index]))
+  const baseSkillLevels = skillLevelsFor(base.baseSkills, skillIndexes)
   const variants = new Map<string, ArmorVariant>()
   const preparedComponents = prepareOrdinaryComponents(
     components,
@@ -179,15 +187,19 @@ function generateArmorVariantsDp(
 
     return !compactResistance || !isNegativeResistanceComponent(component)
       || preferredInitialResistance?.get(resistanceComponentGroup(component)) === component.id
-  })
+  }).sort((left, right) => canonicalComponentOrder(left) - canonicalComponentOrder(right)
+    || left.id.localeCompare(right.id))
+  const componentsById = new Map(preparedComponents.map(component => [component.id, component]))
+  const preferredNegativeResistanceCache = new Map<string, Map<string, string>>()
   let states: GenerationState[] = [{
     componentIds: [],
     cost: 0,
     defenseDelta: 0,
     depth: 0,
+    lastComponentIndex: 0,
     resistanceDelta: ZERO_ARMOR_RESISTANCES,
     skillChanges: [],
-    skills: addSkillValues(base.baseSkills),
+    skillLevels: baseSkillLevels,
     slotUpgrades: 0,
     slots: base.slots,
   }]
@@ -209,13 +221,15 @@ function generateArmorVariantsDp(
         state.resistanceDelta,
       )
       const preferredNegativeResistance = resistanceStrategy === 'balanced'
-        ? preferredNegativeResistanceComponents(preparedComponents, currentResistances)
+        ? preferredNegativeResistanceFor(currentResistances)
         : undefined
 
-      for (const component of ordinaryComponents) {
+      const firstComponentIndex = compactResistance ? state.lastComponentIndex : 0
+      for (let componentIndex = firstComponentIndex; componentIndex < ordinaryComponents.length; componentIndex += 1) {
+        const component = ordinaryComponents[componentIndex]
         const selectedComponent = compactResistance && isNegativeResistanceComponent(component)
-          ? preparedComponents.find(candidate => candidate.id === preferredNegativeResistance
-            ?.get(resistanceComponentGroup(component))) ?? component
+          ? componentsById.get(preferredNegativeResistance
+            ?.get(resistanceComponentGroup(component)) ?? '') ?? component
           : component
         const role = selectedComponent.role ?? 'normal'
         const nextCost = state.cost + selectedComponent.costDelta
@@ -230,9 +244,32 @@ function generateArmorVariantsDp(
         }
 
         const nextSkillChanges = [...state.skillChanges, ...selectedComponent.skillChanges]
-        const nextSkills = addSkillValues(base.baseSkills, nextSkillChanges)
-        if (nextSkills.some(skill => skill.level < 0)
-          || countActiveSkills(nextSkills) > MAX_ARMOR_SKILLS) {
+        const nextSkillLevels = [...state.skillLevels]
+        let nextActiveSkillCount = countActiveLevels(nextSkillLevels)
+        let invalidSkillChange = false
+        for (const change of selectedComponent.skillChanges) {
+          const skillIndex = skillIndexes.get(change.skillId)
+          if (skillIndex === undefined) {
+            invalidSkillChange = true
+            break
+          }
+
+          const previousLevel = nextSkillLevels[skillIndex]
+          const nextLevel = previousLevel + change.level
+          if (nextLevel < 0) {
+            invalidSkillChange = true
+            break
+          }
+
+          nextSkillLevels[skillIndex] = nextLevel
+          if (previousLevel <= 0 && nextLevel > 0) {
+            nextActiveSkillCount += 1
+          }
+          else if (previousLevel > 0 && nextLevel <= 0) {
+            nextActiveSkillCount -= 1
+          }
+        }
+        if (invalidSkillChange || nextActiveSkillCount > MAX_ARMOR_SKILLS) {
           continue
         }
 
@@ -242,7 +279,7 @@ function generateArmorVariantsDp(
           }
           const requiredLevel = getRequiredSkillLevel(requiredSkills, change.skillId)
           return requiredLevel > 0
-            && getSkillLevel(nextSkills, change.skillId) > requiredLevel
+            && (nextSkillLevels[skillIndexes.get(change.skillId)!] ?? 0) > requiredLevel
         })) {
           continue
         }
@@ -261,12 +298,13 @@ function generateArmorVariantsDp(
           cost: nextCost,
           defenseDelta: state.defenseDelta + selectedComponent.defenseDelta,
           depth: depth + 1,
+          lastComponentIndex: componentIndex,
           resistanceDelta: addArmorResistances(
             state.resistanceDelta,
             selectedComponent.resistanceDelta,
           ),
           skillChanges: nextSkillChanges,
-          skills: nextSkills,
+          skillLevels: nextSkillLevels,
           slotUpgrades: nextSlotUpgrades,
           slots: nextSlots,
         }
@@ -280,7 +318,7 @@ function generateArmorVariantsDp(
 
     states = [...nextStates.values()].filter((state) => {
       const key = [
-        activeSkillSetKey(state.skills),
+        activeSkillSetKey(state.skillLevels),
         ...(compactResistance
           ? []
           : [
@@ -325,6 +363,18 @@ function generateArmorVariantsDp(
 
     }
   }
+
+  function preferredNegativeResistanceFor(current: ArmorResistances): Map<string, string> {
+    const key = [current.dragon, current.fire, current.ice, current.thunder, current.water].join(',')
+    const cached = preferredNegativeResistanceCache.get(key)
+    if (cached) {
+      return cached
+    }
+
+    const preferred = preferredNegativeResistanceComponents(preparedComponents, current)
+    preferredNegativeResistanceCache.set(key, preferred)
+    return preferred
+  }
 }
 
 function prepareOrdinaryComponents(
@@ -354,12 +404,35 @@ function prepareOrdinaryComponents(
   return prepared
 }
 
+/**
+ * Effects commute in the final augmentation, but the intermediate five-skill
+ * limit makes some orders invalid. Removing original skills first preserves
+ * those combinations while still giving every multiset one canonical order.
+ */
+function canonicalComponentOrder(component: ArmorAugmentComponent): number {
+  const role = component.role ?? 'normal'
+  if (role === 'cost-fill') {
+    return 3
+  }
+
+  if (component.skillChanges.some(change => change.level < 0)) {
+    return 0
+  }
+
+  if (component.skillChanges.some(change => change.level > 0)) {
+    return 2
+  }
+
+  return 1
+}
+
 function generationStateKey(state: GenerationState, includeResistance: boolean): string {
   return [
     state.cost,
     state.defenseDelta,
     state.slotUpgrades,
-    skillKey(state.skills),
+    state.lastComponentIndex,
+    state.skillLevels.join(','),
     ...(includeResistance
       ? [
           state.resistanceDelta.dragon,
@@ -377,24 +450,36 @@ function dominatesGeneration(left: GenerationState, right: GenerationState): boo
     && left.depth <= right.depth
     && left.defenseDelta >= right.defenseDelta
     && left.slots.every((level, index) => level >= right.slots[index])
-    && left.skills.every(skill => getSkillLevel(left.skills, skill.skillId)
-      >= getSkillLevel(right.skills, skill.skillId))
+    && left.skillLevels.every((level, index) => level >= (right.skillLevels[index] ?? 0))
     && (
       left.cost < right.cost
       || left.depth < right.depth
       || left.defenseDelta > right.defenseDelta
       || left.slots.some((level, index) => level > right.slots[index])
-      || left.skills.some(skill => getSkillLevel(left.skills, skill.skillId)
-        > getSkillLevel(right.skills, skill.skillId))
+      || left.skillLevels.some((level, index) => level > (right.skillLevels[index] ?? 0))
     )
 }
 
-function activeSkillSetKey(skills: readonly SkillValue[]): string {
-  return skills
-    .filter(skill => skill.level > 0)
-    .map(skill => skill.skillId)
-    .sort()
-    .join(',')
+function activeSkillSetKey(levels: readonly number[]): string {
+  return levels.map((level, index) => level > 0 ? index : '').filter(index => index !== '').join(',')
+}
+
+function skillLevelsFor(
+  skills: readonly SkillValue[],
+  indexes: ReadonlyMap<SkillValue['skillId'], number>,
+): number[] {
+  const levels = Array.from({ length: indexes.size }).fill(0)
+  for (const skill of skills) {
+    const index = indexes.get(skill.skillId)
+    if (index !== undefined) {
+      levels[index] += skill.level
+    }
+  }
+  return levels
+}
+
+function countActiveLevels(levels: readonly number[]): number {
+  return levels.reduce((total, level) => total + (level > 0 ? 1 : 0), 0)
 }
 
 function getRequiredSkillLevel(
