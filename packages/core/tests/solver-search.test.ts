@@ -74,6 +74,18 @@ function exhaustiveScores(request: BuildRequest): number[][] {
 }
 
 describe('armor combination search', () => {
+  it('handles 25 requested skills without materializing all skill subsets', () => {
+    const request = fixture(0)
+    const requiredSkills = Array.from({ length: 25 }, (_, index) => ({ skillId: createWikiRef('skill', String(1000 + index)).id, level: 1 }))
+    const armorBySlot = Object.fromEntries(ARMOR_SLOTS.map((slot, index) => [slot, [createArmorVariant({
+      ...request.armorBySlot[slot][0].base,
+      baseSkills: requiredSkills.slice(index * 5, index * 5 + 5),
+    })]])) as unknown as BuildRequest['armorBySlot']
+    const result = solveBuild({ ...request, armorBySlot, requiredSkills }, { maxSolutions: 1 })
+    expect(result).toHaveLength(1)
+    expect(result[0].decorations).toHaveLength(0)
+  })
+
   it('matches exhaustive feasibility, defense and jewel counts for 80 varied requests', () => {
     for (let seed = 0; seed < 80; seed += 1) {
       const request = fixture(seed)

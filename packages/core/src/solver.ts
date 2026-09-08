@@ -352,16 +352,12 @@ function pruneBinarySkillArmorStates(
       0,
     )
     const slotId = slotPatternIds.get(state.slotCounts.join(','))!
-    const dominated = ((coveringSlotsByMask.get(mask) ?? 0n) & slotCoverMasks[slotId]) !== 0n
+    const dominated = hasCoveringSkillSlots(coveringSlotsByMask, mask, slotCoverMasks[slotId])
 
     if (!dominated) {
       kept.push(state)
       const slotBit = 1n << BigInt(slotId)
-      let subset = mask
-      do {
-        coveringSlotsByMask.set(subset, (coveringSlotsByMask.get(subset) ?? 0n) | slotBit)
-        subset = (subset - 1) & mask
-      } while (subset !== mask)
+      coveringSlotsByMask.set(mask, (coveringSlotsByMask.get(mask) ?? 0n) | slotBit)
     }
   }
 
@@ -387,6 +383,16 @@ function slotsCoverCounts(left: readonly number[], right: readonly number[]): bo
   }
 
   return true
+}
+
+function hasCoveringSkillSlots(index: ReadonlyMap<number, bigint>, mask: number, slots: bigint): boolean {
+  // Index only skill sets that actually occur. Expanding every subset of a
+  // 25-skill partial set would otherwise create over 33 million entries.
+  for (const [candidate, candidateSlots] of index) {
+    if ((candidate & mask) === mask && (candidateSlots & slots) !== 0n)
+      return true
+  }
+  return false
 }
 
 function requiredSkillScore(
@@ -496,16 +502,12 @@ function pruneBinaryArmorCandidates(
     const mask = requirements.reduce((value, requirement, index) => value
       | (getSkillLevel(candidate.skills, requirement.skillId) > 0 ? 1 << index : 0), 0)
     const slotId = slotPatternIds.get(slotCapacities(candidate.slots).join(','))!
-    const isWorse = !!((coveringSlotsByMask.get(mask) ?? 0n) & slotCoverMasks[slotId])
+    const isWorse = hasCoveringSkillSlots(coveringSlotsByMask, mask, slotCoverMasks[slotId])
 
     if (!isWorse) {
       kept.push(candidate)
       const slotBit = 1n << BigInt(slotId)
-      let subset = mask
-      do {
-        coveringSlotsByMask.set(subset, (coveringSlotsByMask.get(subset) ?? 0n) | slotBit)
-        subset = (subset - 1) & mask
-      } while (subset !== mask)
+      coveringSlotsByMask.set(mask, (coveringSlotsByMask.get(mask) ?? 0n) | slotBit)
     }
   }
 
