@@ -21,6 +21,7 @@ interface SkillSelection {
 }
 
 const armorSlots = ['head', 'chest', 'arms', 'waist', 'legs'] as const
+const equipmentStatKeys = ['defense', 'fire', 'water', 'thunder', 'ice', 'dragon'] as const
 const { locale, t } = useI18n({ useScope: 'global' })
 const storedTheme = localStorage.getItem('mhrise-build-tools-theme')
 const theme = ref<ColorScheme>(storedTheme === 'dark' || storedTheme === 'light'
@@ -94,6 +95,21 @@ const talismanOptions = computed<SearchSelectOption[]>(() => generateTalismanRec
 })))
 
 const hasArmorFilters = computed(() => Object.values(selectedArmorIds.value).some(Boolean))
+
+const equipmentStats = computed(() => {
+  const totals = { defense: 0, fire: 0, water: 0, thunder: 0, ice: 0, dragon: 0 }
+  for (const slot of armorSlots) {
+    const armor = defaultSnapshot.catalog.armors.find(record => record.ref.id === selectedArmorIds.value[slot])?.armor
+    if (!armor)
+      continue
+    totals.defense += armor.baseDefense
+    for (const element of equipmentStatKeys) {
+      if (element !== 'defense')
+        totals[element] += armor.baseResistances?.[element] ?? 0
+    }
+  }
+  return totals
+})
 
 const canSearch = computed(() => selectedWeaponId.value !== ''
   && selectedSkills.value.length > 0
@@ -248,7 +264,7 @@ onBeforeUnmount(() => {
         </div>
       </header>
 
-      <section class="rounded-lg border border-base bg-elevated p-5 sm:p-6">
+      <section>
         <div class="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
           <div>
             <div class="mb-4 flex items-center justify-between">
@@ -259,9 +275,9 @@ onBeforeUnmount(() => {
                 {{ t('ui.clearArmor') }}
               </ActionButton>
             </div>
-            <div class="space-y-3">
-              <div class="grid items-center gap-3 rounded-md border border-base bg-raised p-2 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
-                <img src="/armor/weapon.png" :alt="t('ui.weapon')" class="h-8 w-8 object-contain opacity-80">
+            <div class="space-y-2">
+              <div class="gear-row">
+                <img src="/armor/weapon.png" :alt="t('ui.weapon')" class="h-7 w-7 object-contain">
                 <SearchSelect
                   v-model="selectedWeaponId"
                   :options="weaponOptions"
@@ -271,11 +287,11 @@ onBeforeUnmount(() => {
                   required
                 />
               </div>
-              <div v-for="slot in armorSlots" :key="slot" class="grid items-center gap-3 rounded-md border border-base bg-raised p-2 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
+              <div v-for="slot in armorSlots" :key="slot" class="gear-row">
                 <img
                   :src="`/armor/${slot}.png`"
                   :alt="t(`slot.${slot}`)"
-                  class="h-8 w-8 object-contain opacity-80"
+                  class="h-7 w-7 object-contain"
                 >
                 <SearchSelect
                   v-model="selectedArmorIds[slot]"
@@ -286,8 +302,8 @@ onBeforeUnmount(() => {
                   :aria-label="t(`slot.${slot}`)"
                 />
               </div>
-              <div class="grid items-center gap-3 rounded-md border border-base bg-raised p-2 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
-                <img src="/armor/talisman.png" :alt="t('ui.talisman')" class="h-8 w-8 object-contain opacity-80">
+              <div class="gear-row">
+                <img src="/armor/talisman.png" :alt="t('ui.talisman')" class="h-7 w-7 object-contain">
                 <SearchSelect
                   v-model="selectedTalismanId"
                   :options="talismanOptions"
@@ -300,7 +316,17 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div class="lg:border-l lg:border-base lg:pl-8">
+          <div class="min-w-0">
+            <dl class="mb-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 rounded-md bg-raised px-4 py-3" :aria-label="t('ui.equipmentStats')" aria-live="polite">
+              <div v-for="stat in equipmentStatKeys" :key="stat" class="flex items-center gap-1.5" :title="t(`stat.${stat}`)">
+                <dt class="flex items-center">
+                  <img :src="`/stats/${stat}.png`" :alt="t(`stat.${stat}`)" class="h-5 w-5 object-contain">
+                </dt>
+                <dd class="m-0 text-sm font-600 tabular-nums" :class="equipmentStats[stat] < 0 ? 'text-red-600 dark:text-red-300' : 'color-base'">
+                  {{ equipmentStats[stat] }}
+                </dd>
+              </div>
+            </dl>
             <div class="mb-4 flex items-center justify-between">
               <h2 class="text-base font-600">
                 {{ t('ui.targetSkills') }}
@@ -405,6 +431,13 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.gear-row {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .app-logo {
   display: inline-block;
   flex: none;

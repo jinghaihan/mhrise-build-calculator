@@ -1,4 +1,11 @@
 {
+  "ui.equipmentStats": "Selected armor stats",
+  "stat.defense": "Defense",
+  "stat.fire": "Fire resistance",
+  "stat.water": "Water resistance",
+  "stat.thunder": "Thunder resistance",
+  "stat.ice": "Ice resistance",
+  "stat.dragon": "Dragon resistance",
   "ui.weapon": "Weapon",
   "ui.equipment": "Equipment",
   "ui.armor": "Armor",

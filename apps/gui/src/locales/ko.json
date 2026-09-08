@@ -1,4 +1,11 @@
 {
+  "ui.equipmentStats": "선택한 방어구 능력치",
+  "stat.defense": "방어력",
+  "stat.fire": "불 내성",
+  "stat.water": "물 내성",
+  "stat.thunder": "번개 내성",
+  "stat.ice": "얼음 내성",
+  "stat.dragon": "용 내성",
   "ui.weapon": "무기",
   "ui.equipment": "장비",
   "ui.armor": "방어구",

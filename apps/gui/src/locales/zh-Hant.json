@@ -1,4 +1,11 @@
 {
+  "ui.equipmentStats": "已選防具屬性",
+  "stat.defense": "防禦力",
+  "stat.fire": "火耐性",
+  "stat.water": "水耐性",
+  "stat.thunder": "雷耐性",
+  "stat.ice": "冰耐性",
+  "stat.dragon": "龍耐性",
   "ui.weapon": "武器",
   "ui.equipment": "裝備",
   "ui.armor": "防具",
