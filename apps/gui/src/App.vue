@@ -230,7 +230,7 @@ onBeforeUnmount(() => {
 
 <template>
   <main class="min-h-screen bg-base color-base">
-    <div class="mx-auto max-w-6xl px-5 py-6 sm:px-8 sm:py-8">
+    <div class="mx-auto max-w-5xl px-5 py-6 sm:px-8 sm:py-8">
       <header class="mb-7 flex items-center justify-between border-b border-base pb-5">
         <div class="flex items-center gap-3">
           <span class="app-logo h-9 w-9 text-primary" role="img" aria-label="Monster Hunter Rise logo" />
