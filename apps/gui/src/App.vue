@@ -253,7 +253,7 @@ onBeforeUnmount(() => {
           </div>
           <ActionButton
             size="sm"
-            variant="action"
+            variant="text"
             class="h-9 w-9 justify-center p-0"
             :icon="isDark ? 'i-ph:sun' : 'i-ph:moon'"
             :aria-label="isDark ? t('ui.switchToLight') : t('ui.switchToDark')"
@@ -357,7 +357,7 @@ onBeforeUnmount(() => {
                 <FormField :label="index === 0 ? t('ui.level') : undefined">
                   <FormNumberInput v-model="skill.level" :min="1" :max="maxSkillLevel(skill.skillId)" :disabled="running" controls />
                 </FormField>
-                <ActionButton size="sm" variant="action" class="h-9 w-9 justify-center p-0" icon="i-ph:trash" :disabled="running" :aria-label="t('ui.removeSkill')" @click="removeSkill(index)" />
+                <ActionButton size="sm" variant="text" class="h-9 w-9 justify-center p-0" icon="i-ph:trash" :disabled="running" :aria-label="t('ui.removeSkill')" @click="removeSkill(index)" />
               </div>
             </div>
           </div>
