@@ -118,13 +118,10 @@ function withGeneratedArmorComponents(
   }
 
   const armorComponentsById = { ...definition.armorComponentsById }
-  const selectedIds = new Set(
-    Object.values(definition.armorIdsBySlot ?? {}).flatMap(ids => ids ?? []),
-  )
-  const requestedRecords = selectedIds.size > 0
-    ? snapshot.catalog.armors.filter(record => selectedIds.has(record.ref.id))
-    : snapshot.catalog.armors
-  const records = requestedRecords.filter(record => record.armorFamilyId)
+  const records = snapshot.catalog.armors.filter((record) => {
+    const selectedIds = definition.armorIdsBySlot?.[record.armor.slot]
+    return record.armorFamilyId && (!selectedIds || selectedIds.includes(record.ref.id))
+  })
 
   for (const record of records) {
     if (armorComponentsById[record.ref.id]) {

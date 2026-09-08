@@ -20,6 +20,35 @@ import {
 } from '../src/snapshot'
 
 describe('source snapshots', () => {
+  it.each([1, 2])('limits %i head candidates while leaving other slots unrestricted', (count) => {
+    const snapshot = parseSourceSnapshot(readFileSync(new URL('../snapshots/source-snapshot.json', import.meta.url), 'utf8'), localizedNames)
+    const heads = snapshot.catalog.armors.filter(record => record.armorFamilyId && record.armor.slot === 'head').slice(0, count)
+    const skillId = snapshot.catalog.skills.find(skill => skill.names.zh === '攻击')!.ref.id
+    const request = createSnapshotBuildRequest(snapshot, {
+      id: 'partial-filter',
+      weaponId: snapshot.catalog.weapons[0].ref.id,
+      requiredSkills: [{ skillId, level: 1 }],
+      armorIdsBySlot: { head: heads.map(record => record.ref.id) },
+    }, { generateArmorVariants: true, armorVariantOptions: { maxOperations: 0 }, maxTalismanCandidates: 1 })
+
+    expect(request.armorBySlot.head.map(variant => variant.base.ref.id)).toEqual(heads.map(record => record.ref.id))
+    for (const slot of ['chest', 'arms', 'waist', 'legs'] as const) {
+      expect(request.armorBySlot[slot].map(variant => variant.base.ref.id)).toEqual(snapshot.catalog.armors
+        .filter(record => record.armorFamilyId && record.armor.slot === slot).map(record => record.ref.id))
+    }
+  })
+
+  it('does not interpret an empty head allowlist as unrestricted', () => {
+    const snapshot = parseSourceSnapshot(readFileSync(new URL('../snapshots/source-snapshot.json', import.meta.url), 'utf8'), localizedNames)
+    expect(() => createSnapshotBuildRequest(snapshot, {
+      id: 'empty-filter',
+      weaponId: snapshot.catalog.weapons[0].ref.id,
+      requiredSkills: [],
+      armorIdsBySlot: { head: [] },
+    }, { generateArmorVariants: true, armorVariantOptions: { maxOperations: 0 } }))
+      .toThrow('No armor data found for head')
+  })
+
   it('loads the synchronized 16.0.0 source snapshot', () => {
     const path = fileURLToPath(new URL('../snapshots/source-snapshot.json', import.meta.url))
     const snapshot = parseSourceSnapshot(readFileSync(path, 'utf8'), localizedNames)
