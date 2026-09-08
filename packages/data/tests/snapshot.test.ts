@@ -10,6 +10,7 @@ import {
 } from '@mhrise-build/core'
 import { describe, expect, it } from 'vitest'
 import localizedNames from '../locales/names.json'
+import { defaultSnapshot } from '../src/default-snapshot'
 import {
   createSnapshotBuildRequest,
   createSnapshotCatalog,
@@ -296,6 +297,14 @@ describe('source snapshots', () => {
       costDelta: -2,
       resistanceDelta: { fire: -1 },
     })
+  })
+
+  it('uses the skill cost table for positive armor skill changes', () => {
+    const attackId = createWikiRef('skill', '366824395').id
+    const component = armorComponentsForPool(defaultSnapshot, 6, [attackId])
+      .find(candidate => candidate.skillChanges[0]?.skillId === attackId && candidate.skillChanges[0].level > 0)
+
+    expect(component?.costDelta).toBe(15)
   })
 
   it('keeps special augmentation rows distinct from normal rows', () => {

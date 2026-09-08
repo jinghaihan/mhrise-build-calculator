@@ -119,6 +119,9 @@ export function armorComponentsForPool(
   removableSkillIds: readonly WikiId[] = [],
 ): ArmorAugmentComponent[] {
   const components: ArmorAugmentComponent[] = []
+  const skillCosts = new Map(snapshot.rules.skillCosts
+    .filter(rule => rule.skillId)
+    .map(rule => [rule.skillId!, rule.cost]))
 
   for (const entry of snapshot.rules.augmentationEntries.filter(entry => entry.poolId === poolId)) {
     const role = entry.role ?? inferredAugmentationRole(entry.gameId)
@@ -131,7 +134,9 @@ export function armorComponentsForPool(
         const eligibleSkillIds = value < 0 ? new Set([...skillIds, ...removableSkillIds]) : new Set(skillIds)
         for (const skillId of eligibleSkillIds) {
           components.push({
-            costDelta: entry.cost,
+            costDelta: value > 0
+              ? skillCosts.get(skillId) ?? entry.cost
+              : entry.cost,
             defenseDelta: 0,
             id: `${poolId}:${entry.gameId}:${skillId}:${level}`,
             ...(role && role !== 'normal' ? { role } : {}),
