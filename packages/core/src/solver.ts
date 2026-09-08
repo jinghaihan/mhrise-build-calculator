@@ -20,7 +20,7 @@ export interface SolveProgress {
 }
 
 const DEFAULT_MAX_SOLUTIONS = 200
-const MAX_SOLVER_CACHE_ENTRIES = 50_000
+const MAX_SOLVER_CACHE_ENTRIES = 2_000
 
 export function solveBuild(
   request: BuildRequest,
@@ -269,21 +269,29 @@ function solveBuildByArmorSearch(
   const initialCounts = [0, 0, 0, 0]
 
   function addSolution(solution: BuildSolution): void {
-    const key = JSON.stringify([
-      Object.values(solution.armor).map(variant => variant.variantId),
-      solution.talisman.ref.id,
-      solution.decorations.map(placement => [placement.decoration.ref.id, placement.host, placement.slotIndex]),
-    ])
+    const key = solutionKey(solution)
     if (solutionKeys.has(key))
       return
     solutionKeys.add(key)
     solutions.push(solution)
-    if (maxSolutions === Number.POSITIVE_INFINITY)
+    if (maxSolutions === Number.POSITIVE_INFINITY) {
+      options.onSolutions?.([...solutions])
       return
+    }
     solutions.sort(compareSolutions)
-    if (solutions.length > maxSolutions)
-      solutions.pop()
+    if (solutions.length > maxSolutions) {
+      const removed = solutions.pop()!
+      solutionKeys.delete(solutionKey(removed))
+    }
     options.onSolutions?.([...solutions])
+  }
+
+  function solutionKey(solution: BuildSolution): string {
+    return JSON.stringify([
+      Object.values(solution.armor).map(variant => variant.variantId),
+      solution.talisman.ref.id,
+      solution.decorations.map(placement => [placement.decoration.ref.id, placement.host, placement.slotIndex]),
+    ])
   }
 
   function searchTalismans(
