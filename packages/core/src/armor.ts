@@ -469,7 +469,7 @@ function skillLevelsFor(
   skills: readonly SkillValue[],
   indexes: ReadonlyMap<SkillValue['skillId'], number>,
 ): number[] {
-  const levels = Array.from({ length: indexes.size }).fill(0)
+  const levels = Array<number>(indexes.size).fill(0)
   for (const skill of skills) {
     const index = indexes.get(skill.skillId)
     if (index !== undefined) {
