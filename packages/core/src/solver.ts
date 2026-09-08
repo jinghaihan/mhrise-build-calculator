@@ -127,6 +127,8 @@ export function solveBuild(
 
   function addSolution(solution: BuildSolution): void {
     solutions.push(solution)
+    if (maxSolutions === Number.POSITIVE_INFINITY)
+      return
     solutions.sort(compareSolutions)
 
     if (solutions.length > maxSolutions) {
@@ -151,7 +153,7 @@ export function solveBuild(
     })
   }
   options.onProgress?.({ current: armorStates.length, stage: 'searching', total: armorStates.length })
-  return solutions
+  return solutions.sort(compareSolutions)
 }
 
 function compareSolutions(left: BuildSolution, right: BuildSolution): number {

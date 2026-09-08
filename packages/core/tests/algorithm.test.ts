@@ -161,6 +161,70 @@ describe('build solving', () => {
 })
 
 describe('equipment reuse optimization', () => {
+  it('matches full cross-build enumeration with different candidate scopes and talismans', () => {
+    for (let seed = 0; seed < 25; seed += 1) {
+      const heads = Array.from({ length: 4 }, (_, index) => armor('head', String(5000 + index), [1, 0, 0], 80 + (seed * (index + 1)) % 23))
+      const requests = Array.from({ length: 3 }, (_, index) => {
+        const build = request(`build-${index}`, [skill(String(attack), 1)])
+        return {
+          ...build,
+          armorBySlot: { ...build.armorBySlot, head: heads.filter((_, head) => head !== (seed + index) % 4) },
+          talismans: [build.talismans[0], { ...build.talismans[0], ref: createWikiRef('talisman', String(6000 + index)) }],
+        }
+      })
+      const candidates = requests.map(build => solveBuild(build, { preserveEquipmentIdentity: true, maxSolutions: Number.POSITIVE_INFINITY }))
+      const scores: number[][] = []
+      for (const a of candidates[0]) {
+        for (const b of candidates[1]) {
+          for (const c of candidates[2]) {
+            const solutions = [a, b, c]
+            scores.push([
+              new Set(solutions.flatMap(solution => Object.values(solution.armor).map(variant => variant.variantId))).size,
+              -solutions.reduce((sum, solution) => sum + solution.defense, 0),
+              new Set(solutions.map(solution => solution.talisman.ref.id)).size,
+            ])
+          }
+        }
+      }
+      scores.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2])
+      const plan = optimizeEquipmentReuse(requests)
+      expect([plan?.score.uniqueArmorPieces, -plan!.score.totalDefense, plan?.score.uniqueTalismans], `seed ${seed}`).toEqual(scores[0])
+      expect(plan?.solutions.map(solution => solution.id)).toEqual(requests.map(build => build.id))
+    }
+  })
+
+  it('keeps a shared low-defense piece beyond the single-build result limit', () => {
+    const shared = armor('head', '1900', [1, 0, 0], 50)
+    const buildA = request('many-heads', [skill(String(attack), 1)])
+    const buildB = request('fixed-head', [skill(String(attack), 1)])
+    const plan = optimizeEquipmentReuse([
+      { ...buildA, armorBySlot: { ...buildA.armorBySlot, head: [
+        ...Array.from({ length: 205 }, (_, index) => armor('head', String(2000 + index), [1, 0, 0], 200 + index)),
+        shared,
+      ] } },
+      { ...buildB, armorBySlot: { ...buildB.armorBySlot, head: [shared] } },
+    ], { maxSolutions: 1 })
+    expect(plan?.score.uniqueArmorPieces).toBe(5)
+    expect(plan?.score.totalDefense).toBe(900)
+    expect(plan?.solutions.map(solution => solution.id)).toEqual(['many-heads', 'fixed-head'])
+    expect(plan?.solutions.every(solution => solution.armor.head.variantId === shared.variantId)).toBe(true)
+  })
+
+  it('ranks reuse before defense, and total defense before talisman count', () => {
+    const high = armor('head', '1900', [1, 0, 0], 200)
+    const low = armor('head', '1901', [1, 0, 0], 50)
+    const requests = ['a', 'b', 'c'].map((id, index) => {
+      const build = request(id, [skill(String(attack), 1)])
+      return {
+        ...build,
+        armorBySlot: { ...build.armorBySlot, head: [low, high] },
+        talismans: [{ ...build.talismans[0], ref: createWikiRef('talisman', String(4000 + index)) }],
+      }
+    })
+    const plan = optimizeEquipmentReuse(requests)
+    expect(plan?.score).toEqual({ uniqueArmorPieces: 5, totalDefense: 1800, uniqueTalismans: 3, armorReuseCount: 10 })
+  })
+
   it('prefers one shared set when two builds can use the same armor variants', () => {
     const plan = optimizeEquipmentReuse([
       request('build-a', [skill(String(attack), 1)]),

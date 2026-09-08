@@ -28,4 +28,6 @@ Pass `generateArmorVariants: true` to a snapshot search to derive ordinary Qurio
 
 Snapshot searches retain armor variant identities. The solver may merge equivalent partial search states only when the selected equipment identity is not needed by the caller; reuse planning keeps identities so a locally weaker-looking piece can still be shared by multiple builds.
 
+Reuse planning does not apply the single-build `maxSolutions` display limit. It considers every feasible equipment identity supplied in the requests, minimizes distinct armor pieces first, then maximizes total defense across builds, then minimizes distinct talismans. Equivalent partial reuse selections are cached; this avoids revisiting the same equipment collection with no defense improvement. Completeness is relative to the supplied/generated candidates, not every possible in-game augmentation. Large unrestricted candidate sets can still be expensive.
+
 Armor, weapon, and decoration records retain Kiranico numeric IDs. Local talisman candidates use `local:` IDs because talismans are generated states rather than Kiranico equipment records.
