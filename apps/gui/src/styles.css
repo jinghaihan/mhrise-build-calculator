@@ -1,0 +1,38 @@
+:root {
+  --planner-control-bg: rgb(255 255 255 / 20%);
+  --planner-control-hover: rgb(93 93 153 / 3%);
+  --planner-control-border: rgb(32 34 48 / 16%);
+  --planner-control-border-hover: rgb(93 93 153 / 35%);
+}
+
+:root.dark {
+  --planner-control-bg: rgb(255 255 255 / 1.5%);
+  --planner-control-hover: rgb(255 255 255 / 3%);
+  --planner-control-border: rgb(255 255 255 / 12%);
+  --planner-control-border-hover: rgb(157 157 207 / 40%);
+}
+
+/* Also overrides the number input's built-in raised surface and height. */
+.planner-control.planner-control {
+  height: 2.5rem;
+  border-radius: 0.375rem;
+  border-color: var(--planner-control-border);
+  background-color: var(--planner-control-bg);
+  transition: background-color 150ms, border-color 150ms;
+}
+
+.planner-control:hover {
+  border-color: var(--planner-control-border-hover);
+  background-color: var(--planner-control-hover);
+}
+
+.planner-control:focus-within {
+  border-color: #8585ba;
+  background-color: var(--planner-control-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planner-control.planner-control {
+    transition: none;
+  }
+}

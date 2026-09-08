@@ -12,7 +12,6 @@ import { useStorage } from '@vueuse/core'
 import * as Comlink from 'comlink'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import SearchMultiSelect from './components/SearchMultiSelect.vue'
 import SearchSelect from './components/SearchSelect.vue'
 import { preferredLocale } from './i18n'
 
@@ -39,6 +38,9 @@ const selectedArmorIds = useStorage<Record<ArmorSlot, string[]>>('mhrise-build-t
   legs: [],
   waist: [],
 }, undefined, { mergeDefaults: true })
+// Retain the first selection from the previous multi-select UI cache.
+for (const slot of armorSlots)
+  selectedArmorIds.value[slot] = selectedArmorIds.value[slot].slice(0, 1)
 const selectedSkills = useStorage<SkillSelection[]>('mhrise-build-tools-skills', [])
 const solutions = ref<BuildSolution[]>([])
 const running = ref(false)
@@ -98,8 +100,6 @@ const talismanOptions = computed<SearchSelectOption[]>(() => generateTalismanRec
 const hasArmorFilters = computed(() => Object.values(selectedArmorIds.value).some(ids => ids.length > 0))
 
 const equipmentStats = computed(() => {
-  if (Object.values(selectedArmorIds.value).some(ids => ids.length > 1))
-    return undefined
   const totals = { defense: 0, fire: 0, water: 0, thunder: 0, ice: 0, dragon: 0 }
   for (const slot of armorSlots) {
     const armor = defaultSnapshot.catalog.armors.find(record => record.ref.id === selectedArmorIds.value[slot][0])?.armor
@@ -243,7 +243,7 @@ onBeforeUnmount(() => {
             <select
               id="locale-select"
               v-model="preferredLocale"
-              class="h-9 min-w-32 appearance-none rounded-md border border-base bg-raised pl-3 pr-9 text-sm color-base outline-none focus:ring-2 focus:ring-primary-500/40"
+              class="planner-control min-w-32 appearance-none border pl-3 pr-9 text-sm color-base outline-none focus:ring-2 focus:ring-primary-500/40"
             >
               <option v-for="supportedLocale in SUPPORTED_LOCALES" :key="supportedLocale" :value="supportedLocale">
                 {{ LOCALE_LABEL[supportedLocale] }}
@@ -293,15 +293,16 @@ onBeforeUnmount(() => {
                   :alt="t(`slot.${slot}`)"
                   class="h-7 w-7 object-contain"
                 >
-                <SearchMultiSelect
-                  v-model="selectedArmorIds[slot]"
+                <SearchSelect
+                  :model-value="selectedArmorIds[slot][0] ?? ''"
+                  clearable
                   :options="armorOptionsBySlot[slot]"
                   :placeholder="t('ui.searchArmor')"
                   :empty-text="t('ui.noMatches')"
                   :disabled="running"
-                  :label="t(`slot.${slot}`)"
-                  :remove-label="t('ui.removeArmor')"
-                  :clear-label="t('ui.clearSelection')"
+                  :aria-label="t(`slot.${slot}`)"
+                  :clear-label="`${t('ui.clearSelection')}: ${t(`slot.${slot}`)}`"
+                  @update:model-value="selectedArmorIds[slot] = $event ? [$event] : []"
                 />
               </div>
               <div class="gear-row">
@@ -321,13 +322,13 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="min-w-0">
-            <dl class="mb-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 rounded-md bg-raised px-4 py-3" :aria-label="t('ui.equipmentStats')" aria-live="polite">
+            <dl class="mb-5 min-h-9 flex flex-wrap items-center gap-x-5 gap-y-2" :aria-label="t('ui.equipmentStats')" aria-live="polite">
               <div v-for="stat in equipmentStatKeys" :key="stat" class="flex items-center gap-1.5" :title="t(`stat.${stat}`)">
                 <dt class="flex items-center">
                   <img :src="`/stats/${stat}.png`" :alt="t(`stat.${stat}`)" class="h-5 w-5 object-contain">
                 </dt>
-                <dd class="m-0 text-sm font-600 tabular-nums" :class="(equipmentStats?.[stat] ?? 0) < 0 ? 'text-red-600 dark:text-red-300' : 'color-base'">
-                  {{ equipmentStats?.[stat] ?? '—' }}
+                <dd class="m-0 text-sm font-600 tabular-nums" :class="equipmentStats[stat] < 0 ? 'text-red-600 dark:text-red-300' : 'color-base'">
+                  {{ equipmentStats[stat] }}
                 </dd>
               </div>
             </dl>
@@ -355,7 +356,7 @@ onBeforeUnmount(() => {
                   />
                 </FormField>
                 <FormField :label="index === 0 ? t('ui.level') : undefined">
-                  <FormNumberInput v-model="skill.level" :min="1" :max="maxSkillLevel(skill.skillId)" :disabled="running" controls />
+                  <FormNumberInput v-model="skill.level" class="planner-control" :min="1" :max="maxSkillLevel(skill.skillId)" :disabled="running" controls />
                 </FormField>
                 <ActionButton size="sm" variant="text" class="h-9 w-9 justify-center p-0" icon="i-ph:trash" :disabled="running" :aria-label="t('ui.removeSkill')" @click="removeSkill(index)" />
               </div>
@@ -438,8 +439,12 @@ onBeforeUnmount(() => {
 .gear-row {
   display: grid;
   grid-template-columns: 1.75rem minmax(0, 1fr);
-  align-items: center;
+  align-items: start;
   gap: 0.5rem;
+}
+
+.gear-row > img {
+  margin-top: 0.375rem;
 }
 
 .app-logo {

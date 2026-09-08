@@ -43,7 +43,7 @@ function displayValue(value: unknown) {
   <ComboboxRoot v-model="model" open-on-click :disabled="disabled" @update:open="(open) => !open && (query = '')">
     <ComboboxAnchor
       v-bind="$attrs"
-      class="text-sm px-3 border border-base rounded-md bg-raised inline-flex gap-2 h-10 w-full transition items-center data-[disabled]:op50 data-[disabled]:pointer-events-none focus-within:ring-2 focus-within:ring-primary-500/40"
+      class="planner-control text-sm px-3 border inline-flex gap-2 w-full items-center data-[disabled]:op50 data-[disabled]:pointer-events-none focus-within:ring-2 focus-within:ring-primary-500/40"
     >
       <span class="i-ph:magnifying-glass op-fade shrink-0" aria-hidden="true" />
       <ComboboxInput
