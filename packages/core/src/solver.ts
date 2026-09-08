@@ -398,14 +398,52 @@ function solveBuildByArmorSearch(
   function findFeasibleSeed(): void {
     interface SeedState {
       readonly armor: Partial<Record<ArmorSlot, ArmorVariant>>
+      readonly defense: number
       readonly requiredLevels: readonly number[]
       readonly slotCounts: readonly number[]
     }
 
-    const beamWidth = 32
-    const candidateLimit = 4096
+    // This pass only supplies an incumbent to the exhaustive search below. It
+    // is deliberately allowed to discard candidates because it never decides
+    // that a build is impossible or replaces the exact traversal.
+    const beamWidth = 128
+    const candidateLimit = 2048
+    const perSkillLimit = 256
+    const seedCandidates = feasibleCandidates.map((pool) => {
+      const selected = new Set<ArmorVariant>()
+      const add = (candidate: typeof pool[number]): void => {
+        selected.add(candidate.variant)
+      }
+      const ranked = [...pool].sort((left, right) => seedCandidateScore(right) - seedCandidateScore(left))
+      ranked.slice(0, candidateLimit).forEach(add)
+      request.requiredSkills.forEach((_, skillIndex) => {
+        ;[...pool].sort((left, right) => right.levels[skillIndex] - left.levels[skillIndex]
+          || seedCandidateScore(right) - seedCandidateScore(left)).slice(0, perSkillLimit).forEach(add)
+      })
+      return pool.filter(candidate => selected.has(candidate.variant))
+    })
+
+    function seedCandidateScore(candidate: typeof feasibleCandidates[number][number]): number {
+      return candidate.levels.reduce((total, level, index) => total
+        + Math.min(level + jewelPotential(candidate.counts, index) + external[index], request.requiredSkills[index].level), 0)
+      + slotCountScore(candidate.counts) * 0.25
+      + candidate.variant.defense * 0.01
+    }
+
+    function seedStateScore(state: SeedState): number {
+      const ratios = request.requiredSkills.map((requirement, index) => Math.min(
+        1,
+        (state.requiredLevels[index] + jewelPotential(state.slotCounts, index) + external[index]) / requirement.level,
+      ))
+      return Math.min(...ratios) * 1_000_000
+        + ratios.reduce((total, ratio) => total + ratio, 0) * 1_000
+        + slotCountScore(state.slotCounts) * 10
+        + state.defense * 0.01
+    }
+
     let beam: SeedState[] = [{
       armor: {},
+      defense: 0,
       requiredLevels: initialLevels,
       slotCounts: initialCounts,
     }]
@@ -413,7 +451,7 @@ function solveBuildByArmorSearch(
     for (const [slotIndex, slot] of slots.entries()) {
       const next = new Map<string, SeedState>()
       for (const state of beam) {
-        for (const candidate of feasibleCandidates[slotIndex].slice(0, candidateLimit)) {
+        for (const candidate of seedCandidates[slotIndex]) {
           const requiredLevels = request.requiredSkills.map((requirement, index) => Math.min(
             requirement.level,
             state.requiredLevels[index] + candidate.levels[index],
@@ -421,18 +459,17 @@ function solveBuildByArmorSearch(
           const slotCounts = state.slotCounts.map((count, index) => count + candidate.counts[index])
           const nextState = {
             armor: { ...state.armor, [slot]: candidate.variant },
+            defense: state.defense + candidate.variant.defense,
             requiredLevels,
             slotCounts,
           }
           const key = `${requiredLevels.join(',')}|${slotCounts.join(',')}`
           const previous = next.get(key)
-          if (!previous || requiredSkillScore(nextState.requiredLevels) > requiredSkillScore(previous.requiredLevels))
+          if (!previous || seedStateScore(nextState) > seedStateScore(previous))
             next.set(key, nextState)
         }
       }
-      beam = [...next.values()].sort((left, right) => requiredSkillScore(right.requiredLevels)
-        - requiredSkillScore(left.requiredLevels)
-        || slotCountScore(right.slotCounts) - slotCountScore(left.slotCounts)).slice(0, beamWidth)
+      beam = [...next.values()].sort((left, right) => seedStateScore(right) - seedStateScore(left)).slice(0, beamWidth)
       if (beam.length === 0)
         return
     }
