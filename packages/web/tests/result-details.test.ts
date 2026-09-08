@@ -1,5 +1,5 @@
-import type { ArmorSlot, ArmorVariant, BuildSolution, Decoration, DecorationPlacement } from '@mhrise-build-tools/core'
-import { createArmorVariant, createWikiRef } from '@mhrise-build-tools/core'
+import type { ArmorSlot, ArmorVariant, BuildSolution, Decoration, DecorationPlacement } from '@mhrise-build/core'
+import { createArmorVariant, createWikiRef } from '@mhrise-build/core'
 import { describe, expect, it } from 'vitest'
 import { armorSkillChanges, equipmentRows, summarizeDecorations } from '../src/result-details'
 

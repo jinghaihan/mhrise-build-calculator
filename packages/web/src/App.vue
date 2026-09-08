@@ -1,30 +1,25 @@
 <script setup lang="ts">
-import type { ArmorSlot, BuildSolution, SkillValue } from '@mhrise-build-tools/core'
-import type { SearchSelectOption } from './components/SearchSelect.vue'
+import type { ArmorSlot, BuildSolution, SkillValue } from '@mhrise-build/core'
+import type { SearchSelectOption } from './components/search-select.vue'
 import type { BuildSearchRequest, BuildWorkerApi, BuildWorkerProgress } from './workers/build.worker'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
-import FormField from '@antfu/design/components/Form/FormField.vue'
-import FormNumberInput from '@antfu/design/components/Form/FormNumberInput.vue'
 import { provideColorScheme } from '@antfu/design/composables/colorScheme'
-import { createWikiId } from '@mhrise-build-tools/core'
-import { defaultSnapshot, generateTalismanRecords, getLocalizedName, LOCALE_LABEL, SUPPORTED_LOCALES } from '@mhrise-build-tools/data'
+import { createWikiId } from '@mhrise-build/core'
+import { defaultSnapshot, generateTalismanRecords, getLocalizedName } from '@mhrise-build/data'
 import { useStorage } from '@vueuse/core'
 import * as Comlink from 'comlink'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import SearchSelect from './components/SearchSelect.vue'
-import BuildResult from './components/BuildResult.vue'
+import AppHeader from './components/app-header.vue'
+import EquipmentPanel from './components/equipment-panel.vue'
+import ResultsSection from './components/results-section.vue'
+import TargetSkillsPanel from './components/target-skills-panel.vue'
 import { preferredLocale } from './i18n'
+import type { EquipmentStats, SkillSelection } from './planner-types'
+import { armorSlots, equipmentStatKeys } from './planner-types'
 
 type ColorScheme = 'light' | 'dark'
 
-interface SkillSelection {
-  level: number
-  skillId: string
-}
-
-const armorSlots = ['head', 'chest', 'arms', 'waist', 'legs'] as const
-const equipmentStatKeys = ['defense', 'fire', 'water', 'thunder', 'ice', 'dragon'] as const
 const { locale, t } = useI18n({ useScope: 'global' })
 const defaultTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 const theme = useStorage<ColorScheme>('mhrise-build-tools-theme', defaultTheme)
@@ -108,7 +103,7 @@ const talismanOptions = computed<SearchSelectOption[]>(() => generateTalismanRec
 
 const hasArmorFilters = computed(() => Object.values(selectedArmorIds.value).some(ids => ids.length > 0))
 
-const equipmentStats = computed(() => {
+const equipmentStats = computed<EquipmentStats>(() => {
   const totals = { defense: 0, fire: 0, water: 0, thunder: 0, ice: 0, dragon: 0 }
   for (const slot of armorSlots) {
     const armor = defaultSnapshot.catalog.armors.find(record => record.ref.id === selectedArmorIds.value[slot][0])?.armor
@@ -137,10 +132,6 @@ function addSkill() {
   const unused = skillOptions.value.find(option => !selectedSkills.value.some(skill => skill.skillId === option.value))
   if (unused)
     selectedSkills.value.push({ level: 1, skillId: unused.value })
-}
-
-function removeSkill(index: number) {
-  selectedSkills.value.splice(index, 1)
 }
 
 function skillRecord(skillId: string) {
@@ -224,139 +215,29 @@ onBeforeUnmount(() => {
 <template>
   <main class="min-h-screen bg-base color-base">
     <div class="mx-auto max-w-5xl px-5 py-6 sm:px-8 sm:py-8">
-      <header class="mb-7 flex items-center justify-between border-b border-base pb-5">
-        <div class="flex items-center gap-3">
-          <span class="app-logo h-9 w-9 text-primary" role="img" aria-label="Monster Hunter Rise logo" />
-          <h1 class="text-xl font-600 tracking-tight">
-            MHRise Build Tools
-          </h1>
-        </div>
-        <div class="flex items-center gap-3">
-          <label class="sr-only" for="locale-select">{{ t('ui.language') }}</label>
-          <div class="relative">
-            <select
-              id="locale-select"
-              v-model="preferredLocale"
-              class="planner-control min-w-32 appearance-none border pl-3 pr-9 text-sm color-base outline-none focus:ring-2 focus:ring-primary-500/40"
-            >
-              <option v-for="supportedLocale in SUPPORTED_LOCALES" :key="supportedLocale" :value="supportedLocale">
-                {{ LOCALE_LABEL[supportedLocale] }}
-              </option>
-            </select>
-            <span class="pointer-events-none absolute right-2.5 top-1/2 i-ph:caret-down translate-y-[-50%] color-secondary" aria-hidden="true" />
-          </div>
-          <ActionButton
-            size="sm"
-            variant="text"
-            class="h-9 w-9 justify-center p-0"
-            :icon="isDark ? 'i-ph:sun' : 'i-ph:moon'"
-            :aria-label="isDark ? t('ui.switchToLight') : t('ui.switchToDark')"
-            @click="toggleTheme"
-          />
-        </div>
-      </header>
+      <AppHeader v-model:locale="preferredLocale" :is-dark="isDark" @toggle-theme="toggleTheme" />
 
       <section>
         <div class="editor-grid grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
-          <div>
-            <div class="mb-4 flex items-center justify-between">
-              <h2 class="text-base font-600">
-                {{ t('ui.equipment') }}
-              </h2>
-              <ActionButton size="sm" variant="text" :disabled="running || !hasArmorFilters" @click="clearArmorFilters">
-                {{ t('ui.clearArmor') }}
-              </ActionButton>
-            </div>
-            <div class="space-y-2">
-              <div class="gear-row">
-                <img src="/armor/weapon.png" :alt="t('ui.weapon')" class="h-7 w-7 object-contain">
-                <SearchSelect
-                  v-model="selectedWeaponId"
-                  :disabled="running"
-                  clearable
-                  :clear-label="`${t('ui.clearSelection')}: ${t('ui.weapon')}`"
-                  :options="weaponOptions"
-                  :placeholder="t('ui.searchWeapons')"
-                  :empty-text="t('ui.noMatches')"
-                  :aria-label="t('ui.weapon')"
-                  required
-                />
-              </div>
-              <div v-for="slot in armorSlots" :key="slot" class="gear-row">
-                <img
-                  :src="`/armor/${slot}.png`"
-                  :alt="t(`slot.${slot}`)"
-                  class="h-7 w-7 object-contain"
-                >
-                <SearchSelect
-                  :model-value="selectedArmorIds[slot][0] ?? ''"
-                  clearable
-                  :options="armorOptionsBySlot[slot]"
-                  :placeholder="t('ui.searchArmor')"
-                  :empty-text="t('ui.noMatches')"
-                  :disabled="running"
-                  :aria-label="t(`slot.${slot}`)"
-                  :clear-label="`${t('ui.clearSelection')}: ${t(`slot.${slot}`)}`"
-                  @update:model-value="selectedArmorIds[slot] = $event ? [$event] : []"
-                />
-              </div>
-              <div class="gear-row">
-                <img src="/armor/talisman.png" :alt="t('ui.talisman')" class="h-7 w-7 object-contain">
-                <SearchSelect
-                  v-model="selectedTalismanId"
-                  clearable
-                  :clear-label="`${t('ui.clearSelection')}: ${t('ui.talisman')}`"
-                  :options="talismanOptions"
-                  :placeholder="t('ui.searchTalisman')"
-                  :empty-text="t('ui.noMatches')"
-                  :disabled="running || selectedSkills.length === 0"
-                  :aria-label="t('ui.talisman')"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div class="skills-panel min-w-0">
-            <dl class="mb-5 min-h-9 flex shrink-0 flex-wrap items-center gap-x-5 gap-y-2" :aria-label="t('ui.equipmentStats')" aria-live="polite">
-              <div v-for="stat in equipmentStatKeys" :key="stat" class="flex items-center gap-1.5" :title="t(`stat.${stat}`)">
-                <dt class="flex items-center">
-                  <img :src="`/stats/${stat}.png`" :alt="t(`stat.${stat}`)" class="h-5 w-5 object-contain">
-                </dt>
-                <dd class="m-0 text-sm font-600 tabular-nums" :class="equipmentStats[stat] < 0 ? 'text-red-600 dark:text-red-300' : 'color-base'">
-                  {{ equipmentStats[stat] }}
-                </dd>
-              </div>
-            </dl>
-            <div class="mb-4 flex shrink-0 items-center justify-between">
-              <h2 class="text-base font-600">
-                {{ t('ui.targetSkills') }}
-              </h2>
-              <ActionButton size="sm" icon="i-ph:plus" :disabled="running" @click="addSkill">
-                {{ t('ui.addSkill') }}
-              </ActionButton>
-            </div>
-
-            <div v-if="selectedSkills.length === 0" class="rounded-md border border-dashed border-base px-4 py-6 text-center text-sm color-tertiary">
-              {{ t('ui.addSkillRequirement') }}
-            </div>
-            <div v-else class="planner-scroll skill-list space-y-3" role="region" :aria-label="t('ui.targetSkills')" tabindex="0">
-              <div v-for="(skill, index) in selectedSkills" :key="index" class="skill-row grid items-end gap-3">
-                <FormField :label="index === 0 ? t('ui.skill') : undefined">
-                  <SearchSelect
-                    v-model="skill.skillId"
-                    :options="skillOptions"
-                    :placeholder="t('ui.searchSkills')"
-                    :empty-text="t('ui.noMatches')"
-                    :disabled="running"
-                  />
-                </FormField>
-                <FormField :label="index === 0 ? t('ui.level') : undefined">
-                  <FormNumberInput v-model="skill.level" class="planner-control" :min="1" :max="maxSkillLevel(skill.skillId)" :disabled="running" controls />
-                </FormField>
-                <ActionButton size="sm" variant="text" class="h-9 w-9 justify-center p-0" icon="i-ph:trash" :disabled="running" :aria-label="t('ui.removeSkill')" @click="removeSkill(index)" />
-              </div>
-            </div>
-          </div>
+          <EquipmentPanel
+            v-model:armor-ids="selectedArmorIds"
+            v-model:talisman-id="selectedTalismanId"
+            v-model:weapon-id="selectedWeaponId"
+            :armor-options-by-slot="armorOptionsBySlot"
+            :disabled="running"
+            :has-armor-filters="hasArmorFilters"
+            :talisman-options="talismanOptions"
+            :weapon-options="weaponOptions"
+            @clear-armor="clearArmorFilters"
+          />
+          <TargetSkillsPanel
+            v-model:skills="selectedSkills"
+            :disabled="running"
+            :equipment-stats="equipmentStats"
+            :max-skill-level="maxSkillLevel"
+            :skill-options="skillOptions"
+            @add-skill="addSkill"
+          />
         </div>
 
         <div class="mt-8 flex flex-wrap items-center gap-3 border-t border-base pt-5">
@@ -383,46 +264,7 @@ onBeforeUnmount(() => {
         </div>
       </section>
 
-      <section class="mt-8">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="text-lg font-600">
-            {{ t('ui.results') }}
-          </h2>
-          <span v-if="solutions.length" class="text-sm color-secondary">{{ solutions.length }} {{ t('ui.builds') }}</span>
-        </div>
-
-        <div v-if="errorMessage" class="mb-3 rounded-md border border-red/30 bg-red/10 px-4 py-3 text-sm text-red-600 dark:text-red-300" role="alert">
-          {{ errorMessage }}
-        </div>
-
-        <div v-if="solutions.length" class="space-y-3">
-          <BuildResult v-for="(solution, index) in solutions" :key="index" :solution="solution" :index="index" />
-        </div>
-        <div v-else class="rounded-lg border border-dashed border-base px-4 py-12 text-center text-sm color-tertiary">
-          {{ t('ui.noResults') }}
-        </div>
-      </section>
+      <ResultsSection :error-message="errorMessage" :solutions="solutions" />
     </div>
   </main>
 </template>
-
-<style scoped>
-.gear-row {
-  display: grid;
-  grid-template-columns: 1.75rem minmax(0, 1fr);
-  align-items: start;
-  gap: 0.5rem;
-}
-
-.gear-row > img {
-  margin-top: 0.375rem;
-}
-
-.app-logo {
-  display: inline-block;
-  flex: none;
-  background-color: currentColor;
-  mask: url('/logo.svg') center / contain no-repeat;
-  -webkit-mask: url('/logo.svg') center / contain no-repeat;
-}
-</style>

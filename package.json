@@ -8,7 +8,7 @@
   "author": "jinghaihan",
   "license": "MIT",
   "scripts": {
-    "dev": "pnpm -F @mhrise-build-tools/gui dev",
+    "dev": "pnpm -F @mhrise-build/web dev",
     "deps": "taze major -I",
     "knip": "knip",
     "lint": "eslint .",
@@ -20,7 +20,6 @@
     "typecheck": "pnpm --recursive --if-present typecheck"
   },
   "devDependencies": {
-    "vite": "catalog:build",
     "knip": "catalog:dev",
     "pncat": "catalog:dev",
     "simple-git-hooks": "catalog:dev",

@@ -1,4 +1,4 @@
-import type { WikiEntityKind } from '@mhrise-build-tools/core'
+import type { WikiEntityKind } from '@mhrise-build/core'
 import type {
   DataCatalog,
   KiranicoArmorRecord,

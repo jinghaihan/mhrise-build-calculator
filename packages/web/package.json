@@ -1,5 +1,5 @@
 {
-  "name": "@mhrise-build-tools/gui",
+  "name": "@mhrise-build/web",
   "type": "module",
   "version": "0.0.0",
   "private": true,
@@ -15,13 +15,12 @@
     "@antfu/utils": "catalog:frontend",
     "@iconify-json/ph": "catalog:frontend",
     "@vueuse/core": "catalog:frontend",
-    "colorjs.io": "catalog:frontend",
     "comlink": "catalog:frontend",
     "reka-ui": "catalog:frontend",
     "vue": "catalog:frontend",
     "vue-i18n": "catalog:frontend",
-    "@mhrise-build-tools/core": "workspace:*",
-    "@mhrise-build-tools/data": "workspace:*"
+    "@mhrise-build/core": "workspace:*",
+    "@mhrise-build/data": "workspace:*"
   },
   "devDependencies": {
     "vite": "catalog:build",

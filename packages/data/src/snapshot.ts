@@ -5,10 +5,10 @@ import type {
   SlotLevels,
   Talisman,
   WikiId,
-} from '@mhrise-build-tools/core'
+} from '@mhrise-build/core'
 import type { DataCatalog, KiranicoArmorRecord, KiranicoTalismanRecord } from './catalog'
 import type { LocalizedNameData } from './localization'
-import { createLocalRef } from '@mhrise-build-tools/core'
+import { createLocalRef } from '@mhrise-build/core'
 import { createDataCatalog } from './catalog'
 import { applyLocalizedNames } from './localization'
 

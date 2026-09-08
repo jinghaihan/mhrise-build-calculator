@@ -12,13 +12,13 @@ import type {
   Weapon,
   WikiEntityKind,
   WikiRef,
-} from '@mhrise-build-tools/core'
+} from '@mhrise-build/core'
 import {
   ARMOR_SLOTS,
   createArmorVariant,
   generateArmorVariants,
   optimizeEquipmentReuse,
-} from '@mhrise-build-tools/core'
+} from '@mhrise-build/core'
 
 export type LocaleCode = string
 

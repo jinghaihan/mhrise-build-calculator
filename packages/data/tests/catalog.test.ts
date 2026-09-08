@@ -1,4 +1,4 @@
-import { createArmorVariant, createWikiRef } from '@mhrise-build-tools/core'
+import { createArmorVariant, createWikiRef } from '@mhrise-build/core'
 import { describe, expect, it } from 'vitest'
 import {
   createBuildRequest,

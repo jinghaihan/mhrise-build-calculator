@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { ArmorVariant, BuildSolution, DecorationPlacement, SkillValue } from '@mhrise-build-tools/core'
-import { defaultSnapshot, getLocalizedName } from '@mhrise-build-tools/data'
+import type { ArmorVariant, BuildSolution, DecorationPlacement, SkillValue } from '@mhrise-build/core'
+import { defaultSnapshot, getLocalizedName } from '@mhrise-build/data'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { armorSkillChanges, equipmentRows, summarizeDecorations } from '../result-details'

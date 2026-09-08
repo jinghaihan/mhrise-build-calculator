@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { createWikiRef } from '@mhrise-build-tools/core'
+import { createWikiRef } from '@mhrise-build/core'
 import { describe, expect, it } from 'vitest'
 import localizedNames from '../locales/names.json'
 import { parseMarkdownBuildRequirements } from '../src/markdown'

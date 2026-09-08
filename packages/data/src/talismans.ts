@@ -1,6 +1,6 @@
-import type { SkillValue, SlotLevels, Talisman } from '@mhrise-build-tools/core'
+import type { SkillValue, SlotLevels, Talisman } from '@mhrise-build/core'
 import type { KiranicoTalismanRecord, LocalizedNames } from './catalog'
-import { createLocalRef, createWikiId } from '@mhrise-build-tools/core'
+import { createLocalRef, createWikiId } from '@mhrise-build/core'
 
 export interface TalismanTableRow {
   readonly allowedSlots?: readonly SlotLevels[]

@@ -7,7 +7,7 @@ import {
   createWikiRef,
   generateArmorVariants,
   getSkillLevel,
-} from '@mhrise-build-tools/core'
+} from '@mhrise-build/core'
 import { describe, expect, it } from 'vitest'
 import localizedNames from '../locales/names.json'
 import {

@@ -1,4 +1,5 @@
-import { normalizeLocale, SUPPORTED_LOCALES } from '@mhrise-build-tools/data'
+import type { AppLocale } from '@mhrise-build/data'
+import { normalizeLocale, SUPPORTED_LOCALES } from '@mhrise-build/data'
 import { useStorage } from '@vueuse/core'
 import { watch } from 'vue'
 import { createI18n } from 'vue-i18n'
@@ -8,7 +9,7 @@ import ko from './locales/ko.json'
 import zhHant from './locales/zh-Hant.json'
 import zh from './locales/zh.json'
 
-export const preferredLocale = useStorage('mhrise-build-tools-locale', 'en')
+export const preferredLocale = useStorage<AppLocale>('mhrise-build-tools-locale', 'en')
 
 export const i18n = createI18n({
   legacy: false,

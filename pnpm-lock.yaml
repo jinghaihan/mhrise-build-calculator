@@ -50,9 +50,6 @@ catalogs:
     '@vueuse/core':
       specifier: ^14.4.0
       version: 14.4.0
-    colorjs.io:
-      specifier: ^0.6.1
-      version: 0.6.1
     comlink:
       specifier: ^4.4.2
       version: 4.4.2
@@ -125,9 +122,6 @@ importers:
       typescript:
         specifier: catalog:dev
         version: 6.0.3
-      vite:
-        specifier: catalog:build
-        version: 8.2.2(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0)
       vitest:
         specifier: catalog:test
         version: 5.0.0(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0))
@@ -135,7 +129,29 @@ importers:
         specifier: catalog:prod
         version: 0.18.5
 
-  apps/gui:
+  packages/core:
+    devDependencies:
+      typescript:
+        specifier: catalog:dev
+        version: 6.0.3
+      vitest:
+        specifier: catalog:test
+        version: 5.0.0(@types/node@26.4.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.7.0)(yaml@2.9.0))
+
+  packages/data:
+    dependencies:
+      '@mhrise-build/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: catalog:dev
+        version: 6.0.3
+      vitest:
+        specifier: catalog:test
+        version: 5.0.0(@types/node@26.4.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.7.0)(yaml@2.9.0))
+
+  packages/web:
     dependencies:
       '@antfu/design':
         specifier: catalog:frontend
@@ -146,18 +162,15 @@ importers:
       '@iconify-json/ph':
         specifier: catalog:frontend
         version: 1.2.2
-      '@mhrise-build-tools/core':
+      '@mhrise-build/core':
         specifier: workspace:*
-        version: link:../../packages/core
-      '@mhrise-build-tools/data':
+        version: link:../core
+      '@mhrise-build/data':
         specifier: workspace:*
-        version: link:../../packages/data
+        version: link:../data
       '@vueuse/core':
         specifier: catalog:frontend
         version: 14.4.0(vue@3.5.42(typescript@6.0.3))
-      colorjs.io:
-        specifier: catalog:frontend
-        version: 0.6.1
       comlink:
         specifier: catalog:frontend
         version: 4.4.2
@@ -195,28 +208,6 @@ importers:
       vue-tsc:
         specifier: catalog:frontend
         version: 3.3.11(typescript@6.0.3)
-
-  packages/core:
-    devDependencies:
-      typescript:
-        specifier: catalog:dev
-        version: 6.0.3
-      vitest:
-        specifier: catalog:test
-        version: 5.0.0(@types/node@26.4.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.7.0)(yaml@2.9.0))
-
-  packages/data:
-    dependencies:
-      '@mhrise-build-tools/core':
-        specifier: workspace:*
-        version: link:../core
-    devDependencies:
-      typescript:
-        specifier: catalog:dev
-        version: 6.0.3
-      vitest:
-        specifier: catalog:test
-        version: 5.0.0(@types/node@26.4.1)(vite@8.2.2(@types/node@26.4.1)(jiti@2.7.0)(yaml@2.9.0))
 
 packages:
 
@@ -4425,7 +4416,8 @@ snapshots:
 
   colorette@2.0.20: {}
 
-  colorjs.io@0.6.1: {}
+  colorjs.io@0.6.1:
+    optional: true
 
   comlink@4.4.2: {}
 

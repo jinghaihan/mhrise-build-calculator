@@ -5,14 +5,14 @@ import type {
   ReusePlan,
   SolveProgress,
   WikiId,
-} from '@mhrise-build-tools/core'
+} from '@mhrise-build/core'
 import type { BuildDefinition, BuildRequestProgress, DataCatalog } from './catalog'
 import type { SourceSnapshot } from './snapshot'
 import {
   ARMOR_SLOTS,
   optimizeEquipmentReuse,
   solveBuild,
-} from '@mhrise-build-tools/core'
+} from '@mhrise-build/core'
 import { createBuildRequest } from './catalog'
 import { armorComponentsForPool, findArmorFamily, generateTalismanRecords } from './snapshot'
 

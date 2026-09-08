@@ -7,14 +7,14 @@ import type {
   SkillValue,
   Weapon,
   WikiEntityKind,
-} from '@mhrise-build-tools/core'
+} from '@mhrise-build/core'
 import type {
   KiranicoArmorRecord,
   KiranicoDecorationRecord,
   KiranicoWeaponRecord,
   SkillRecord,
 } from './catalog'
-import { createWikiId, createWikiRef } from '@mhrise-build-tools/core'
+import { createWikiId, createWikiRef } from '@mhrise-build/core'
 
 export const KIRANICO_BASE_URL = 'https://mhrise.kiranico.com'
 

@@ -1,4 +1,4 @@
-import type { SkillValue } from '@mhrise-build-tools/core'
+import type { SkillValue } from '@mhrise-build/core'
 import type { DataCatalog, LocaleCode } from './catalog'
 import { skillRequirement } from './catalog'
 

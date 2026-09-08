@@ -1,5 +1,5 @@
 {
-  "name": "@mhrise-build-tools/data",
+  "name": "@mhrise-build/data",
   "type": "module",
   "version": "0.0.0",
   "private": true,
@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@mhrise-build-tools/core": "workspace:*"
+    "@mhrise-build/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "catalog:dev",

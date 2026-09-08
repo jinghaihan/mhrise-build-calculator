@@ -6,7 +6,7 @@ import { defineConfig, presetWind4 } from 'unocss'
 
 export default defineConfig({
   presets: [
-    presetAnthonyDesign({ primary: '#5d5d99', darkBackground: '#101416' }),
+    presetAnthonyDesign({ primary: '#5d5d99' }),
     presetIcons({ collections: { ph: () => icons } }),
     presetWind4(),
   ],

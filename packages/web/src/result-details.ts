@@ -1,5 +1,5 @@
-import type { ArmorVariant, BuildSolution, DecorationPlacement } from '@mhrise-build-tools/core'
-import { addSkillValues } from '@mhrise-build-tools/core'
+import type { ArmorVariant, BuildSolution, DecorationPlacement } from '@mhrise-build/core'
+import { addSkillValues } from '@mhrise-build/core'
 
 export function summarizeDecorations(placements: readonly DecorationPlacement[]) {
   const groups = new Map<string, { decoration: DecorationPlacement['decoration'], placements: DecorationPlacement[] }>()

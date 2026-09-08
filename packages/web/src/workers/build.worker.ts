@@ -1,5 +1,5 @@
-import type { ArmorSlot, BuildSolution, SkillValue } from '@mhrise-build-tools/core'
-import { defaultSnapshot, searchSnapshotBuild } from '@mhrise-build-tools/data'
+import type { ArmorSlot, BuildSolution, SkillValue } from '@mhrise-build/core'
+import { defaultSnapshot, searchSnapshotBuild } from '@mhrise-build/data'
 import * as Comlink from 'comlink'
 
 export interface BuildSearchRequest {
