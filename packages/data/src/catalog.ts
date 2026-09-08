@@ -17,8 +17,8 @@ import {
   ARMOR_SLOTS,
   createArmorVariant,
   generateArmorVariants,
-  getSkillLevel,
   optimizeEquipmentReuse,
+  pruneArmorVariants,
 } from '@mhrise-build/core'
 
 export type LocaleCode = string
@@ -133,6 +133,7 @@ export function createBuildRequest(
   catalog: DataCatalog,
   definition: BuildDefinition,
   options: {
+    readonly maxArmorAlternatives?: number
     readonly onProgress?: (progress: BuildRequestProgress) => void
   } = {},
 ): BuildRequest {
@@ -157,6 +158,7 @@ export function createBuildRequest(
         record.armor,
         definition,
         generatedAugmentations,
+        options.maxArmorAlternatives,
       )
       completedRecords += 1
       options.onProgress?.({
@@ -212,6 +214,7 @@ function armorVariantsFor(
   base: ArmorPiece,
   definition: BuildDefinition,
   generatedAugmentations: Map<string, readonly (ArmorAugmentation | undefined)[]>,
+  maxArmorAlternatives?: number,
 ) {
   const explicitAugmentations = definition.armorAugmentationsById?.[base.ref.id] ?? []
   const components = definition.armorComponentsById?.[base.ref.id] ?? []
@@ -230,7 +233,7 @@ function armorVariantsFor(
   if (!augmentations) {
     if (components.length > 0) {
       const generatedVariants = generateArmorVariants(base, components, definition.armorVariantOptions)
-      const reducedVariants = reduceGeneratedVariants(generatedVariants, definition.requiredSkills)
+      const reducedVariants = reduceGeneratedVariants(generatedVariants, definition.requiredSkills, maxArmorAlternatives)
       augmentations = reducedVariants.map(variant => variant.augmentation)
     }
     else {
@@ -256,29 +259,12 @@ function armorVariantsFor(
 function reduceGeneratedVariants(
   variants: readonly ReturnType<typeof createArmorVariant>[],
   requirements: readonly SkillValue[],
+  maxAlternatives?: number,
 ): ReturnType<typeof createArmorVariant>[] {
-  if (requirements.length === 0)
+  if (requirements.length === 0 || maxAlternatives === undefined)
     return [...variants]
 
-  const bestByState = new Map<string, ReturnType<typeof createArmorVariant>>()
-  for (const variant of variants) {
-    const key = [
-      requirements.map(requirement => `${requirement.skillId}:${Math.min(
-        getSkillLevel(variant.skills, requirement.skillId),
-        requirement.level,
-      )}`).join(','),
-      socketCapacities(variant.slots).join(','),
-    ].join('|')
-    const previous = bestByState.get(key)
-    if (!previous || variant.defense > previous.defense)
-      bestByState.set(key, variant)
-  }
-
-  return [...bestByState.values()]
-}
-
-function socketCapacities(slots: readonly [number, number, number]): [number, number, number, number] {
-  return [1, 2, 3, 4].map(level => slots.filter(slot => slot >= level).length) as [number, number, number, number]
+  return pruneArmorVariants(variants, requirements, maxAlternatives)
 }
 
 function filterByIds<T extends { ref: { id: string } }>(

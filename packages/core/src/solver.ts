@@ -422,7 +422,6 @@ function solveBuildByArmorSearch(
       })
       return pool.filter(candidate => selected.has(candidate.variant))
     })
-
     function seedCandidateScore(candidate: typeof feasibleCandidates[number][number]): number {
       return candidate.levels.reduce((total, level, index) => total
         + Math.min(level + jewelPotential(candidate.counts, index) + external[index], request.requiredSkills[index].level), 0)
@@ -904,11 +903,16 @@ function createSearchCandidates(
 
   const reduced = [...equivalent.values()].flatMap(value => Array.isArray(value) ? value : [value])
   return Number.isFinite(maxSolutions)
-    ? pruneDominatedArmorCandidates(reduced, requirements, maxSolutions)
+    ? pruneArmorVariants(reduced, requirements, maxSolutions)
     : reduced
 }
 
-function pruneDominatedArmorCandidates(
+/**
+ * Remove armor variants that can never improve a ranked result. A retained
+ * variant must still represent each requested skill/socket state up to the
+ * requested number of alternatives.
+ */
+export function pruneArmorVariants(
   candidates: readonly ArmorVariant[],
   requirements: readonly SkillValue[],
   maxAlternatives: number,
