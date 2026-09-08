@@ -70,6 +70,18 @@ function request(id: string, requiredSkills: readonly SkillValue[]): BuildReques
 }
 
 describe('build solving', () => {
+  it('keeps a usable talisman when candidates differ only in unrelated skills', () => {
+    const build = request('equivalent-talismans', [skill(String(attack), 1)])
+    const extra = {
+      ...build.talismans[0],
+      ref: createWikiRef('talisman', '3002'),
+      maxSkills: undefined,
+      skills: [...build.talismans[0].skills, skill('9999', 1)],
+    }
+    expect(solveBuild({ ...build, talismans: [build.talismans[0], extra] }, { maxSolutions: 1 })).toHaveLength(1)
+    expect(solveBuild({ ...build, talismans: [extra, build.talismans[0]] }, { maxSolutions: 1 })).toHaveLength(1)
+  })
+
   it('combines armor, talisman and decorations to meet skill requirements', () => {
     const solutions = solveBuild(request('attack-build', [skill(String(attack), 2)]), {
       maxSolutions: 1,

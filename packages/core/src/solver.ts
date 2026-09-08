@@ -580,21 +580,23 @@ function orderTalismanCandidates(
     return ordered
   }
 
-  return ordered.filter((candidate, candidateIndex) => !ordered.some((other, otherIndex) => {
+  const signatures = ordered.map(talisman => ({
+    levels: requirements.map(requirement => Math.min(requirement.level, getSkillLevel(talisman.skills, requirement.skillId))),
+    slots: [...talisman.slots].sort((left, right) => right - left),
+    talisman,
+  }))
+  const unique = [...new Map(signatures.map(candidate => [
+    `${candidate.levels.join(',')}|${candidate.slots.join(',')}`,
+    candidate,
+  ])).values()]
+  return unique.filter((candidate, candidateIndex) => !unique.some((other, otherIndex) => {
     if (candidateIndex === otherIndex) {
       return false
     }
 
-    return requirements.every(requirement => getSkillLevel(other.skills, requirement.skillId)
-      >= getSkillLevel(candidate.skills, requirement.skillId))
-    && slotsCover(other.slots, candidate.slots)
-  }))
-}
-
-function slotsCover(left: readonly number[], right: readonly number[]): boolean {
-  const sortedLeft = [...left].sort((a, b) => b - a)
-  const sortedRight = [...right].sort((a, b) => b - a)
-  return sortedRight.every((level, index) => (sortedLeft[index] ?? 0) >= level)
+    return candidate.levels.every((level, index) => other.levels[index] >= level)
+      && candidate.slots.every((level, index) => other.slots[index] >= level)
+  })).map(candidate => candidate.talisman)
 }
 
 function skillKey(skills: readonly SkillValue[]): string {
