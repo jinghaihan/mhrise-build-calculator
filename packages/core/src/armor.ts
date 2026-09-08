@@ -134,13 +134,13 @@ export function generateArmorVariants(
 }
 
 interface GenerationState {
-  readonly componentIds: readonly string[]
   readonly cost: number
   readonly defenseDelta: number
   readonly depth: number
   readonly lastComponentIndex: number
+  readonly component?: ArmorAugmentComponent
+  readonly parent?: GenerationState
   readonly resistanceDelta: ArmorResistances
-  readonly skillChanges: readonly SkillValue[]
   readonly skillLevels: readonly number[]
   readonly slotUpgrades: number
   readonly slots: SlotLevels
@@ -162,7 +162,7 @@ function generateArmorVariantsDp(
   ])].sort()
   const skillIndexes = new Map(skillIds.map((skillId, index) => [skillId, index]))
   const baseSkillLevels = skillLevelsFor(base.baseSkills, skillIndexes)
-  const variants = new Map<string, ArmorVariant>()
+  const variants = new Map<string, GenerationState>()
   const preparedComponents = prepareOrdinaryComponents(
     components,
     resistanceStrategy,
@@ -192,13 +192,11 @@ function generateArmorVariantsDp(
   const componentsById = new Map(preparedComponents.map(component => [component.id, component]))
   const preferredNegativeResistanceCache = new Map<string, Map<string, string>>()
   let states: GenerationState[] = [{
-    componentIds: [],
     cost: 0,
     defenseDelta: 0,
     depth: 0,
     lastComponentIndex: 0,
     resistanceDelta: ZERO_ARMOR_RESISTANCES,
-    skillChanges: [],
     skillLevels: baseSkillLevels,
     slotUpgrades: 0,
     slots: base.slots,
@@ -243,7 +241,6 @@ function generateArmorVariantsDp(
           continue
         }
 
-        const nextSkillChanges = [...state.skillChanges, ...selectedComponent.skillChanges]
         const nextSkillLevels = [...state.skillLevels]
         let nextActiveSkillCount = countActiveLevels(nextSkillLevels)
         let invalidSkillChange = false
@@ -294,16 +291,16 @@ function generateArmorVariantsDp(
         }
 
         const nextState: GenerationState = {
-          componentIds: [...state.componentIds, selectedComponent.id],
+          component: selectedComponent,
           cost: nextCost,
           defenseDelta: state.defenseDelta + selectedComponent.defenseDelta,
           depth: depth + 1,
           lastComponentIndex: componentIndex,
+          parent: state,
           resistanceDelta: addArmorResistances(
             state.resistanceDelta,
             selectedComponent.resistanceDelta,
           ),
-          skillChanges: nextSkillChanges,
           skillLevels: nextSkillLevels,
           slotUpgrades: nextSlotUpgrades,
           slots: nextSlots,
@@ -341,26 +338,59 @@ function generateArmorVariantsDp(
     })
   }
 
-  return [...variants.values()]
-
-  function addVariant(state: GenerationState): void {
+  return [...variants.values()].flatMap((state) => {
     try {
-      const variant = createArmorVariant(base, {
-        componentIds: state.componentIds,
+      return [createArmorVariant(base, {
+        ...augmentationForState(state),
         cost: state.cost,
         defenseDelta: state.defenseDelta,
         resistanceDelta: state.resistanceDelta,
-        skillChanges: state.skillChanges,
         slotUpgrades: state.slotUpgrades,
-      })
-      const key = armorVariantStateKey(variant, requiredSkills)
-      const existing = variants.get(key)
-      if (!existing || variant.defense > existing.defense) {
-        variants.set(key, variant)
-      }
+      })]
     }
     catch {
+      return []
+    }
+  })
 
+  function addVariant(state: GenerationState): void {
+    const key = [
+      state.slots.join(','),
+      ...(requiredSkills.length === 0
+        ? [
+            state.resistanceDelta.dragon,
+            state.resistanceDelta.fire,
+            state.resistanceDelta.ice,
+            state.resistanceDelta.thunder,
+            state.resistanceDelta.water,
+          ]
+        : []),
+      requiredSkills.length > 0
+        ? requiredSkills.map(requirement => skillIndexes.get(requirement.skillId) !== undefined
+            ? `${requirement.skillId}:${Math.min(
+              state.skillLevels[skillIndexes.get(requirement.skillId)!],
+              requirement.level,
+            )}`
+            : `${requirement.skillId}:0`).join(',')
+        : state.skillLevels.join(','),
+    ].join('|')
+    const existing = variants.get(key)
+    if (!existing || state.defenseDelta > existing.defenseDelta) {
+      variants.set(key, state)
+    }
+  }
+
+  function augmentationForState(state: GenerationState): Pick<ArmorAugmentation, 'componentIds' | 'skillChanges'> {
+    const selected: ArmorAugmentComponent[] = []
+    let current: GenerationState | undefined = state
+    while (current?.component) {
+      selected.push(current.component)
+      current = current.parent
+    }
+    selected.reverse()
+    return {
+      componentIds: selected.map(component => component.id),
+      skillChanges: selected.flatMap(component => component.skillChanges),
     }
   }
 
@@ -535,31 +565,6 @@ function preferredNegativeResistanceComponents(
   }
 
   return new Map([...preferred].map(([group, component]) => [group, component.id]))
-}
-
-function armorVariantStateKey(
-  variant: ArmorVariant,
-  requiredSkills: readonly SkillValue[],
-): string {
-  const resistanceStateKey = requiredSkills.length === 0
-    ? [
-        variant.resistances.dragon,
-        variant.resistances.fire,
-        variant.resistances.ice,
-        variant.resistances.thunder,
-        variant.resistances.water,
-      ]
-    : []
-  return [
-    variant.slots.join(','),
-    ...resistanceStateKey,
-    requiredSkills.length > 0
-      ? requiredSkills.map(requirement => `${requirement.skillId}:${Math.min(
-          getSkillLevel(variant.skills, requirement.skillId),
-          requirement.level,
-        )}`).join(',')
-      : skillKey(variant.skills),
-  ].join('|')
 }
 
 function dedupeComponents(
