@@ -20,11 +20,18 @@
     "typecheck": "pnpm --recursive --if-present typecheck"
   },
   "devDependencies": {
+    "vite": "catalog:build",
     "knip": "catalog:dev",
     "pncat": "catalog:dev",
     "simple-git-hooks": "catalog:dev",
     "taze": "catalog:dev",
     "typescript": "catalog:dev",
+    "@unocss/preset-icons": "catalog:frontend",
+    "@unocss/reset": "catalog:frontend",
+    "@unocss/transformer-directives": "catalog:frontend",
+    "@vitejs/plugin-vue": "catalog:frontend",
+    "unocss": "catalog:frontend",
+    "vue-tsc": "catalog:frontend",
     "@octohash/eslint-config": "catalog:lint",
     "eslint": "catalog:lint",
     "lint-staged": "catalog:lint",

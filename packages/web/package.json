@@ -21,15 +21,5 @@
     "vue-i18n": "catalog:frontend",
     "@mhrise-build/core": "workspace:*",
     "@mhrise-build/data": "workspace:*"
-  },
-  "devDependencies": {
-    "vite": "catalog:build",
-    "@unocss/preset-icons": "catalog:frontend",
-    "@unocss/reset": "catalog:frontend",
-    "@unocss/transformer-directives": "catalog:frontend",
-    "@vitejs/plugin-vue": "catalog:frontend",
-    "unocss": "catalog:frontend",
-    "vue-tsc": "catalog:frontend",
-    "vitest": "catalog:test"
   }
 }
