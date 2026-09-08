@@ -456,22 +456,23 @@ function createSearchCandidates(
   }
 
   const reduced = [...equivalent.values()].flatMap(value => Array.isArray(value) ? value : [value])
-  return maxSolutions === 1
-    ? pruneDominatedArmorCandidates(reduced, requirements)
+  return Number.isFinite(maxSolutions)
+    ? pruneDominatedArmorCandidates(reduced, requirements, maxSolutions)
     : reduced
 }
 
 function pruneDominatedArmorCandidates(
   candidates: readonly ArmorVariant[],
   requirements: readonly SkillValue[],
+  maxAlternatives: number,
 ): ArmorVariant[] {
   const ordered = [...candidates].sort((left, right) => compareDominanceCandidates(
     right,
     left,
     requirements,
   ))
-  const skillCoverage = requirements.map(requirement => Array.from({ length: requirement.level + 1 }).fill(0n))
-  const slotCoverage = Array.from({ length: 4 }, () => Array.from({ length: 5 }).fill(0n))
+  const skillCoverage: bigint[][] = requirements.map(requirement => Array<bigint>(requirement.level + 1).fill(0n))
+  const slotCoverage: bigint[][] = Array.from({ length: 4 }, () => Array<bigint>(5).fill(0n))
   const kept: ArmorVariant[] = []
   let allKept = 0n
 
@@ -494,7 +495,7 @@ function pruneDominatedArmorCandidates(
       }
     }
 
-    if (covering !== 0n) {
+    if (countBitsUpTo(covering, maxAlternatives) >= maxAlternatives) {
       continue
     }
 
@@ -514,6 +515,16 @@ function pruneDominatedArmorCandidates(
   }
 
   return kept
+}
+
+function countBitsUpTo(value: bigint, limit: number): number {
+  let count = 0
+  let remaining = value
+  while (remaining !== 0n && count < limit) {
+    remaining &= remaining - 1n
+    count += 1
+  }
+  return count
 }
 
 function compareDominanceCandidates(
