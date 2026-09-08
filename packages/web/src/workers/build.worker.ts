@@ -1,4 +1,4 @@
-import type { ArmorSlot, BuildSolution, SkillValue } from '@mhrise-build/core'
+import type { ArmorSlot, BuildSolution, SkillValue, TalismanFilter } from '@mhrise-build/core'
 import { defaultSnapshot, searchSnapshotBuild } from '@mhrise-build/data'
 import * as Comlink from 'comlink'
 
@@ -6,6 +6,7 @@ export interface BuildSearchRequest {
   readonly armorIdsBySlot?: Partial<Readonly<Record<ArmorSlot, readonly string[]>>>
   readonly maxSolutions?: number
   readonly requiredSkills: readonly SkillValue[]
+  readonly talismanFilter?: TalismanFilter
   readonly talismanIds?: readonly string[]
   readonly weaponId: string
 }
@@ -32,6 +33,7 @@ const api: BuildWorkerApi = {
     }, {
       generateArmorVariants: true,
       maxSolutions: request.maxSolutions ?? 5,
+      talismanFilter: request.talismanFilter,
       onProgress: progress => onProgress?.({
         current: progress.current,
         stage: progress.stage,

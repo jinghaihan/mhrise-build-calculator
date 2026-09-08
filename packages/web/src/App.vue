@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { ArmorSlot, BuildSolution, SkillValue } from '@mhrise-build/core'
+import type { ArmorSlot, BuildSolution, SkillValue, TalismanFilter } from '@mhrise-build/core'
 import type { SearchSelectOption } from './components/search-select.vue'
 import type { BuildSearchRequest, BuildWorkerApi, BuildWorkerProgress } from './workers/build.worker'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import { provideColorScheme } from '@antfu/design/composables/colorScheme'
 import { createWikiId } from '@mhrise-build/core'
-import { defaultSnapshot, generateTalismanRecords, getLocalizedName } from '@mhrise-build/data'
+import { defaultSnapshot, getLocalizedName } from '@mhrise-build/data'
 import * as Comlink from 'comlink'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -23,9 +23,9 @@ const selectedWeaponId = computed({
   get: () => plannerStorage.value.equipment.weaponId,
   set: value => plannerStorage.value.equipment.weaponId = value,
 })
-const selectedTalismanId = computed({
-  get: () => plannerStorage.value.equipment.talismanId,
-  set: value => plannerStorage.value.equipment.talismanId = value,
+const selectedTalismanFilter = computed({
+  get: () => plannerStorage.value.equipment.talismanFilter,
+  set: value => plannerStorage.value.equipment.talismanFilter = value,
 })
 const selectedArmorIds = computed<Record<ArmorSlot, string[]>>({
   get: () => plannerStorage.value.equipment.armorIds,
@@ -48,7 +48,7 @@ let workerApi: Comlink.Remote<BuildWorkerApi> | undefined
 let elapsedTimer: ReturnType<typeof setInterval> | undefined
 let searchStartedAt = 0
 
-watch([selectedWeaponId, selectedTalismanId, selectedArmorIds, selectedSkills], () => {
+watch([selectedWeaponId, selectedTalismanFilter, selectedArmorIds, selectedSkills], () => {
   if (!running.value) {
     solutions.value = []
     progress.value = undefined
@@ -95,14 +95,6 @@ const armorOptionsBySlot = computed<Record<ArmorSlot, SearchSelectOption[]>>(() 
     }))
     .sort((left, right) => left.label.localeCompare(right.label, locale.value))]),
 ) as Record<ArmorSlot, SearchSelectOption[]>)
-
-const talismanOptions = computed<SearchSelectOption[]>(() => generateTalismanRecords(defaultSnapshot, {
-  maxCandidates: 2000,
-  skillIds: selectedSkills.value.map(skill => createWikiId(skill.skillId)),
-}).map(record => ({
-  label: getLocalizedName(record, locale.value, 'zh') ?? String(record.ref.id),
-  value: String(record.ref.id),
-})))
 
 const hasArmorFilters = computed(() => Object.values(selectedArmorIds.value).some(ids => ids.length > 0))
 
@@ -199,9 +191,21 @@ function startSearch() {
       level,
       skillId: createWikiId(skillId),
     })),
-    ...(talismanOptions.value.some(option => option.value === selectedTalismanId.value)
-      ? { talismanIds: [selectedTalismanId.value] }
-      : {}),
+    talismanFilter: {
+      ...(selectedTalismanFilter.value.firstSkillId
+        ? {
+            firstSkillId: createWikiId(selectedTalismanFilter.value.firstSkillId),
+            firstSkillLevel: selectedTalismanFilter.value.firstSkillLevel,
+          }
+        : {}),
+      ...(selectedTalismanFilter.value.secondSkillId
+        ? {
+            secondSkillId: createWikiId(selectedTalismanFilter.value.secondSkillId),
+            secondSkillLevel: selectedTalismanFilter.value.secondSkillLevel,
+          }
+        : {}),
+      slots: selectedTalismanFilter.value.slots,
+    } satisfies TalismanFilter,
     weaponId: selectedWeaponId.value,
   }
   void currentApi.search(request, Comlink.proxy((update: BuildWorkerProgress) => {
@@ -257,12 +261,12 @@ onBeforeUnmount(() => {
         <div class="editor-grid grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
           <EquipmentPanel
             v-model:armor-ids="selectedArmorIds"
-            v-model:talisman-id="selectedTalismanId"
+            v-model:talisman-filter="selectedTalismanFilter"
             v-model:weapon-id="selectedWeaponId"
             :armor-options-by-slot="armorOptionsBySlot"
             :disabled="running"
             :has-armor-filters="hasArmorFilters"
-            :talisman-options="talismanOptions"
+            :skill-options="skillOptions"
             :weapon-options="weaponOptions"
             @clear-armor="clearArmorFilters"
           />

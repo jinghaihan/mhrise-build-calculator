@@ -4,18 +4,20 @@ import type { SearchSelectOption } from './search-select.vue'
 import ActionButton from '@antfu/design/components/Action/ActionButton.vue'
 import { useI18n } from 'vue-i18n'
 import SearchSelect from './search-select.vue'
+import TalismanFilter from './talisman-filter.vue'
 import { armorSlots } from '../planner-types'
+import type { TalismanFilterStorage } from '../storage'
 
 defineProps<{
   armorOptionsBySlot: Readonly<Record<ArmorSlot, SearchSelectOption[]>>
   disabled: boolean
   hasArmorFilters: boolean
-  talismanOptions: SearchSelectOption[]
+  skillOptions: SearchSelectOption[]
   weaponOptions: SearchSelectOption[]
 }>()
 
 const selectedWeaponId = defineModel<string>('weaponId', { required: true })
-const selectedTalismanId = defineModel<string>('talismanId', { required: true })
+const selectedTalismanFilter = defineModel<TalismanFilterStorage>('talismanFilter', { required: true })
 const selectedArmorIds = defineModel<Record<ArmorSlot, string[]>>('armorIds', { required: true })
 const emit = defineEmits<{
   clearArmor: []
@@ -68,16 +70,7 @@ const { t } = useI18n({ useScope: 'global' })
       </div>
       <div class="gear-row">
         <img src="/armor/talisman.png" :alt="t('ui.talisman')" class="h-7 w-7 object-contain">
-        <SearchSelect
-          v-model="selectedTalismanId"
-          clearable
-          :clear-label="`${t('ui.clearSelection')}: ${t('ui.talisman')}`"
-          :options="talismanOptions"
-          :placeholder="t('ui.searchTalisman')"
-          :empty-text="t('ui.noMatches')"
-          :disabled="disabled"
-          :aria-label="t('ui.talisman')"
-        />
+        <TalismanFilter v-model:filter="selectedTalismanFilter" :disabled="disabled" :skill-options="skillOptions" />
       </div>
     </div>
   </div>

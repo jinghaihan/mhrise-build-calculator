@@ -1,4 +1,4 @@
-import type { ArmorSlot } from '@mhrise-build/core'
+import type { ArmorSlot, SlotLevels } from '@mhrise-build/core'
 import type { AppLocale } from '@mhrise-build/data'
 import type { SkillSelection } from './planner-types'
 import { useStorage } from '@vueuse/core'
@@ -12,9 +12,18 @@ export interface PlannerStorageState {
   equipment: {
     armorIds: Record<ArmorSlot, string[]>
     talismanId: string
+    talismanFilter: TalismanFilterStorage
     weaponId: string
   }
   skills: SkillSelection[]
+}
+
+export interface TalismanFilterStorage {
+  firstSkillId: string
+  firstSkillLevel: number
+  secondSkillId: string
+  secondSkillLevel: number
+  slots: SlotLevels
 }
 
 export interface PreferencesStorageState {
@@ -42,6 +51,13 @@ function createDefaultPlannerState(): PlannerStorageState {
     equipment: {
       armorIds: createDefaultArmorIds(),
       talismanId: '',
+      talismanFilter: {
+        firstSkillId: '',
+        firstSkillLevel: 1,
+        secondSkillId: '',
+        secondSkillLevel: 1,
+        slots: [0, 0, 0],
+      },
       weaponId: '',
     },
     skills: [],
@@ -86,6 +102,7 @@ function migrateLegacyState(): { planner: PlannerStorageState, preferences: Pref
         equipment: {
           armorIds: readLegacyValue('mhrise-build-calculator-armors', defaultPlannerState.equipment.armorIds),
           talismanId: readLegacyValue('mhrise-build-calculator-talisman', ''),
+          talismanFilter: defaultPlannerState.equipment.talismanFilter,
           weaponId: readLegacyValue('mhrise-build-calculator-weapon', ''),
         },
         skills: readLegacyValue<SkillSelection[]>('mhrise-build-calculator-skills', []),
