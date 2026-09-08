@@ -1,6 +1,9 @@
 packages:
   - packages/*
 
+allowBuilds:
+  vue-demi: true
+
 catalogs:
   build:
     vite: ^8.2.2
