@@ -7,14 +7,14 @@
     <meta name="theme-color" content="#5d5d99" />
     <script>
       ;(function () {
-        const setting = localStorage.getItem('mhrise-build-tools-theme')
+        const setting = localStorage.getItem('mhrise-build-calculator-theme')
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         const isDark = setting === 'dark' || (setting !== 'light' && prefersDark)
         document.documentElement.classList.toggle('dark', isDark)
         document.documentElement.classList.toggle('light', !isDark)
       })()
     </script>
-    <title>MHRise Build Tools</title>
+    <title>MHRise Build Calculator</title>
   </head>
   <body>
     <div id="app"></div>

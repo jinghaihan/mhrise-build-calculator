@@ -20,7 +20,7 @@ const { t } = useI18n({ useScope: 'global' })
     <div class="flex items-center gap-3">
       <span class="app-logo h-9 w-9 text-primary" role="img" aria-label="Monster Hunter Rise logo" />
       <h1 class="text-xl font-600 tracking-tight">
-        MHRise Build Tools
+        MHRise Build Calculator
       </h1>
     </div>
     <div class="flex items-center gap-3">

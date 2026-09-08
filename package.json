@@ -1,5 +1,5 @@
 {
-  "name": "mhrise-build-tools",
+  "name": "mhrise-build-calculator",
   "type": "module",
   "version": "0.0.0",
   "private": true,

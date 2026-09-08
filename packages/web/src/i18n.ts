@@ -9,7 +9,7 @@ import ko from './locales/ko.json'
 import zhHant from './locales/zh-Hant.json'
 import zh from './locales/zh.json'
 
-export const preferredLocale = useStorage<AppLocale>('mhrise-build-tools-locale', 'en')
+export const preferredLocale = useStorage<AppLocale>('mhrise-build-calculator-locale', 'en')
 
 export const i18n = createI18n({
   legacy: false,

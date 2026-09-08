@@ -1,4 +1,4 @@
-# MHRise Build Tools
+# MHRise Build Calculator
 
 Build planner and equipment-reuse optimizer for Monster Hunter Rise: Sunbreak.
 

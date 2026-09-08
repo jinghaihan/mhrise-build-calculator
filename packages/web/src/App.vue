@@ -22,12 +22,12 @@ type ColorScheme = 'light' | 'dark'
 
 const { locale, t } = useI18n({ useScope: 'global' })
 const defaultTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-const theme = useStorage<ColorScheme>('mhrise-build-tools-theme', defaultTheme)
+const theme = useStorage<ColorScheme>('mhrise-build-calculator-theme', defaultTheme)
 if (theme.value !== 'dark' && theme.value !== 'light')
   theme.value = defaultTheme
-const selectedWeaponId = useStorage('mhrise-build-tools-weapon', '')
-const selectedTalismanId = useStorage('mhrise-build-tools-talisman', '')
-const selectedArmorIds = useStorage<Record<ArmorSlot, string[]>>('mhrise-build-tools-armors', {
+const selectedWeaponId = useStorage('mhrise-build-calculator-weapon', '')
+const selectedTalismanId = useStorage('mhrise-build-calculator-talisman', '')
+const selectedArmorIds = useStorage<Record<ArmorSlot, string[]>>('mhrise-build-calculator-armors', {
   arms: [],
   chest: [],
   head: [],
@@ -37,7 +37,7 @@ const selectedArmorIds = useStorage<Record<ArmorSlot, string[]>>('mhrise-build-t
 // Retain the first selection from the previous multi-select UI cache.
 for (const slot of armorSlots)
   selectedArmorIds.value[slot] = selectedArmorIds.value[slot].slice(0, 1)
-const selectedSkills = useStorage<SkillSelection[]>('mhrise-build-tools-skills', [])
+const selectedSkills = useStorage<SkillSelection[]>('mhrise-build-calculator-skills', [])
 const solutions = ref<BuildSolution[]>([])
 const running = ref(false)
 const errorMessage = ref('')
