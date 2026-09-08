@@ -261,6 +261,7 @@ function solveBuildByArmorSearch(
     skills: readonly SkillValue[],
     currentArmor: Record<ArmorSlot, ArmorVariant>,
     talismans = orderedTalismans,
+    stopAtFirst = false,
   ): void {
     const armorKey = [
       request.requiredSkills.map(requirement => `${requirement.skillId}:${getSkillLevel(skills, requirement.skillId)}`).join(','),
@@ -329,6 +330,8 @@ function solveBuildByArmorSearch(
         continue
 
       matches.push({ decorations, talisman })
+      if (stopAtFirst)
+        break
     }
 
     matches.sort((left, right) => left.decorations.length - right.decorations.length
@@ -369,7 +372,7 @@ function solveBuildByArmorSearch(
       slotCounts: initialCounts,
     }]
     const candidateLimit = 2048
-    const beamWidth = 32
+    const beamWidth = 8
 
     for (const [slotIndex, slot] of slots.entries()) {
       const next = new Map<string, SeedState>()
@@ -409,6 +412,7 @@ function solveBuildByArmorSearch(
         getArmorSkills(state.armor as Record<ArmorSlot, ArmorVariant>),
         state.armor as Record<ArmorSlot, ArmorVariant>,
         orderedTalismans.slice(0, 512),
+        true,
       )
       if (solutions.length > 0)
         return
