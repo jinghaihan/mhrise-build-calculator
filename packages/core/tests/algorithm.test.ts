@@ -2,6 +2,7 @@ import type { ArmorPiece, ArmorSlot, BuildRequest, SkillValue } from '../src/mod
 import { describe, expect, it } from 'vitest'
 import { createArmorVariant } from '../src/armor'
 import { createWikiId, createWikiRef } from '../src/ids'
+import { findUnreachableRequirements } from '../src/milp'
 import { optimizeEquipmentReuse } from '../src/reuse'
 import { solveBuild } from '../src/solver'
 
@@ -70,6 +71,18 @@ function request(id: string, requiredSkills: readonly SkillValue[]): BuildReques
 }
 
 describe('build solving', () => {
+  it('proves a skill is unreachable without rejecting skills supplied by decorations', () => {
+    const missing = skill('999999999', 3)
+    const build = request('unreachable-milp', [missing])
+    const unreachable = findUnreachableRequirements({
+      ...build,
+      decorations: build.decorations.filter(decoration => decoration.skills[0].skillId !== missing.skillId),
+    })
+
+    expect(unreachable).toEqual([{ maximum: 0, requirement: missing }])
+    expect(findUnreachableRequirements({ ...build, requiredSkills: [skill(String(attack), 1)] })).toEqual([])
+  })
+
   it('returns distinct armor sets and remaps cached jewels to each set sockets', () => {
     const build = request('socket-cache', [skill(String(attack), 2)])
     const emptyArmor = Object.fromEntries(Object.entries(build.armorBySlot).map(([slot, variants]) => [

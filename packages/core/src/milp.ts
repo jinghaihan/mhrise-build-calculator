@@ -15,6 +15,11 @@ export interface AsyncSolveOptions {
 const SEED_CANDIDATE_LIMIT = 4_096
 const SEED_SKILL_CANDIDATE_LIMIT = 512
 
+export interface UnreachableSkillRequirement {
+  readonly maximum: number
+  readonly requirement: SkillValue
+}
+
 /**
  * Solve a build through a MILP model. The model is intentionally built from a
  * bounded seed candidate set; every returned build is then checked against the
@@ -25,27 +30,75 @@ export async function solveBuildAsync(
   options: AsyncSolveOptions = {},
 ): Promise<BuildSolution[]> {
   const requirements = request.requiredSkills
+  const legalTalismans = request.talismans.filter(isTalismanLegal)
+  const unreachable = findUnreachableRequirements({ ...request, talismans: legalTalismans })
+  if (unreachable.length > 0) {
+    options.onProgress?.({ current: 1, stage: 'solving', total: 1 })
+    return []
+  }
   const armorBySlot = Object.fromEntries(ARMOR_SLOTS.map(slot => [
     slot,
     selectSeedCandidates(request.armorBySlot[slot], requirements),
   ])) as unknown as Record<ArmorSlot, readonly ArmorVariant[]>
-  const talismans = dedupeTalismans(request.talismans.filter(isTalismanLegal), requirements)
+  const talismans = dedupeTalismans(legalTalismans, requirements)
   const decorations = dedupeDecorations(request.decorations, requirements)
-  const model = createModel(request, armorBySlot, talismans, decorations)
   options.onProgress?.({ current: 0, stage: 'solving', total: 1 })
 
   const highs = await loadHighs()
-  const result = highs.solve(model.lp, {
+  const startedAt = Date.now()
+  const timeLimitSeconds = options.timeLimitSeconds ?? 120
+  const feasibleModel = createModel(request, armorBySlot, talismans, decorations, false)
+  const feasibleResult = highs.solve(feasibleModel.lp, {
+    mip_heuristic_effort: 1,
     output_flag: false,
-    time_limit: options.timeLimitSeconds ?? 120,
+    time_limit: Math.min(timeLimitSeconds, 30),
   })
-
+  const feasibleSolution = feasibleResult.Status === 'Optimal' || feasibleResult.Status === 'Time limit reached'
+    ? materializeSolution(request, feasibleModel, feasibleResult.Columns)
+    : undefined
+  const elapsedSeconds = (Date.now() - startedAt) / 1_000
+  const remainingSeconds = Math.max(1, timeLimitSeconds - elapsedSeconds)
+  const model = createModel(request, armorBySlot, talismans, decorations, true)
+  const result = highs.solve(model.lp, {
+    mip_heuristic_effort: 1,
+    output_flag: false,
+    time_limit: remainingSeconds,
+  })
   if (result.Status !== 'Optimal' && result.Status !== 'Time limit reached')
-    return []
+    return feasibleSolution ? [feasibleSolution] : []
 
   const solution = materializeSolution(request, model, result.Columns)
   options.onProgress?.({ current: 1, stage: 'solving', total: 1 })
-  return solution ? [solution] : []
+  return solution ? [solution] : feasibleSolution ? [feasibleSolution] : []
+}
+
+/**
+ * Return only requirements that cannot be reached even before socket
+ * competition is considered. Decorations are treated as an unbounded source
+ * when any matching decoration exists, so this check can reject only proofs
+ * of impossibility and never a potentially feasible build.
+ */
+export function findUnreachableRequirements(
+  request: BuildRequest,
+): UnreachableSkillRequirement[] {
+  return request.requiredSkills.flatMap((requirement) => {
+    const armorMaximum = ARMOR_SLOTS.reduce((total, slot) => total + Math.max(
+      0,
+      ...request.armorBySlot[slot].map(variant => getSkillLevel(variant.skills, requirement.skillId)),
+    ), 0)
+    const talismanMaximum = Math.max(
+      0,
+      ...request.talismans.map(talisman => getSkillLevel(talisman.skills, requirement.skillId)),
+    )
+    const decorationCanProvide = request.decorations.some(decoration =>
+      getSkillLevel(decoration.skills, requirement.skillId) > 0)
+    const maximum = getSkillLevel(request.weapon.skills, requirement.skillId)
+      + armorMaximum
+      + talismanMaximum
+      + (decorationCanProvide ? requirement.level : 0)
+
+    return maximum < requirement.level ? [{ maximum, requirement }] : []
+  })
 }
 
 interface Model {
@@ -60,6 +113,7 @@ function createModel(
   armor: Readonly<Record<ArmorSlot, readonly ArmorVariant[]>>,
   talismans: readonly Talisman[],
   decorations: readonly Decoration[],
+  optimizeDefense: boolean,
 ): Model {
   const rows: string[] = []
   const objective: string[] = []
@@ -70,8 +124,10 @@ function createModel(
     const variables = armor[slot].map((_, index) => armorVariable(slot, index))
     rows.push(`${slot}_choice: ${variables.join(' + ')} = 1`)
     binaries.push(...variables)
-    for (const [index, variant] of armor[slot].entries())
-      objective.push(`${variant.defense * 1_000} ${variables[index]}`)
+    for (const [index, variant] of armor[slot].entries()) {
+      if (optimizeDefense)
+        objective.push(`${variant.defense * 1_000} ${variables[index]}`)
+    }
   }
 
   const talismanVariables = talismans.map((_, index) => talismanVariable(index))
@@ -110,12 +166,13 @@ function createModel(
   for (const [index, decoration] of decorations.entries()) {
     const variable = decorationVariable(index)
     generals.push(variable)
-    objective.push(`-${decoration.slotLevel} ${variable}`)
+    if (optimizeDefense)
+      objective.push(`-${decoration.slotLevel} ${variable}`)
   }
 
   const lp = [
     'Maximize',
-    ` obj: ${objective.join(' + ')}`,
+    ` obj: ${objective.length > 0 ? objective.join(' + ') : '0'}`,
     'Subject To',
     ...rows.map(row => ` ${row}`),
     'Bounds',
