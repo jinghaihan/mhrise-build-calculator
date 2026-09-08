@@ -8,11 +8,13 @@ import FormNumberInput from '@antfu/design/components/Form/FormNumberInput.vue'
 import { provideColorScheme } from '@antfu/design/composables/colorScheme'
 import { createWikiId } from '@mhrise-build-tools/core'
 import { defaultSnapshot, generateTalismanRecords, getLocalizedName, LOCALE_LABEL, SUPPORTED_LOCALES } from '@mhrise-build-tools/data'
+import { useStorage } from '@vueuse/core'
 import * as Comlink from 'comlink'
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SearchMultiSelect from './components/SearchMultiSelect.vue'
 import SearchSelect from './components/SearchSelect.vue'
+import { preferredLocale } from './i18n'
 
 type ColorScheme = 'light' | 'dark'
 
@@ -24,20 +26,20 @@ interface SkillSelection {
 const armorSlots = ['head', 'chest', 'arms', 'waist', 'legs'] as const
 const equipmentStatKeys = ['defense', 'fire', 'water', 'thunder', 'ice', 'dragon'] as const
 const { locale, t } = useI18n({ useScope: 'global' })
-const storedTheme = localStorage.getItem('mhrise-build-tools-theme')
-const theme = ref<ColorScheme>(storedTheme === 'dark' || storedTheme === 'light'
-  ? storedTheme
-  : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-const selectedWeaponId = ref('')
-const selectedTalismanId = ref('')
-const selectedArmorIds = ref<Record<ArmorSlot, string[]>>({
+const defaultTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+const theme = useStorage<ColorScheme>('mhrise-build-tools-theme', defaultTheme)
+if (theme.value !== 'dark' && theme.value !== 'light')
+  theme.value = defaultTheme
+const selectedWeaponId = useStorage('mhrise-build-tools-weapon', '')
+const selectedTalismanId = useStorage('mhrise-build-tools-talisman', '')
+const selectedArmorIds = useStorage<Record<ArmorSlot, string[]>>('mhrise-build-tools-armors', {
   arms: [],
   chest: [],
   head: [],
   legs: [],
   waist: [],
-})
-const selectedSkills = ref<SkillSelection[]>([])
+}, undefined, { mergeDefaults: true })
+const selectedSkills = useStorage<SkillSelection[]>('mhrise-build-tools-skills', [])
 const solutions = ref<BuildSolution[]>([])
 const running = ref(false)
 const errorMessage = ref('')
@@ -55,12 +57,10 @@ function applyTheme() {
 
 function toggleTheme() {
   theme.value = isDark.value ? 'light' : 'dark'
-  localStorage.setItem('mhrise-build-tools-theme', theme.value)
-  applyTheme()
 }
 
 provideColorScheme(() => theme.value)
-applyTheme()
+watch(theme, applyTheme, { immediate: true })
 
 const skillOptions = computed<SearchSelectOption[]>(() => defaultSnapshot.catalog.skills
   .map(record => ({
@@ -158,10 +158,6 @@ function clearArmorFilters() {
     selectedArmorIds.value[slot] = []
 }
 
-function persistLocale() {
-  localStorage.setItem('mhrise-build-tools-locale', locale.value)
-}
-
 function maxSkillLevel(skillId: string) {
   return skillRecord(skillId)?.maxLevel ?? 10
 }
@@ -246,9 +242,8 @@ onBeforeUnmount(() => {
           <div class="relative">
             <select
               id="locale-select"
-              v-model="locale"
+              v-model="preferredLocale"
               class="h-9 min-w-32 appearance-none rounded-md border border-base bg-raised pl-3 pr-9 text-sm color-base outline-none focus:ring-2 focus:ring-primary-500/40"
-              @change="persistLocale"
             >
               <option v-for="supportedLocale in SUPPORTED_LOCALES" :key="supportedLocale" :value="supportedLocale">
                 {{ LOCALE_LABEL[supportedLocale] }}

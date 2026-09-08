@@ -13,6 +13,7 @@
     "@antfu/design": "catalog:frontend",
     "@antfu/utils": "catalog:frontend",
     "@iconify-json/ph": "catalog:frontend",
+    "@vueuse/core": "catalog:frontend",
     "colorjs.io": "catalog:frontend",
     "comlink": "catalog:frontend",
     "reka-ui": "catalog:frontend",
