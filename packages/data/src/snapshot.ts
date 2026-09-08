@@ -131,12 +131,12 @@ export function armorComponentsForPool(
 
     if (entry.kind === 'skill') {
       for (const { level, value } of values) {
-        const eligibleSkillIds = value < 0 ? new Set([...skillIds, ...removableSkillIds]) : new Set(skillIds)
+        const eligibleSkillIds = value < 0
+          ? new Set([...skillIds, ...removableSkillIds])
+          : new Set(skillIds.filter(skillId => skillCosts.has(skillId)))
         for (const skillId of eligibleSkillIds) {
           components.push({
-            costDelta: value > 0
-              ? skillCosts.get(skillId) ?? entry.cost
-              : entry.cost,
+            costDelta: value > 0 ? skillCosts.get(skillId)! : entry.cost,
             defenseDelta: 0,
             id: `${poolId}:${entry.gameId}:${skillId}:${level}`,
             ...(role && role !== 'normal' ? { role } : {}),

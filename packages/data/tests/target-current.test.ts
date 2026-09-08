@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs'
-import { createWikiId, getSkillLevel } from '@mhrise-build/core'
+import { createWikiId } from '@mhrise-build/core'
 import { describe, expect, it } from 'vitest'
 import localizedNames from '../locales/names.json'
 import { solveSnapshotBuildAsync } from '../src/planner'
 import { parseSourceSnapshot } from '../src/snapshot'
 
 describe('user target build', () => {
-  it('finds a feasible build for the supplied weapon, skills, and armor', async () => {
+  it('rejects the supplied fixed armor target when it requires non-augmentable Blood Awakening', async () => {
     const snapshot = parseSourceSnapshot(
       readFileSync(new URL('../snapshots/source-snapshot.json', import.meta.url), 'utf8'),
       localizedNames,
@@ -54,8 +54,6 @@ describe('user target build', () => {
       maxSolutions: 1,
     })
 
-    expect(results).toHaveLength(1)
-    for (const requirement of requiredSkills)
-      expect(getSkillLevel(results[0].skills, requirement.skillId)).toBeGreaterThanOrEqual(requirement.level)
+    expect(results).toHaveLength(0)
   }, 600_000)
 })

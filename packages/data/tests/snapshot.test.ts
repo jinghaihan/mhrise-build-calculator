@@ -70,7 +70,7 @@ describe('source snapshots', () => {
       catalog: { armors: [], decorations: [], skills: [], talismans: [], weapons: [] },
       rules: {
         armorFamilies: [],
-        skillCosts: [],
+        skillCosts: [{ cost: 15, gameId: 1, name: '攻击', skillId }],
         talismanRules: [],
         augmentationEntries: [
           { cost: 15, gameId: 1, kind: 'skill', levels: [1], poolId: 1 },
@@ -250,7 +250,8 @@ describe('source snapshots', () => {
     )
   })
 
-  it('loads catalogs and expands generic skill augmentation rules', () => {
+  it('expands generic skill augmentation rules using the skill cost allowlist', () => {
+    const skill = createWikiRef('skill', '366824395').id
     const snapshot = parseSourceSnapshot({
       catalog: {
         armors: [],
@@ -271,12 +272,11 @@ describe('source snapshots', () => {
           poolId: 1,
           sourceBlock: 0,
         }],
-        skillCosts: [],
+        skillCosts: [{ cost: 3, gameId: 1, name: '攻击', skillId: skill }],
         talismanRules: [],
       },
       source: { kiranico: [], workbook: 'fixture.xlsx' },
     })
-    const skill = createWikiRef('skill', '366824395').id
 
     expect(armorComponentsForPool(snapshot, 1, [skill])).toEqual([{
       costDelta: 3,
@@ -305,6 +305,14 @@ describe('source snapshots', () => {
       .find(candidate => candidate.skillChanges[0]?.skillId === attackId && candidate.skillChanges[0].level > 0)
 
     expect(component?.costDelta).toBe(15)
+  })
+
+  it('does not invent positive augmentation skills missing from the workbook table', () => {
+    const bloodAwakeningId = createWikiRef('skill', '825821882').id
+    const components = armorComponentsForPool(defaultSnapshot, 6, [bloodAwakeningId])
+
+    expect(components.some(component => component.skillChanges.some(change => change.skillId === bloodAwakeningId
+      && change.level > 0))).toBe(false)
   })
 
   it('keeps special augmentation rows distinct from normal rows', () => {
