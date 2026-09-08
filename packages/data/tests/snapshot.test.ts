@@ -356,4 +356,39 @@ describe('source snapshots', () => {
     expect(record.talisman.slots).toEqual([4, 1, 1])
     expect(record.talisman.skills).toEqual([{ level: 1, skillId: '366824395' }])
   })
+
+  it('filters generated talismans by requested skills and slots', () => {
+    const attackId = createWikiRef('skill', '366824395').id
+    const snapshot = parseSourceSnapshot({
+      catalog: { armors: [], decorations: [], skills: [], talismans: [], weapons: [] },
+      generatedAt: '',
+      rules: {
+        armorFamilies: [],
+        augmentationEntries: [],
+        skillCosts: [],
+        talismanRules: [{
+          firstSkillMax: 2,
+          firstSkillMaxRing: 1,
+          gameId: 1,
+          maxLevel: 7,
+          name: '攻击',
+          rank: 'A',
+          secondSkillMax: 2,
+          secondSkillMaxRing: 1,
+          skillId: attackId,
+          slotOptions: [[4, 1, 1]],
+        }],
+      },
+      source: { kiranico: [], workbook: '' },
+    })
+
+    const catalog = createSnapshotCatalog(snapshot, [attackId], undefined, {
+      firstSkillId: attackId,
+      firstSkillLevel: 2,
+      slots: [4, 1, 1],
+    })
+
+    expect(catalog.talismans).toHaveLength(1)
+    expect(catalog.talismans[0].talisman.skills).toEqual([{ level: 2, skillId: attackId }])
+  })
 })

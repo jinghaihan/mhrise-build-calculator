@@ -88,6 +88,14 @@ export interface Talisman {
   readonly slots: SlotLevels
 }
 
+export interface TalismanFilter {
+  readonly firstSkillId?: WikiId
+  readonly firstSkillLevel?: number
+  readonly secondSkillId?: WikiId
+  readonly secondSkillLevel?: number
+  readonly slots?: SlotLevels
+}
+
 export interface BuildRequest {
   readonly armorBySlot: Readonly<Record<ArmorSlot, readonly ArmorVariant[]>>
   readonly decorations: readonly Decoration[]

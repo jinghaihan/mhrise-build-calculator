@@ -4,12 +4,15 @@ import type {
   BuildSolution,
   ReusePlan,
   SolveProgress,
+  Talisman,
+  TalismanFilter,
   WikiId,
 } from '@mhrise-build/core'
 import type { BuildDefinition, BuildRequestProgress, DataCatalog } from './catalog'
 import type { SourceSnapshot } from './snapshot'
 import {
   ARMOR_SLOTS,
+  getSkillLevel,
   optimizeEquipmentReuse,
   solveBuild,
 } from '@mhrise-build/core'
@@ -24,6 +27,7 @@ export interface SnapshotPlanOptions {
   readonly onProgress?: (progress: BuildRequestProgress | SolveProgress) => void
   readonly onSolutions?: (solutions: readonly BuildSolution[]) => void
   readonly talismanSkillIds?: readonly WikiId[]
+  readonly talismanFilter?: TalismanFilter
 }
 
 export type SnapshotBuildQuery = Omit<BuildDefinition, 'id'> & {
@@ -34,13 +38,25 @@ export function createSnapshotCatalog(
   snapshot: SourceSnapshot,
   skillIds: readonly WikiId[],
   maxTalismanCandidates?: number,
+  talismanFilter?: TalismanFilter,
 ): DataCatalog {
+  const generatedSkillIds = talismanFilter
+    ? [...new Set([
+        ...skillIds,
+        ...(talismanFilter.firstSkillId ? [talismanFilter.firstSkillId] : []),
+        ...(talismanFilter.secondSkillId ? [talismanFilter.secondSkillId] : []),
+      ])]
+    : skillIds
+  const talismans = generateTalismanRecords(snapshot, {
+    maxCandidates: maxTalismanCandidates,
+    skillIds: generatedSkillIds,
+  })
+
   return {
     ...snapshot.catalog,
-    talismans: generateTalismanRecords(snapshot, {
-      maxCandidates: maxTalismanCandidates,
-      skillIds,
-    }),
+    talismans: talismanFilter
+      ? talismans.filter(record => matchesTalismanFilter(record.talisman, talismanFilter))
+      : talismans,
   }
 }
 
@@ -51,7 +67,7 @@ export function createSnapshotBuildRequest(
 ): BuildRequest {
   const skillIds = options.talismanSkillIds
     ?? definition.requiredSkills.map(requirement => requirement.skillId)
-  const catalog = createSnapshotCatalog(snapshot, skillIds, options.maxTalismanCandidates)
+  const catalog = createSnapshotCatalog(snapshot, skillIds, options.maxTalismanCandidates, options.talismanFilter)
   const request = createBuildRequest(
     catalog,
     withGeneratedArmorComponents(snapshot, definition, skillIds, options),
@@ -107,6 +123,22 @@ function toBuildDefinition(query: SnapshotBuildQuery): BuildDefinition {
     ...query,
     id: query.id ?? `weapon-${query.weaponId}`,
   }
+}
+
+function matchesTalismanFilter(
+  talisman: Talisman,
+  filter: TalismanFilter,
+): boolean {
+  const requiredSkills = [
+    [filter.firstSkillId, filter.firstSkillLevel],
+    [filter.secondSkillId, filter.secondSkillLevel],
+  ] as const
+  if (requiredSkills.some(([skillId, level]) => skillId
+    && getSkillLevel(talisman.skills, skillId) < (level ?? 1))) {
+    return false
+  }
+
+  return !filter.slots || filter.slots.every((level, index) => talisman.slots[index] >= level)
 }
 
 function withGeneratedArmorComponents(
