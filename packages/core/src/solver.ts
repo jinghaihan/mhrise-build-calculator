@@ -395,6 +395,60 @@ function solveBuildByArmorSearch(
     }
   }
 
+  function findFeasibleSeed(): void {
+    interface SeedState {
+      readonly armor: Partial<Record<ArmorSlot, ArmorVariant>>
+      readonly requiredLevels: readonly number[]
+      readonly slotCounts: readonly number[]
+    }
+
+    const beamWidth = 32
+    const candidateLimit = 4096
+    let beam: SeedState[] = [{
+      armor: {},
+      requiredLevels: initialLevels,
+      slotCounts: initialCounts,
+    }]
+
+    for (const [slotIndex, slot] of slots.entries()) {
+      const next = new Map<string, SeedState>()
+      for (const state of beam) {
+        for (const candidate of feasibleCandidates[slotIndex].slice(0, candidateLimit)) {
+          const requiredLevels = request.requiredSkills.map((requirement, index) => Math.min(
+            requirement.level,
+            state.requiredLevels[index] + candidate.levels[index],
+          ))
+          const slotCounts = state.slotCounts.map((count, index) => count + candidate.counts[index])
+          const nextState = {
+            armor: { ...state.armor, [slot]: candidate.variant },
+            requiredLevels,
+            slotCounts,
+          }
+          const key = `${requiredLevels.join(',')}|${slotCounts.join(',')}`
+          const previous = next.get(key)
+          if (!previous || requiredSkillScore(nextState.requiredLevels) > requiredSkillScore(previous.requiredLevels))
+            next.set(key, nextState)
+        }
+      }
+      beam = [...next.values()].sort((left, right) => requiredSkillScore(right.requiredLevels)
+        - requiredSkillScore(left.requiredLevels)
+        || slotCountScore(right.slotCounts) - slotCountScore(left.slotCounts)).slice(0, beamWidth)
+      if (beam.length === 0)
+        return
+    }
+
+    for (const state of beam) {
+      searchTalismans(
+        getArmorSkills(state.armor as Record<ArmorSlot, ArmorVariant>),
+        state.armor as Record<ArmorSlot, ArmorVariant>,
+        orderedTalismans,
+        true,
+      )
+      if (solutions.length > 0)
+        return
+    }
+  }
+
   function visit(
     slotIndex: number,
     requiredLevels: readonly number[],
@@ -468,6 +522,7 @@ function solveBuildByArmorSearch(
   }
 
   options.onProgress?.({ current: 0, stage: 'searching', total: 0 })
+  findFeasibleSeed()
   visit(0, initialLevels, initialCounts, 0, true)
   visit(0, initialLevels, initialCounts, 0)
   options.onProgress?.({ current: 1, stage: 'searching', total: 1 })
