@@ -63,7 +63,7 @@ function displayValue(value: unknown) {
         class="p-1 border border-base rounded-lg bg-glass:75 min-w-[--reka-combobox-trigger-width] max-h-80 shadow-lg z-dropdown"
         data-af-animate
       >
-        <ComboboxViewport class="max-h-78 overflow-y-auto">
+        <ComboboxViewport class="planner-scroll max-h-78 overflow-y-auto">
           <ComboboxItem
             v-for="option in visibleOptions"
             :key="option.value"

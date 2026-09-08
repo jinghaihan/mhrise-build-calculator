@@ -3,6 +3,8 @@
   --planner-control-hover: rgb(93 93 153 / 3%);
   --planner-control-border: rgb(32 34 48 / 16%);
   --planner-control-border-hover: rgb(93 93 153 / 35%);
+  --planner-scrollbar: rgb(93 93 153 / 30%);
+  --planner-scrollbar-hover: rgb(93 93 153 / 55%);
 }
 
 :root.dark {
@@ -10,6 +12,29 @@
   --planner-control-hover: rgb(255 255 255 / 3%);
   --planner-control-border: rgb(255 255 255 / 12%);
   --planner-control-border-hover: rgb(157 157 207 / 40%);
+  --planner-scrollbar: rgb(157 157 207 / 30%);
+  --planner-scrollbar-hover: rgb(157 157 207 / 55%);
+}
+
+/* Specificity also overrides Reka's injected scrollbar-hiding rule. */
+.planner-scroll.planner-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--planner-scrollbar) transparent;
+}
+
+.planner-scroll:hover {
+  scrollbar-color: var(--planner-scrollbar-hover) transparent;
+}
+
+/* Fallback for browsers without standard scrollbar styling. */
+.planner-scroll.planner-scroll::-webkit-scrollbar { display: block; width: 6px; height: 6px; }
+.planner-scroll::-webkit-scrollbar-track { background: transparent; }
+.planner-scroll::-webkit-scrollbar-thumb { background: var(--planner-scrollbar); border-radius: 999px; }
+.planner-scroll::-webkit-scrollbar-thumb:hover { background: var(--planner-scrollbar-hover); }
+.planner-scroll::-webkit-scrollbar-corner { background: transparent; }
+
+@media (forced-colors: active) {
+  .planner-scroll.planner-scroll { scrollbar-color: auto; }
 }
 
 /* Also overrides the number input's built-in raised surface and height. */
@@ -34,5 +59,45 @@
 @media (prefers-reduced-motion: reduce) {
   .planner-control.planner-control {
     transition: none;
+  }
+}
+
+.skills-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.skill-list {
+  min-height: 0;
+  max-height: min(60vh, 28rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 0.25rem;
+  margin: -0.25rem;
+}
+
+.skill-list:focus-visible {
+  outline: 2px solid #8585ba;
+  outline-offset: 2px;
+}
+
+.skill-row {
+  grid-template-columns: minmax(0, 1fr) 5rem 2.25rem;
+}
+
+@media (min-width: 1024px) {
+  .editor-grid {
+    align-items: start;
+  }
+
+  .skills-panel {
+    height: 24rem;
+  }
+
+  .skill-list {
+    flex: 1;
+    max-height: none;
   }
 }

@@ -13,6 +13,7 @@ import * as Comlink from 'comlink'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SearchSelect from './components/SearchSelect.vue'
+import BuildResult from './components/BuildResult.vue'
 import { preferredLocale } from './i18n'
 
 type ColorScheme = 'light' | 'dark'
@@ -48,6 +49,14 @@ const errorMessage = ref('')
 const progress = ref<BuildWorkerProgress>()
 let worker: Worker | undefined
 let workerApi: Comlink.Remote<BuildWorkerApi> | undefined
+
+watch([selectedWeaponId, selectedTalismanId, selectedArmorIds, selectedSkills], () => {
+  if (!running.value) {
+    solutions.value = []
+    progress.value = undefined
+    errorMessage.value = ''
+  }
+}, { deep: true })
 
 const isDark = computed(() => theme.value === 'dark')
 
@@ -136,21 +145,6 @@ function removeSkill(index: number) {
 
 function skillRecord(skillId: string) {
   return defaultSnapshot.catalog.skills.find(record => String(record.ref.id) === skillId)
-}
-
-function skillName(skillId: string) {
-  const record = skillRecord(skillId)
-  return record ? (getLocalizedName(record, locale.value, 'zh') ?? skillId) : skillId
-}
-
-function weaponName(weaponId: string) {
-  const record = defaultSnapshot.catalog.weapons.find(item => String(item.ref.id) === weaponId)
-  return record ? (getLocalizedName(record, locale.value, 'zh') ?? weaponId) : weaponId
-}
-
-function armorName(armorId: string) {
-  const record = defaultSnapshot.catalog.armors.find(item => String(item.ref.id) === armorId)
-  return record ? (getLocalizedName(record, locale.value, 'zh') ?? armorId) : armorId
 }
 
 function clearArmorFilters() {
@@ -263,7 +257,7 @@ onBeforeUnmount(() => {
       </header>
 
       <section>
-        <div class="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
+        <div class="editor-grid grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
           <div>
             <div class="mb-4 flex items-center justify-between">
               <h2 class="text-base font-600">
@@ -278,6 +272,7 @@ onBeforeUnmount(() => {
                 <img src="/armor/weapon.png" :alt="t('ui.weapon')" class="h-7 w-7 object-contain">
                 <SearchSelect
                   v-model="selectedWeaponId"
+                  :disabled="running"
                   clearable
                   :clear-label="`${t('ui.clearSelection')}: ${t('ui.weapon')}`"
                   :options="weaponOptions"
@@ -321,8 +316,8 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div class="min-w-0">
-            <dl class="mb-5 min-h-9 flex flex-wrap items-center gap-x-5 gap-y-2" :aria-label="t('ui.equipmentStats')" aria-live="polite">
+          <div class="skills-panel min-w-0">
+            <dl class="mb-5 min-h-9 flex shrink-0 flex-wrap items-center gap-x-5 gap-y-2" :aria-label="t('ui.equipmentStats')" aria-live="polite">
               <div v-for="stat in equipmentStatKeys" :key="stat" class="flex items-center gap-1.5" :title="t(`stat.${stat}`)">
                 <dt class="flex items-center">
                   <img :src="`/stats/${stat}.png`" :alt="t(`stat.${stat}`)" class="h-5 w-5 object-contain">
@@ -332,7 +327,7 @@ onBeforeUnmount(() => {
                 </dd>
               </div>
             </dl>
-            <div class="mb-4 flex items-center justify-between">
+            <div class="mb-4 flex shrink-0 items-center justify-between">
               <h2 class="text-base font-600">
                 {{ t('ui.targetSkills') }}
               </h2>
@@ -344,8 +339,8 @@ onBeforeUnmount(() => {
             <div v-if="selectedSkills.length === 0" class="rounded-md border border-dashed border-base px-4 py-6 text-center text-sm color-tertiary">
               {{ t('ui.addSkillRequirement') }}
             </div>
-            <div v-else class="space-y-3">
-              <div v-for="(skill, index) in selectedSkills" :key="index" class="grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_8rem_2.25rem]">
+            <div v-else class="planner-scroll skill-list space-y-3" role="region" :aria-label="t('ui.targetSkills')" tabindex="0">
+              <div v-for="(skill, index) in selectedSkills" :key="index" class="skill-row grid items-end gap-3">
                 <FormField :label="index === 0 ? t('ui.skill') : undefined">
                   <SearchSelect
                     v-model="skill.skillId"
@@ -374,7 +369,7 @@ onBeforeUnmount(() => {
           <span v-if="!canSearch && !running" class="text-sm color-tertiary">{{ t('ui.chooseRequirements') }}</span>
         </div>
 
-        <div v-if="running || progress" class="mt-5 border-t border-base pt-4">
+        <div v-if="running" class="mt-5 border-t border-base pt-4">
           <div v-if="progress" class="flex items-center justify-between gap-4 text-sm">
             <span>{{ progress.stage === 'generating' ? t('ui.generatingVariants') : t('ui.searchingCombinations') }}</span>
             <span class="font-mono color-secondary">{{ progress.current }} / {{ progress.total }}</span>
@@ -400,32 +395,8 @@ onBeforeUnmount(() => {
           {{ errorMessage }}
         </div>
 
-        <div v-if="solutions.length" class="overflow-hidden rounded-lg border border-base bg-elevated">
-          <article v-for="(solution, index) in solutions" :key="solution.id" class="border-b border-base p-4 last:border-b-0 sm:p-5">
-            <div class="flex items-start justify-between gap-4">
-              <div class="min-w-0">
-                <p class="text-xs color-tertiary">
-                  #{{ index + 1 }} · {{ weaponName(String(solution.weapon.ref.id)) }}
-                </p>
-                <div class="mt-2 grid gap-x-5 gap-y-1 text-sm sm:grid-cols-2">
-                  <span v-for="slot in armorSlots" :key="slot" class="truncate">
-                    <span class="mr-2 color-tertiary">{{ t(`slot.${slot}`) }}</span>{{ armorName(String(solution.armor[slot].base.ref.id)) }}
-                  </span>
-                </div>
-              </div>
-              <div class="shrink-0 text-right">
-                <p class="text-xs color-tertiary">
-                  {{ t('ui.defense') }}
-                </p>
-                <p class="font-mono text-xl font-600 text-primary">
-                  {{ solution.defense }}
-                </p>
-              </div>
-            </div>
-            <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs color-secondary">
-              <span v-for="skill in solution.skills" :key="skill.skillId">{{ skillName(String(skill.skillId)) }} Lv.{{ skill.level }}</span>
-            </div>
-          </article>
+        <div v-if="solutions.length" class="space-y-3">
+          <BuildResult v-for="(solution, index) in solutions" :key="index" :solution="solution" :index="index" />
         </div>
         <div v-else class="rounded-lg border border-dashed border-base px-4 py-12 text-center text-sm color-tertiary">
           {{ t('ui.noResults') }}
