@@ -26,7 +26,7 @@ export interface TalismanFilterStorage {
   slots: SlotLevels
 }
 
-export interface PreferencesStorageState {
+interface PreferencesStorageState {
   readonly schemaVersion: 1
   locale: AppLocale
   theme: ColorScheme
@@ -150,7 +150,7 @@ export const plannerStorage = useStorage<PlannerStorageState>(
   { mergeDefaults: true },
 )
 
-export const preferencesStorage = useStorage<PreferencesStorageState>(
+const preferencesStorage = useStorage<PreferencesStorageState>(
   PREFERENCES_STORAGE_KEY,
   migratedState.preferences,
   undefined,
