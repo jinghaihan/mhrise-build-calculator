@@ -181,15 +181,17 @@ function solveBuildByArmorSearch(
   maxSolutions: number,
   options: SolveOptions,
 ): BuildSolution[] {
-  // Leave the smallest candidate pool for the final branch. This keeps the
-  // expensive talisman/decorations check narrow while preserving exhaustive
-  // traversal and therefore result correctness.
-  const slots = [...ARMOR_SLOTS].sort((left, right) => armorBySlot[right].length - armorBySlot[left].length)
+  // Explore the most constrained armor slots first. The traversal remains
+  // exhaustive, but a failed requirement can reject a branch before the large
+  // candidate pools are reached.
+  const slots = [...ARMOR_SLOTS].sort((left, right) => armorBySlot[left].length - armorBySlot[right].length)
   const candidates = slots.map(slot => armorBySlot[slot].map(variant => ({
     variant,
     levels: request.requiredSkills.map(requirement => getSkillLevel(variant.skills, requirement.skillId)),
     counts: slotCapacities(variant.slots),
-  })))
+  })).sort((left, right) => right.variant.defense - left.variant.defense
+    || requiredSkillScore(right.levels) - requiredSkillScore(left.levels)
+    || slotCountScore(right.counts) - slotCountScore(left.counts)))
   const jewelLevels = Array.from({ length: 5 }, (_, level) => request.requiredSkills.map(requirement =>
     request.decorations.reduce((best, jewel) => jewel.slotLevel <= level
       ? Math.max(best, getSkillLevel(jewel.skills, requirement.skillId))
@@ -357,68 +359,6 @@ function solveBuildByArmorSearch(
     }
   }
 
-  function findFeasibleSeed(): void {
-    interface SeedState {
-      readonly armor: Partial<Record<ArmorSlot, ArmorVariant>>
-      readonly defense: number
-      readonly requiredLevels: readonly number[]
-      readonly slotCounts: readonly number[]
-    }
-
-    let beam: SeedState[] = [{
-      armor: {},
-      defense: 0,
-      requiredLevels: initialLevels,
-      slotCounts: initialCounts,
-    }]
-    const candidateLimit = 2048
-    const beamWidth = 8
-
-    for (const [slotIndex, slot] of slots.entries()) {
-      const next = new Map<string, SeedState>()
-      for (const state of beam) {
-        for (const candidate of candidates[slotIndex].slice(0, candidateLimit)) {
-          const requiredLevels = request.requiredSkills.map((requirement, index) => Math.min(
-            requirement.level,
-            state.requiredLevels[index] + candidate.levels[index],
-          ))
-          const slotCounts = state.slotCounts.map((count, index) => count + candidate.counts[index])
-          const nextState = {
-            armor: { ...state.armor, [slot]: candidate.variant },
-            defense: state.defense + candidate.variant.defense,
-            requiredLevels,
-            slotCounts,
-          }
-          const key = `${requiredLevels.join(',')}|${slotCounts.join(',')}`
-          const previous = next.get(key)
-          if (!previous || previous.defense < nextState.defense)
-            next.set(key, nextState)
-        }
-      }
-      beam = [...next.values()].sort((left, right) => (
-        requiredSkillScore(right.requiredLevels) * 1000
-        + slotCountScore(right.slotCounts) * 10
-        + right.defense
-        - requiredSkillScore(left.requiredLevels) * 1000
-        - slotCountScore(left.slotCounts) * 10
-        - left.defense
-      )).slice(0, beamWidth)
-      if (beam.length === 0)
-        return
-    }
-
-    for (const state of beam) {
-      searchTalismans(
-        getArmorSkills(state.armor as Record<ArmorSlot, ArmorVariant>),
-        state.armor as Record<ArmorSlot, ArmorVariant>,
-        orderedTalismans.slice(0, 512),
-        true,
-      )
-      if (solutions.length > 0)
-        return
-    }
-  }
-
   function visit(
     slotIndex: number,
     requiredLevels: readonly number[],
@@ -477,7 +417,6 @@ function solveBuildByArmorSearch(
   }
 
   options.onProgress?.({ current: 0, stage: 'searching', total: 0 })
-  findFeasibleSeed()
   visit(0, initialLevels, initialCounts, 0)
   options.onProgress?.({ current: 1, stage: 'searching', total: 1 })
   return solutions.sort(compareSolutions)
